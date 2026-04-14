@@ -20,13 +20,7 @@
  --shadow: 0 10px 30px rgba(26,60,42,0.10);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
- font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
- background: var(--bg);
- color: var(--text);
- line-height: 1.6;
- min-width: 1100px;
-}
+body {\n background: linear-gradient(135deg, #f0c8e8 0%, #d4a8f0 40%, #a8c8f0 70%, #c8e8f8 100%) fixed;\n}
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
 
@@ -275,17 +269,17 @@ tr:hover td { background: #eef5ff; }
 }
 
 /* ===== GLASSMORPHISM CREAM ===== */
-body { background: linear-gradient(135deg, #f5e6c8 0%, #efe0b8 30%, #e8d4a0 60%, #ddd0a8 100%) fixed; }
-.header { background: rgba(60,40,20,0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.15); }
+body { background: linear-gradient(135deg, #f8c8dc 0%, #e8a0d0 25%, #c890d8 50%, #a0c0e8 75%, #c0e0f0 100%) fixed; }
+.header { background: rgba(180,100,220,0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); box-shadow: 0 4px 20px rgba(160,80,200,0.3); }
 .header-badge { background: rgba(180,140,60,0.5) !important; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .container { background: transparent; padding-top: 24px; }
-.nav-tabs { background: rgba(60,40,20,0.2); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.2); }
+.nav-tabs { background: rgba(255,255,255,0.25); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 6px 24px rgba(160,80,200,0.15); }
 .tab-btn { background: rgba(60,40,20,0.15); border: 1px solid rgba(180,140,60,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .tab-btn.active { background: rgba(180,140,60,0.55); border-color: rgba(180,140,60,0.5); }
 .tab-btn:hover { background: rgba(60,40,20,0.3) !important; }
-.card { background: rgba(60,40,20,0.18); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.18); box-shadow: 0 8px 32px rgba(60,40,20,0.15), inset 0 1px 0 rgba(255,255,255,0.15); }
-.stat-card { background: rgba(60,40,20,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.15); box-shadow: 0 8px 32px rgba(60,40,20,0.12), inset 0 1px 0 rgba(255,255,255,0.1); }
-.form-group input, .form-group select { background: rgba(255,255,255,0.25); border: 1px solid rgba(180,140,60,0.25); color: #3d2810; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.card { background: rgba(255,255,255,0.25); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 12px 48px rgba(160,80,200,0.25), 0 4px 16px rgba(100,40,160,0.15), inset 0 2px 0 rgba(255,255,255,0.5); border-radius: var(--radius); }
+.stat-card { background: rgba(255,255,255,0.3); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 10px 40px rgba(160,80,200,0.2), 0 3px 12px rgba(100,40,160,0.12), inset 0 2px 0 rgba(255,255,255,0.5); border-radius: var(--radius); }
+.form-group input, .form-group select { background: rgba(255,255,255,0.35); border: 1px solid rgba(200,120,240,0.3); color: #2d1040; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 2px 8px rgba(160,80,200,0.1); }
 .form-group input::placeholder { color: rgba(61,40,16,0.4); }
 .form-group input:focus, .form-group select:focus { background: rgba(255,255,255,0.4); border-color: rgba(180,140,60,0.5); }
 .search-bar input, .search-bar select { background: rgba(255,255,255,0.25); border: 1px solid rgba(180,140,60,0.2); color: #3d2810; }
@@ -297,7 +291,7 @@ body { background: linear-gradient(135deg, #f5e6c8 0%, #efe0b8 30%, #e8d4a0 60%,
 .btn-success:hover { background: rgba(100,160,80,0.85) !important; }
 .btn-danger { background: rgba(192,57,43,0.7) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(192,57,43,0.35); color: #fff; }
 .btn-danger:hover { background: rgba(192,57,43,0.9) !important; }
-table th { background: rgba(60,40,20,0.55) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+table th { background: rgba(160,80,200,0.7) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 td { background: rgba(255,255,255,0.1); color: #3d2810; }
 tr:hover td { background: rgba(180,140,60,0.12); }
 tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
