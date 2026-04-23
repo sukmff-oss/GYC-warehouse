@@ -323,10 +323,19 @@ tr:last-child td { border-bottom: none; }
   <input type="password" id="loginPwd" placeholder="● ● ● ●" maxlength="20" onkeypress="if(event.key==='Enter')checkLogin()">
   <button onclick="checkLogin()">登 入</button>
   <div class="login-error" id="loginError"></div>
+  <div id="qrcode" style="margin:16px auto 0;width:150px;height:150px;"></div>
+  <p style="font-size:11px;color:var(--muted);margin-top:8px;">手機掃描直接開啟</p>
  </div>
 </div>
 
+<script src="qrcode.min.js"></script>
 <script>
+var QR_URL = "https://sukmff-oss.github.io/GYC-warehouse/";
+var qr = qrcode(0, 'M');
+qr.addData(QR_URL);
+qr.make();
+document.getElementById('qrcode').innerHTML = qr.createSvgTag(4, 8);
+
 function checkLogin(){
   var pwd = document.getElementById('loginPwd').value.trim();
   if(pwd === '1234'){
