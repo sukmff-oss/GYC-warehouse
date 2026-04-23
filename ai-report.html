@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國研AI報告</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+:root{
+  --bg:#060912;
+  --bg2:#0a1020;
+  --card:#0c1528;
+  --card2:#0f1d35;
+  --border:#1a2740;
+  --border2:#243354;
+  --text:#EDF2FA;
+  --muted:#5A7090;
+  --accent:#FF6535;
+  --accent2:#FF8C5A;
+  --up:#EF4444;
+  --down:#10B981;
+  --blue:#4F8EF7;
+  --gold:#F5C518;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+
+/* nav */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,9,18,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 20px;}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:3px;height:56px;overflow-x:auto;scrollbar-width:none;}
+.nav-inner::-webkit-scrollbar{display:none;}
+.nav-inner a{font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;transition:.2s;color:var(--muted);letter-spacing:.3px;}
+.nav-inner a:hover,.nav-inner a.active{background:rgba(255,101,53,0.14);color:var(--accent);}
+.nav-logo{font-weight:900;font-size:17px;color:var(--text)!important;letter-spacing:1px;margin-right:10px;}
+.nav-logo span{color:var(--accent);}
+.live-dot{width:7px;height:7px;background:var(--down);border-radius:50%;animation:livepulse 2s infinite;margin-left:6px;}
+@keyframes livepulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+.nav-clock{font-size:12px;color:var(--muted);padding:4px 12px;background:rgba(255,255,255,0.04);border-radius:999px;margin-left:auto;font-variant-numeric:tabular-nums;letter-spacing:.5px;}
+
+/* container */
+.container{max-width:1200px;margin:0 auto;padding:28px 20px;display:flex;flex-direction:column;gap:18px;}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0a1628 0%,#060d20 40%,#1a0a00 100%);border:1px solid var(--border);border-radius:22px;padding:32px 36px;position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:0 0;}
+/* left column: eyebrow + h1 + meta */
+.hero-left{display:flex;flex-direction:column;gap:0;}
+.hero-left .hero-eyebrow{z-index:1;}
+.hero-left h1{z-index:1;}
+.hero-left .hero-meta{z-index:1;}
+.hero-eyebrow{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;position:relative;z-index:1;}
+.hero h1{font-size:38px;font-weight:900;letter-spacing:4px;margin-bottom:20px;position:relative;z-index:1;}
+.hero h1 span{color:var(--accent);}
+.hero-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);position:relative;z-index:1;}
+/* flip clock - right column of hero grid */
+.flip-clock-wrap{display:flex;align-items:center;gap:3px;grid-column:2;grid-row:1/3;align-self:center;}
+.flip-unit{display:flex;flex-direction:column;align-items:center;}
+.flip-digits{display:flex;gap:2px;}
+.flip-card{position:relative;width:36px;height:52px;background:linear-gradient(180deg,#1a2744 0%,#0f1c35 100%);border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.5);overflow:hidden;perspective:200px;}
+.flip-card .top-half,.flip-card .bottom-half{position:absolute;left:0;right:0;height:50%;overflow:hidden;backface-visibility:hidden;}
+.flip-card .top-half{top:0;border-radius:6px 6px 0 0;border-bottom:1px solid rgba(0,0,0,0.4);}
+.flip-card .bottom-half{bottom:0;border-radius:0 0 6px 6px;background:linear-gradient(180deg,#0f1c35 0%,#1a2744 100%);}
+.flip-card .top-half .digit,.flip-card .bottom-half .digit{display:block;font-size:32px;font-weight:700;color:var(--text);font-family:'Courier New',monospace;letter-spacing:0;line-height:26px;text-align:center;}
+.flip-card .top-half{transform-origin:bottom;}
+.flip-card .bottom-half{transform-origin:top;backface-visibility:hidden;}
+.flip-card.flipping .top-half{animation:flip-top 0.5s ease-in-out forwards;}
+.flip-card.flipping .bottom-half{animation:flip-bottom 0.5s ease-in-out 0.5s forwards;}
+@keyframes flip-top{0%{transform:rotateX(0deg);}100%{transform:rotateX(-90deg);}}
+@keyframes flip-bottom{0%{transform:rotateX(90deg);}100%{transform:rotateX(0deg);}}
+.flip-sep{font-size:36px;font-weight:700;color:var(--accent);line-height:52px;margin:0 2px;}
+.flip-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:5px;}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color .3s;}
+.card:hover{border-color:var(--border2);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;}
+.section-header h2{font-size:17px;font-weight:700;letter-spacing:.3px;}
+.badge{font-size:10.5px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,0.05);color:var(--muted);letter-spacing:.5px;}
+
+/* metric cards */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.metric-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;transition:border-color .25s;}
+.metric-card:hover{border-color:rgba(255,101,53,0.28);}
+.metric-card h3{font-size:10.5px;color:var(--muted);font-weight:500;margin-bottom:8px;letter-spacing:.6px;text-transform:uppercase;}
+.metric-card .val{font-size:19px;font-weight:700;}
+.metric-card .sub{font-size:11.5px;color:var(--muted);margin-top:5px;}
+
+/* crypto mini grid */
+.crypto-mini-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
+.crypto-mini{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:11px 8px;text-align:center;}
+.crypto-mini h4{font-size:10px;color:var(--muted);font-weight:500;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+.crypto-mini .val{font-size:14px;font-weight:700;}
+.crypto-mini .sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* up/dn colors */
+.c-up{color:var(--up) !important;}
+.c-dn{color:var(--down) !important;}
+.c-flat{color:var(--muted);}
+
+/* compare table */
+.compare-wrap{overflow-x:auto;border-radius:10px;}
+table.compare{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.compare th{padding:9px 14px;text-align:left;font-size:10.5px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);letter-spacing:.7px;text-transform:uppercase;}
+table.compare th:not(:first-child){text-align:right;}
+table.compare td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.035);}
+table.compare td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums;}
+table.compare td.lbl{font-weight:500;}
+table.compare td.yes{color:var(--muted);}
+table.compare td.cur{font-weight:600;}
+table.compare td.chg{font-weight:600;}
+table.compare td.pct{font-weight:700;font-size:14px;}
+table.compare tr:last-child td{border-bottom:none;}
+.up-bg{background:rgba(239,68,68,0.06);}
+.dn-bg{background:rgba(16,185,129,0.06);}
+
+/* rank cards */
+.rank-row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;}
+.rank-card{flex:1;min-width:170px;padding:13px 16px;border-radius:12px;border:1px solid;}
+.rank-card.up-rank{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.18);}
+.rank-card.dn-rank{background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.18);}
+.rank-label{font-size:10px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px;}
+.rank-name{font-size:16px;font-weight:700;margin-bottom:3px;}
+.rank-pct{font-size:22px;font-weight:900;}
+.rank-price{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* news */
+.news-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.news-item{display:flex;gap:11px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.025);border:1px solid transparent;transition:all .2s;}
+.news-item:hover{background:rgba(255,255,255,0.05);border-color:var(--border);}
+.news-item .emoji{font-size:21px;flex-shrink:0;padding-top:2px;}
+.news-item .title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:4px;}
+.news-item .desc{font-size:11px;color:var(--muted);line-height:1.4;}
+.news-item .source{font-size:10px;color:var(--muted);margin-top:6px;display:block;letter-spacing:.4px;}
+
+/* video news embedded */
+.news-item.video-item{flex-direction:column;gap:0;padding:0;overflow:hidden;border-radius:10px;}
+.news-item.video-item .video-embed{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:10px 10px 0 0;}
+.news-item.video-item .video-embed img{width:100%;height:100%;object-fit:cover;display:block;}
+.news-item.video-item .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.3);transition:background .2s;border-radius:10px 10px 0 0;}
+.news-item.video-item:hover .play-overlay{background:rgba(0,0,0,0.5);}
+.news-item.video-item>div:last-child{padding:10px 12px;}
+.news-item.video-item .title{font-size:13px;line-height:1.4;}
+#video .news-grid{grid-template-columns:repeat(2,1fr);}
+
+/* alerts */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.6;}
+.alert-o{background:rgba(255,101,53,0.09);border:1px solid rgba(255,101,53,0.18);color:#FF8C5A;}
+.alert-g{background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.14);color:#6EE7B7;}
+.alert-b{background:rgba(79,142,247,0.07);border:1px solid rgba(79,142,247,0.14);color:#93C5FD;}
+
+/* products */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:14px;}
+.product-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.025);}
+.product-swatch{width:42px;height:42px;border-radius:8px;flex-shrink:0;}
+.product-name{font-weight:600;font-size:13px;}
+.product-code{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* kv */
+.kv{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.035);font-size:13px;}
+.kv:last-child{border-bottom:none;}
+.kv .lbl{color:var(--muted);}
+.kv .val{font-weight:600;}
+.tgl-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;margin-top:10px;transition:all .2s;}
+.tgl-btn:hover{background:rgba(255,255,255,0.08);color:var(--text);}
+.collapsible{display:none;margin-top:10px;}
+.collapsible.open{display:block;}
+
+/* weather */
+.weather-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.weather-card{text-align:center;padding:18px 12px;background:rgba(255,255,255,0.025);border-radius:12px;}
+.weather-card h3{font-size:10px;color:var(--muted);margin-bottom:10px;letter-spacing:.8px;text-transform:uppercase;}
+.weather-card .big{font-size:38px;margin-bottom:4px;}
+.weather-card .val{font-size:28px;font-weight:700;}
+.weather-card .sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+/* org */
+.org-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.org-node{padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;text-align:center;min-width:80px;}
+.org-gold{background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);color:#F5C518;}
+.org-blue{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.18);color:#7CACFF;}
+
+/* guest */
+.guest-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;}
+.guest-input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;font-family:inherit;}
+.guest-input:focus{border-color:var(--accent);}
+.guest-input::placeholder{color:var(--muted);}
+.guest-textarea{grid-column:1/-1;resize:vertical;min-height:80px;}
+.guest-btn{background:var(--accent);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:background .2s;font-family:inherit;}
+.guest-btn:hover{background:var(--accent2);}
+.guest-list{margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.guest-item{padding:12px;border-radius:8px;background:rgba(255,255,255,0.025);border:1px solid var(--border);}
+.guest-header{display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;}
+.guest-name{font-weight:600;color:var(--accent);}
+.guest-time{color:var(--muted);}
+.guest-contact{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.guest-msg{font-size:13px;line-height:1.5;}
+
+/* AI chat */
+.chat-window{height:190px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:12px;background:rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:10px;}
+.ai-msg{display:flex;gap:8px;align-items:flex-start;}
+.ai-msg.user{flex-direction:row-reverse;}
+.ai-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ai-msg.user .ai-avatar{background:rgba(255,101,53,0.18);}
+.ai-msg.bot .ai-avatar{background:rgba(79,142,247,0.18);}
+.ai-bubble{max-width:75%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5;}
+.ai-bubble.user{background:var(--accent);color:white;border-bottom-right-radius:4px;}
+.ai-bubble.bot{background:rgba(255,255,255,0.05);border-bottom-left-radius:4px;}
+.ai-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.ai-quick-btn{padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s;}
+.ai-quick-btn:hover{background:rgba(255,101,53,0.14);color:var(--accent);border-color:rgba(255,101,53,0.3);}
+
+/* footer */
+.footer{text-align:center;padding:28px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);margin-top:8px;}
+.brand{font-size:16px;font-weight:700;margin-bottom:4px;}
+.brand span{color:var(--accent);}
+
+/* util */
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+.mb12{margin-bottom:12px;}
+.legend{font-size:11px;color:var(--muted);margin-bottom:10px;letter-spacing:.4px;}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.tag-g{background:rgba(16,185,129,0.14);color:#10B981;}
+.tag-b{background:rgba(79,142,247,0.14);color:#4F8EF7;}
+.tag-o{background:rgba(255,101,53,0.14);color:#FF6535;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.section-gap{display:flex;flex-direction:column;gap:18px;}
+@media(max-width:860px){
+  .two-col{grid-template-columns:1fr;}
+  .metrics-grid{grid-template-columns:repeat(2,1fr);}
+  .crypto-mini-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:520px){
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .crypto-mini-grid{grid-template-columns:repeat(2,1fr);}
+  .news-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">國研<span>AI</span></a>
+    <a href="#finance">金融行情</a>
+    <a href="#crypto">熱門虛擬貨幣</a>
+    <a href="#stocks">台股熱門股</a>
+    <a href="#materials">原料成本</a>
+    <a href="#products">產品色卡</a>
+    <a href="#news">📺 台灣新聞</a>
+    <a href="#video">🎬 影音新聞</a>
+    <a href="#ai-research">🤖 AI研究</a>
+    <a href="#dept">部門動態</a>
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank">📦 倉儲管理</a>
+    <a href="#customer">客服留言</a>
+    <div class="live-dot"></div>
+    <span class="nav-clock" id="nav-clock">23:39:13</span>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-left">
+    <div class="hero-eyebrow">🟠 國研AI報告 · 化工產業日行情</div>
+    <h1>國研<span>AI</span>報告</h1>
+    <div class="hero-meta">
+      <span>📅 2026-04-23</span>
+      <span>🕐 23:39:13 Asia/Taipei</span>
+      <span>📍 桃園市大園區</span>
+      <span>🔄 每日 09:30 自動更新</span>
+    </div>
+    </div>
+    <div class="flip-clock-wrap" id="hero-clock">
+      <div class="flip-unit"><div class="flip-digits">
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fh0">-</div></div><div class="bottom-half"><div class="digit" id="fb0">-</div></div></div>
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fh1">-</div></div><div class="bottom-half"><div class="digit" id="fb1">-</div></div></div>
+      </div><div class="flip-label">時</div></div>
+      <div class="flip-sep">:</div>
+      <div class="flip-unit"><div class="flip-digits">
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fm0">-</div></div><div class="bottom-half"><div class="digit" id="fb2">-</div></div></div>
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fm1">-</div></div><div class="bottom-half"><div class="digit" id="fb3">-</div></div></div>
+      </div><div class="flip-label">分</div></div>
+      <div class="flip-sep">:</div>
+      <div class="flip-unit"><div class="flip-digits">
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fs0">-</div></div><div class="bottom-half"><div class="digit" id="fb4">-</div></div></div>
+        <div class="flip-card"><div class="top-half"><div class="digit" id="fs1">-</div></div><div class="bottom-half"><div class="digit" id="fb5">-</div></div></div>
+      </div><div class="flip-label">秒</div></div>
+    </div>
+    <script>
+    function to2(n){return String(n).padStart(2,'0');}
+    function flipTo(id,val){
+      var el=document.getElementById(id);
+      if(!el)return;
+      if(el.textContent===val)return;
+      var card=el.parentElement.parentElement;
+      card.classList.add('flipping');
+      setTimeout(function(){
+        el.textContent=val;
+        card.classList.remove('flipping');
+      },500);
+    }
+    function tick(){
+      var now=new Date();
+      var h=to2(now.getHours()),m=to2(now.getMinutes()),s=to2(now.getSeconds());
+      flipTo('fh0',h[0]);flipTo('fh1',h[1]);
+      flipTo('fm0',m[0]);flipTo('fm1',m[1]);
+      flipTo('fs0',s[0]);flipTo('fs1',s[1]);
+    }
+    // init
+    var now=new Date();
+    var h=to2(now.getHours()),m=to2(now.getMinutes()),s=to2(now.getSeconds());
+    document.getElementById('fh0').textContent=h[0];document.getElementById('fb0').textContent=h[0];
+    document.getElementById('fh1').textContent=h[1];document.getElementById('fb1').textContent=h[1];
+    document.getElementById('fm0').textContent=m[0];document.getElementById('fb2').textContent=m[0];
+    document.getElementById('fm1').textContent=m[1];document.getElementById('fb3').textContent=m[1];
+    document.getElementById('fs0').textContent=s[0];document.getElementById('fb4').textContent=s[0];
+    document.getElementById('fs1').textContent=s[1];document.getElementById('fb5').textContent=s[1];
+    setInterval(tick,1000);
+    </script>
+  </div>
+
+  <!-- 1. 金融行情 -->
+  <div class="card" id="finance">
+    <div class="section-header">
+      <h2>📈 金融行情</h2>
+      <span class="badge">LIVE 2026-04-23 23:39</span>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>🇹🇼 台股加權</h3>
+        <div class="val">37,714.15</div>
+        <div class="sub c-dn">-0.43%</div>
+      </div>
+      <div class="metric-card">
+        <h3>₿ 比特幣</h3>
+        <div class="val" style="font-size:16px">78,511.00 USD</div>
+        <div class="sub c-dn">-0.90%</div>
+      </div>
+      <div class="metric-card">
+        <h3>🥇 黃金</h3>
+        <div class="val">4,753.00 USD</div>
+        <div class="sub c-up">+0.43%</div>
+      </div>
+      <div class="metric-card">
+        <h3>🛢 Brent原油</h3>
+        <div class="val" style="font-size:16px">102.83 USD</div>
+        <div class="sub c-up">+0.90%</div>
+      </div>
+    </div>
+    <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　資料來源：Yahoo Finance（延遲15分鐘）</p>
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead><tr><th>項目</th><th>昨日收盤</th><th>今日報價</th><th>漲跌金額</th><th>漲跌幅</th></tr></thead>
+        <tbody>
+<tr class="dn-bg"><td class="lbl">🇹🇼 台股加權</td><td class="yes">37,878.47</td><td class="cur">37,714.15</td><td class="chg">▼ -164.32</td><td class="pct dn">▼ -0.43%</td></tr><tr class="dn-bg"><td class="lbl">₿ BTC 比特幣</td><td class="yes">N/A</td><td class="cur">78,511.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.90%</td></tr><tr class="dn-bg"><td class="lbl">💰 ETH 以太幣</td><td class="yes">N/A</td><td class="cur">2,335.72 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -3.01%</td></tr><tr class="dn-bg"><td class="lbl">🔶 SOL Solana</td><td class="yes">N/A</td><td class="cur">86.24 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.39%</td></tr><tr class="up-bg"><td class="lbl">🥇 黃金</td><td class="yes">4,732.50 USD</td><td class="cur">4,753.00 USD</td><td class="chg">▲ +20.50 USD</td><td class="pct up">▲ +0.43%</td></tr><tr class="up-bg"><td class="lbl">🛢 Brent 原油</td><td class="yes">101.91 USD</td><td class="cur">102.83 USD</td><td class="chg">▲ +0.92 USD</td><td class="pct up">▲ +0.90%</td></tr><tr class="up-bg"><td class="lbl">🛢 WTI 原油</td><td class="yes">92.96 USD</td><td class="cur">93.36 USD</td><td class="chg">▲ +0.40 USD</td><td class="pct up">▲ +0.43%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. 熱門虛擬貨幣 -->
+  <div class="card" id="crypto">
+    <div class="section-header">
+      <h2>🪙 熱門虛擬貨幣</h2>
+      <span class="badge">CoinGecko · 24h</span>
+    </div>
+    <div class="crypto-mini-grid">
+      <div class="crypto-mini"><h4>₿ BTC</h4><div class="val c-dn">78,511.00</div><div class="sub c-dn">-0.90%</div></div>
+      <div class="crypto-mini"><h4>💰 ETH</h4><div class="val c-dn">2,335.72</div><div class="sub c-dn">-3.01%</div></div>
+      <div class="crypto-mini"><h4>🔶 SOL</h4><div class="val c-dn">86.24</div><div class="sub c-dn">-2.39%</div></div>
+      <div class="crypto-mini"><h4>🐕 DOGE</h4><div class="val c-flat">N/A</div><div class="sub c-flat"></div></div>
+      <div class="crypto-mini"><h4>💎 ETC</h4><div class="val c-flat">N/A</div><div class="sub c-flat"></div></div>
+      <div class="crypto-mini"><h4>🔷 KAS</h4><div class="val c-flat">N/A</div><div class="sub c-flat"></div></div>
+    </div>
+    <div class="rank-row">
+      <div class="rank-card up-rank">
+        <div class="rank-label">🏆 最大漲幅</div>
+        <div class="rank-name c-up">比特幣</div>
+        <div class="rank-pct c-up">-0.90%</div>
+        <div class="rank-price">現價 78,511.00 USD</div>
+      </div>
+      <div class="rank-card dn-rank">
+        <div class="rank-label">📉 最大跌幅</div>
+        <div class="rank-name c-dn">以太幣</div>
+        <div class="rank-pct c-dn">-3.01%</div>
+        <div class="rank-price">現價 2,335.72 USD</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 台股熱門股 -->
+  <div class="card" id="stocks">
+    <div class="section-header">
+      <h2>📊 台股熱門股 Top 10</h2>
+      <span class="badge">Yahoo Finance</span>
+    </div>
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead><tr><th>股票</th><th>昨日收盤</th><th>今日報價</th><th>漲跌金額</th><th>漲跌幅</th></tr></thead>
+        <tbody>
+<tr class="up-bg"><td class="lbl">台積電</td><td class="yes">2,050.00 元</td><td class="cur">2,080.00 元</td><td class="chg">▲ +30.00 元</td><td class="pct up">▲ +1.46%</td></tr><tr class="up-bg"><td class="lbl">鴻海</td><td class="yes">221.00 元</td><td class="cur">225.00 元</td><td class="chg">▲ +4.00 元</td><td class="pct up">▲ +1.81%</td></tr><tr class="dn-bg"><td class="lbl">富邦金</td><td class="yes">88.30 元</td><td class="cur">88.30 元</td><td class="chg">▼ -0.00 元</td><td class="pct dn">▼ -0.00%</td></tr><tr class="dn-bg"><td class="lbl">國泰金</td><td class="yes">75.90 元</td><td class="cur">74.80 元</td><td class="chg">▼ -1.10 元</td><td class="pct dn">▼ -1.45%</td></tr><tr class="dn-bg"><td class="lbl">中鋼</td><td class="yes">19.55 元</td><td class="cur">19.15 元</td><td class="chg">▼ -0.40 元</td><td class="pct dn">▼ -2.05%</td></tr><tr class="dn-bg"><td class="lbl">台塑</td><td class="yes">51.90 元</td><td class="cur">51.00 元</td><td class="chg">▼ -0.90 元</td><td class="pct dn">▼ -1.73%</td></tr><tr class="dn-bg"><td class="lbl">台化</td><td class="yes">50.60 元</td><td class="cur">49.40 元</td><td class="chg">▼ -1.20 元</td><td class="pct dn">▼ -2.37%</td></tr><tr class="dn-bg"><td class="lbl">統一</td><td class="yes">72.40 元</td><td class="cur">71.90 元</td><td class="chg">▼ -0.50 元</td><td class="pct dn">▼ -0.69%</td></tr><tr class="dn-bg"><td class="lbl">大立光</td><td class="yes">2,585.00 元</td><td class="cur">2,485.00 元</td><td class="chg">▼ -100.00 元</td><td class="pct dn">▼ -3.87%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rank-row mt12">
+      <div class="rank-card up-rank">
+        <div class="rank-label">🏆 最大漲幅</div>
+        <div class="rank-name c-up">鴻海</div>
+        <div class="rank-pct c-up">+1.81%</div>
+        <div class="rank-price">現價 225.00 元</div>
+      </div>
+      <div class="rank-card dn-rank">
+        <div class="rank-label">📉 最大跌幅</div>
+        <div class="rank-name c-dn">大立光</div>
+        <div class="rank-pct c-dn">-3.87%</div>
+        <div class="rank-price">現價 2,485.00 元</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 原料行情 -->
+  <div class="card" id="materials">
+    <div class="section-header">
+      <h2>🛢️ 國際原料樹酯溶劑成本</h2>
+      <span class="badge">2026-04-23</span>
+    </div>
+    <div class="alert-o mb12">⚠️ 原料行情為參考評估，精準報價請聯絡業務窗口。<br>採購建議：小批分單為主，優先確認高周轉料號安全庫存。</div>
+    <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　<a href="#" onclick="toggleMaterials();return false;" style="color:var(--accent)">✏️ 更新原料報價</a></p>
+    <div class="compare-wrap">
+      <table class="compare" id="mat-table">
+        <thead><tr><th>原料</th><th>昨日參考</th><th>今日參考</th><th>漲跌</th><th>備註</th></tr></thead>
+        <tbody>
+
+        </tbody>
+      </table>
+    </div>
+    <div id="mat-form" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.02);">
+      <h3 style="font-size:13px;margin-bottom:10px;">✏️ 更新原料今日報價（USD/噸）</h3>
+      <div id="mat-inputs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="guest-btn" onclick="saveMaterials()">儲存更新</button>
+        <button class="guest-btn" style="background:rgba(255,255,255,0.1)" onclick="toggleMaterials()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 產品色卡 -->
+  <div class="card" id="products">
+    <div class="section-header">
+      <h2>🎨 GYC系列產品色卡</h2>
+    </div>
+    <div class="product-grid">
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#C9A84C,#FFD700)"></div><div><div class="product-name">GYC-METAL-001</div><div class="product-code">鋁銀漿10% · VOC&lt;80g/L</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#0f172a,#38bdf8)"></div><div><div class="product-name">冰川銀藍</div><div class="product-code">金屬版 · 熱銷中</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#003366,#1565C0)"></div><div><div class="product-name">GYC-PLASTIC-001</div><div class="product-code">塑料版 · VOC&lt;60g/L</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#1B5E20,#2E7D32)"></div><div><div class="product-name">GYC-WOOD-001</div><div class="product-code">木器版 · VOC&lt;50g/L</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#5D4037,#795548)"></div><div><div class="product-name">防腐防霉抗菌</div><div class="product-code">≥99% · 特殊配方</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#B71C1C,#E53935)"></div><div><div class="product-name">005 法拉利紅</div><div class="product-code">GU 50-70 · ABS≥4B</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#1a1a1a,#424242)"></div><div><div class="product-name">007 鋼琴黑</div><div class="product-code">耐鹽霧 ≥200h</div></div></div>
+      <div class="product-card"><div class="product-swatch" style="background:linear-gradient(135deg,#6A1B9A,#8E24AA)"></div><div><div class="product-name">008 炫彩紫</div><div class="product-code">珠光粉 8-9.5%</div></div></div>
+    </div>
+    <div class="alert-g">💡 <strong>冰川銀藍</strong>已進入量產配方（METAL/PLASTIC/WOOD三版本），低VOC完全符合IKEA環保規範！</div>
+  </div>
+
+  <!-- 天氣 + 實驗室 -->
+  <div class="two-col">
+    <div class="card">
+      <div class="section-header">
+        <h2>🌤️ 桃園市天氣</h2>
+        <span class="badge">大園區</span>
+      </div>
+      <div class="weather-grid">
+        <div class="weather-card">
+          <h3>天氣</h3>
+          <div class="big">🌧️</div>
+          <div class="sub">🌧️ 雨</div>
+        </div>
+        <div class="weather-card">
+          <h3>溫度</h3>
+          <div class="val">21.4°C</div>
+          <div class="sub">體感溫度</div>
+        </div>
+        <div class="weather-card">
+          <h3>濕度</h3>
+          <div class="val">90%</div>
+          <div class="sub">相對濕度</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <h2>🔬 實驗室成果</h2>
+        <span class="tag-o">量產中</span>
+      </div>
+      <div class="alert-o mb12"><strong>GYC-METAL-001 / GYC-PLASTIC-001 / GYC-WOOD-001</strong> 進入量產配方階段</div>
+      <div class="kv"><span class="lbl">樹酯（金屬版）</span><span class="val">水性丙烯酸聚氨酯 50%</span></div>
+      <div class="kv"><span class="lbl">鋁銀漿</span><span class="val">10%</span></div>
+      <div class="kv"><span class="lbl">珠光粉</span><span class="val">8%</span></div>
+      <div class="kv"><span class="lbl">成本估計</span><span class="val" style="color:var(--accent)">NT$ 180-220/kg</span></div>
+      <button class="tgl-btn" onclick="toggleBlock('lab')">展開更多明細 ▾</button>
+      <div class="collapsible" id="lab">
+        <div class="kv mt8"><span class="lbl">耐鹽霧</span><span class="val">≥200h</span></div>
+        <div class="kv"><span class="lbl">光澤 (60°)</span><span class="val">40-60 GU</span></div>
+        <div class="kv"><span class="lbl">VOC</span><span class="val">&lt;80g/L</span></div>
+        <div class="alert-g mt8">⚠️ 陽離子活性劑嚴禁與陰離子表面活性劑同時使用！</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新聞（滿寬）-->
+<div class="container" style="padding-top:0">
+  <div class="card" id="news">
+    <div class="section-header">
+      <h2>📺 台灣即時頭條</h2>
+      <span class="badge">2026-04-23</span>
+    </div>
+    <div class="news-grid"><a class="news-item" href="https://tw.news.yahoo.com/%E6%96%B0%E5%8C%97%E8%80%83%E5%8F%A4%E5%AD%A3%E5%8D%87%E7%B4%9A%E7%99%BB%E5%A0%B4-%E5%8D%81%E4%B8%89%E8%A1%8C-%E8%B7%A8%E5%9C%8B%E6%B5%B7%E6%B4%8B%E6%96%87%E5%8C%96%E7%9B%9B%E5%AE%B4%E6%8F%AD%E5%B9%95-152630328.html" target="_blank"><div class="emoji">📈</div><div><div class="title">新北考古季升級登場 十三行：跨國海洋文化盛宴揭幕</div><div class="desc">（記者陳志仁／新北報導）「2026新北考古季」全面升級登場，以「永續蔚藍進行式」為主題，自3月至5月串聯國內外 […]</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E5%A5%B9%E8%8A%B150%E5%85%83%E8%B2%B7%E8%B2%BC%E5%9C%96-%E7%94%B7%E5%8F%8B%E6%96%A5%E8%B2%AC-%E6%95%97%E5%AE%B6%E6%8B%9C%E9%87%91-%E4%B8%8D%E6%9C%83%E8%8A%B1%E5%9C%A8%E5%88%80%E5%8F%A3%E4%B8%8A-%E7%B6%B2%E7%9C%8B%E5%82%BB%E4%BA%86-152500280.html" target="_blank"><div class="emoji">📈</div><div><div class="title">她花50元買貼圖…男友斥責「敗家拜金」不會花在刀口上 網看傻了</div><div class="desc">一名網友日前在Threads分享自己只是買了50元貼圖，竟被男友指責說，買這種貼圖幹嘛？並斥責女友很敗家還拜金，50元也不會花在刀口上。對此，許多網友看到兩人對話截圖直說，還不快分手，留著是要幹嘛？</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E4%BA%9E%E5%85%89%E6%94%BBai%E4%BC%BA%E6%9C%8D%E5%99%A8%E6%95%A3%E7%86%B1-%E7%B5%90%E7%9B%9Ffrore-systems-152115686.html" target="_blank"><div class="emoji">📈</div><div><div class="title">亞光攻AI伺服器散熱 結盟Frore Systems</div><div class="desc">[NOWNEWS今日新聞]隨著AI伺服器與資料中心建置需求大爆發，光學廠亞光今（23）日宣布，已與美國矽谷散熱技術先鋒FroreSystems正式簽署合作備忘錄（MOU），雙方將攜手投入AI資料中心液</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E9%BB%91%E8%A1%A3%E4%BA%BA%E9%97%96%E6%9C%8D%E5%8B%99%E8%99%95-%E5%8F%AB%E5%A6%B3%E5%88%A5%E7%A2%B0%E9%80%99%E8%AD%B0%E9%A1%8C-%E6%A1%83%E5%9C%92%E8%AD%B0%E5%93%A1%E6%9C%B1%E7%8F%8D%E7%91%A4%E5%A0%B1%E6%A1%88-%E9%82%84%E9%BB%9E%E5%90%8D%E5%B8%82%E9%95%B7-152100593.html" target="_blank"><div class="emoji">📈</div><div><div class="title">黑衣人闖服務處「叫妳別碰這議題」！桃園議員朱珍瑤報案：還點名市長</div><div class="desc">桃園市議員朱珍瑤今（23）日發布嚴正聲明，揭露其服務處遭不明人士闖入威脅。朱珍瑤指出，一名黑衣男子於本月 21 日闖入服務處，對留守人員進行帶有威脅意味的言語施壓，要求議員「不要再碰某個議題」。朱珍瑤</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E8%8D%B7%E8%8E%AB%E8%8C%B2%E6%B5%B7%E5%B3%BD%E9%98%BB%E5%A1%9E%E9%87%8D%E5%89%B5%E6%9D%B1%E5%8D%97%E4%BA%9E-%E8%8F%B2-%E8%B6%8A%E8%A1%9D%E6%93%8A%E6%9C%80%E5%A4%A7-%E5%B0%88%E5%AE%B6%E8%AD%A6%E5%91%8A%E5%81%9A%E5%A5%BD-%E4%BA%8C%E6%AC%A1%E9%80%9A%E8%86%A8-152000747.html" target="_blank"><div class="emoji">📈</div><div><div class="title">荷莫茲海峽阻塞重創東南亞！菲、越衝擊最大，專家警告做好「二次通膨」準備</div><div class="desc">戰爭的代價，從來不只是戰場上彈藥消耗，而是與全球餐桌上的帳單息息相關。2026年的中東衝突，精準地擊中東南亞經濟命脈，重創高度依賴外部的能源供應鏈。當荷莫茲海峽的油輪遭到封鎖，隨之而來的不是單純油價上</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%97%A5%E6%9C%AC%E7%B6%B2%E7%B4%85%E7%8D%B2%E5%B0%81-%E7%84%A1%E7%BD%A9%E6%95%99%E4%B8%BB-%E9%A6%99%E6%B1%97%E6%B7%8B%E6%BC%93%E5%A4%A7%E8%B7%B3%E7%86%B1%E8%88%9E-%E5%90%B8%E7%99%BE%E8%90%AC%E4%BA%BA%E7%98%8B%E5%82%B3%E7%B7%8A%E7%9B%AF-151722988.html" target="_blank"><div class="emoji">📈</div><div><div class="title">日本網紅獲封「無罩教主」！香汗淋漓大跳熱舞 吸百萬人瘋傳緊盯</div><div class="desc">日本大尺度網紅 Macca（まっか），憑藉深邃的五官與 H 級的火辣身材，並大力推廣「無罩生活」走紅，吸引百萬粉絲追蹤，在台灣也有不小的人氣。近日，她似乎再度找到流量密碼，連續好幾部流汗練舞的片段，就</div><span class="source">Yahoo News · 今日</span></div></a></div>
+  </div>
+
+  <div class="card" id="video">
+    <div class="section-header">
+      <h2>🎬 三立影音新聞</h2>
+      <span class="badge">YouTube · 即時</span>
+    </div>
+    <div class="news-grid"><a class="news-item video-item" href="https://youtu.be/vDNGv0BIv2A" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/vDNGv0BIv2A/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/MkLwZWo4qmo" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/MkLwZWo4qmo/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/PGsLHUd8ve8" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/PGsLHUd8ve8/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/rVC0yJvk974" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/rVC0yJvk974/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/YIdBQBLwviY" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/YIdBQBLwviY/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/3YFlWSlsV2g" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/3YFlWSlsV2g/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/DiEpyIyA3BM" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/DiEpyIyA3BM/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a><a class="news-item video-item" href="https://youtu.be/XAd8b8nnw9g" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/XAd8b8nnw9g/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+<div><div class="title">三立新聞影片</div><div class="desc">三立LIVE新聞 · YouTube</div></div></a></div>
+  </div>
+
+  <div class="card" id="ai-research">
+    <div class="section-header">
+      <h2>🤖 AI 研究 &amp; OpenClaw / Hermes 動態</h2>
+      <span class="badge">Hacker News</span>
+    </div>
+    <div class="alert-b mb12">🔬 本區追蹤 AI Agents、OpenClaw、本地 LLM、Claude Code、Coding Agents 等前沿研究。</div>
+    <div class="news-grid"><a class="news-item" href="https://openai.com/index/introducing-chatgpt-images-2-0/" target="_blank"><div class="emoji">🧠</div><div><div class="title">ChatGPT Images 2.0</div><div class="desc">HN · wahnfrieden · 1021 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://twitter.com/spacex/status/2046713419978453374" target="_blank"><div class="emoji">⌨️</div><div><div class="title">SpaceX says it has agreement to acquire Cursor for $60B</div><div class="desc">HN · dmarcos · 805 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://bsky.app/profile/edzitron.com/post/3mjzxwfx3qs2a" target="_blank"><div class="emoji">🏛</div><div><div class="title">Claude Code to be removed from Anthropic's Pro plan?</div><div class="desc">HN · JamesMcMinn · 672 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/eighth-generation-tpu-agentic-era/" target="_blank"><div class="emoji">🤖</div><div><div class="title">Our eighth generation TPUs: two chips for the agentic era</div><div class="desc">HN · xnx · 438 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://bsky.app/profile/edzitron.com/post/3mjzxwfx3qs2a" target="_blank"><div class="emoji">🏛</div><div><div class="title">Claude Code to be removed from Pro Tier?</div><div class="desc">HN · johnduhart · 265 pts</div><span class="source">Hacker News · 今日</span></div></a></div>
+  </div>
+
+  <!-- 部門 -->
+  <div class="card" id="dept">
+    <div class="section-header"><h2>🏢 部門動態</h2></div>
+    <div class="two-col">
+      <div>
+        <div class="section-header" style="margin-bottom:8px;"><h2 style="font-size:14px">🔧 技術部</h2><span class="tag-g">正常運作</span></div>
+        <div class="kv"><span class="lbl">AI早報系統</span><span class="val c-dn">✔️ 已建立</span></div>
+        <div class="kv"><span class="lbl">原料報價</span><span class="val" style="color:var(--accent)">✏️ 待手動更新</span></div>
+        <div class="kv"><span class="lbl">報告系統</span><span class="val c-dn">✔️ v3.0</span></div>
+      </div>
+      <div>
+        <div class="section-header" style="margin-bottom:8px;"><h2 style="font-size:14px">🔍 品保部</h2><span class="tag-g">正常運作</span></div>
+        <div class="kv"><span class="lbl">原物料採樣</span><span class="val">SGS送測中</span></div>
+        <div class="kv"><span class="lbl">三芳稽核</span><span class="val" style="color:var(--accent)">⚠️ 缺失1項待改善</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公司資訊 -->
+  <div class="card">
+    <div class="section-header"><h2>🏢 公司基本資訊</h2></div>
+    <div class="org-row">
+      <div class="org-node org-gold"><div style="font-size:20px">👑</div><div>董事長</div><div style="font-size:11px">蘇錦全</div></div>
+    </div>
+    <div class="org-row">
+      <div class="org-node org-blue">🔬 實驗室</div>
+      <div class="org-node org-blue">🧪 技術部</div>
+      <div class="org-node org-blue">🔍 品保部</div>
+      <div class="org-node org-blue">💻 資訊部</div>
+      <div class="org-node org-blue">🌟 品牌</div>
+    </div>
+    <div class="two-col mt12">
+      <div class="kv"><span class="lbl">電話</span><span class="val">+886-3-381-3575</span></div>
+      <div class="kv"><span class="lbl">Email</span><span class="val">contact@guoyan.com.tw</span></div>
+    </div>
+  </div>
+
+  <!-- 倉儲管理 QR -->
+  <div class="card" id="warehouse">
+    <div class="section-header"><h2>📦 倉儲管理系統</h2><span class="badge">遠端登入</span></div>
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div id="wh-qr" style="width:140px;height:140px;flex-shrink:0;"></div>
+      <div>
+        <p style="color:var(--muted);font-size:13px;line-height:1.6;">用手機相機掃描 QR Code，<br>即可直接開啟<strong style="color:var(--accent)">倉儲管理系統</strong>登入頁。</p>
+        <p style="color:var(--muted);font-size:12px;margin-top:8px;">🌐 <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank" style="color:var(--blue);">直接開啟連結</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script>
+  (function(){
+    var qr=qrcode(0,'M');
+    qr.addData('https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html');
+    qr.make();
+    document.getElementById('wh-qr').innerHTML=qr.createSvgTag(4,4);
+  })();
+  </script>
+
+  <!-- 客服 -->
+  <div class="card" id="customer">
+    <div class="section-header"><h2>💬 智能客服留言板</h2><span class="badge">聯絡我們</span></div>
+    <div class="alert-g mb12">歡迎留言！我們重視每一位客戶的意見。</div>
+    <div class="guest-form">
+      <input id="guest-name" class="guest-input" type="text" placeholder="姓名 *">
+      <input id="guest-phone" class="guest-input" type="tel" placeholder="電話 *">
+      <input id="guest-email" class="guest-input" type="email" placeholder="Email *">
+    </div>
+    <textarea id="guest-msg" class="guest-input guest-textarea" placeholder="想對我們說的話...（必填）"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
+      <small style="color:#3A5070;font-size:11.5px">📞 +886-3-381-3575　✉️ contact@guoyan.com.tw</small>
+      <button class="guest-btn" onclick="submitGuest()">送出留言 ✉️</button>
+    </div>
+    <div id="guest-list" class="guest-list"></div>
+  </div>
+
+  <!-- AI 客服 -->
+  <div class="card" id="ai-chat">
+    <div class="section-header">
+      <h2>🤖 GYC-AI 即時客服</h2>
+      <span class="badge">示範模式</span>
+    </div>
+    <div class="chat-window" id="chat-window">
+      <div class="ai-msg bot">
+        <div class="ai-avatar bot">🤖</div>
+        <div class="ai-bubble bot">您好！我是 GYC-AI 智能客服，可回答國研化工產品相關問題。</div>
+      </div>
+    </div>
+    <div class="ai-quick">
+      <button class="ai-quick-btn" onclick="aiQuery('冰川銀藍')">冰川銀藍</button>
+      <button class="ai-quick-btn" onclick="aiQuery('價格查詢')">價格查詢</button>
+      <button class="ai-quick-btn" onclick="aiQuery('IKEA合作')">IKEA合作</button>
+      <button class="ai-quick-btn" onclick="aiQuery('VOC規格')">VOC規格</button>
+      <button class="ai-quick-btn" onclick="aiQuery('送測服務')">送測服務</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input id="chat-input" class="guest-input" type="text" placeholder="輸入問題..." style="flex:1">
+      <button class="guest-btn" onclick="sendChat()">送出</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="brand">國研<span>AI</span>報告</div>
+  <p>© 2026 國研AI科技股份有限公司 · 本報告僅供內部參考，不構成投資建議。</p>
+  <p style="margin-top:4px">自動發報系統 v3.0 · 更新時間 2026-04-23 23:39:13</p>
+</div>
+
+</div>
+
+<script>
+function updateClock(){
+  var t=new Date();
+  var h=String(t.getHours()).padStart(2,'0');
+  var m=String(t.getMinutes()).padStart(2,'0');
+  var s=String(t.getSeconds()).padStart(2,'0');
+  var c=h+':'+m+':'+s;
+  document.getElementById('nav-clock').textContent=c;
+}
+setInterval(updateClock,1000);updateClock();
+document.querySelectorAll('.nav-inner a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    a.classList.add('active');
+    var target=document.querySelector(a.getAttribute('href'));
+    if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+function toggleBlock(id){document.getElementById(id).classList.toggle('open');}
+
+var MAT_NAMES=['brent','wti','pp','pe','pvc','tdi','alcohol','eva','tio2','ipa'];
+var MAT_LABELS=['Brent原油','WTI原油','PP/丙烯','PE','PVC','TDI/MDI','醇類溶劑','EVA','鈦白粉','IPA'];
+function toggleMaterials(){
+  var form=document.getElementById('mat-form');
+  var isHidden=form.style.display==='none';
+  form.style.display=isHidden?'block':'none';
+  if(isHidden){
+    var cont=document.getElementById('mat-inputs');
+    var html='';
+    for(var i=0;i<MAT_NAMES.length;i++){
+      html+='<input class="guest-input" data-key="'+MAT_NAMES[i]+'" placeholder="'+MAT_LABELS[i]+' (USD/噸)" type="number" step="0.01">';
+    }
+    cont.innerHTML=html;
+  }
+}
+function saveMaterials(){
+  var inputs=document.querySelectorAll('#mat-inputs input');
+  var prices={};
+  for(var i=0;i<inputs.length;i++){
+    var v=parseFloat(inputs[i].value);
+    if(!isNaN(v)&&v>0)prices[inputs[i].getAttribute('data-key')]=v;
+  }
+  localStorage.setItem('gyc_mat_prices',JSON.stringify(prices));
+  alert('原料報價已儲存（暂存localStorage）。\n請重新執行更新腳本以寫入正式資料庫。');
+}
+function submitGuest(){
+  var name=document.getElementById('guest-name').value.trim();
+  var phone=document.getElementById('guest-phone').value.trim();
+  var email=document.getElementById('guest-email').value.trim();
+  var msg=document.getElementById('guest-msg').value.trim();
+  if(!name||!msg){alert('請填寫姓名與留言內容！');return;}
+  if(!phone&&!email){alert('請留電話或Email！');return;}
+  var now_str=new Date().toLocaleString('zh-TW',{timeZone:'Asia/Taipei'});
+  var list=document.getElementById('guest-list');
+  var item=document.createElement('div');
+  item.className='guest-item';
+  item.innerHTML='<div class="guest-header"><span class="guest-name">'+name.replace(/</g,'&lt;')+'</span><span class="guest-time">'+now_str+'</span></div><div class="guest-contact">📞 '+(phone||'未留')+' ✉️ '+(email||'未留')+'</div><div class="guest-msg">'+msg.replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div>';
+  list.insertBefore(item,list.firstChild);
+  document.getElementById('guest-name').value='';
+  document.getElementById('guest-phone').value='';
+  document.getElementById('guest-email').value='';
+  document.getElementById('guest-msg').value='';
+  alert('感謝留言！我們將儘快回覆您！🙏');
+}
+var aiKB={
+  '冰川銀藍':'「冰川銀藍」是國研化工旗艦水性涂料，金屬版GYC-METAL-001（鋁銀漿10%，珠光粉8%），低VOC符合IKEA規範，已進入量產。',
+  '價格':'GYC系列參考價：\n• 金屬版：NT$ 180-220/kg\n• 塑料版：NT$ 200-260/kg\n• 木器版：NT$ 150-190/kg\n請聯絡業務窗口取得正式報價。',
+  'voc':'VOC指標：\n• 金屬版<80g/L\n• 塑料版<60g/L\n• 木器版<50g/L\n遠低於傳統溶劑型涂料。',
+  'ieka':'IKEA 2030規範：甲醛符合歐盟E1一半標準。\n\n🌟 冰川銀藍低VOC完全符合，現正洽談合作中。',
+  '送測':'SGS送測由品保部負責：\n① 原料及成品送測\n② 追蹤進度\n③ 歸檔報告\n請填表或致電申請。',
+  '三芳':'三芳化學稽核（2026-04-01）：缺失1項（倉庫目測程序），已規劃改善中。',
+};
+function sendChat(){
+  var input=document.getElementById('chat-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  var win=document.getElementById('chat-window');
+  win.innerHTML+='<div class="ai-msg user"><div class="ai-avatar user">👤</div><div class="ai-bubble user">'+msg.replace(/</g,'&lt;')+'</div></div>';
+  input.value='';
+  var found=null;
+  for(var k in aiKB){
+    if(msg.toLowerCase().indexOf(k)!==-1){found=aiKB[k];break;}
+  }
+  var reply=found||'感謝提問！請撥打 +886-3-381-3575 即時諮詢，或填寫客服表單。🙏';
+  setTimeout(function(){
+    win.innerHTML+='<div class="ai-msg bot"><div class="ai-avatar bot">🤖</div><div class="ai-bubble bot">'+reply.replace(/\n/g,'<br>')+'</div></div>';
+    win.scrollTop=win.scrollHeight;
+  },500);
+  win.scrollTop=win.scrollHeight;
+}
+function aiQuery(q){document.getElementById('chat-input').value=q;sendChat();}
+var ci=document.getElementById('chat-input');
+if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();});
+</script>
+</body>
+</html>
