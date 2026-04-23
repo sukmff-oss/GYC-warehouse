@@ -228,9 +228,73 @@ tr:hover td { background: #eef5ff; }
  align-items: center;
 }
 .info-bar strong { color: var(--primary); }
+
+/* Login gate */
+#loginScreen {
+ position: fixed; inset: 0;
+ background: linear-gradient(135deg, #0c2c67 0%, #17479d 100%);
+ display: flex; align-items: center; justify-content: center;
+ z-index: 999999;
+}
+.login-box {
+ background: #fff;
+ border-radius: 20px;
+ padding: 40px 36px;
+ width: 360px;
+ text-align: center;
+ box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-box h2 { font-size: 24px; color: var(--primary); margin-bottom: 6px; }
+.login-box p { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.login-box input {
+ width: 100%; padding: 14px 16px;
+ border: 2px solid var(--border);
+ border-radius: 10px;
+ font-size: 18px; text-align: center; letter-spacing: 4px;
+ font-family: inherit; outline: none;
+ transition: border-color .2s;
+ margin-bottom: 16px;
+ box-sizing: border-box;
+}
+.login-box input:focus { border-color: var(--secondary); }
+.login-box button {
+ width: 100%; padding: 14px;
+ background: var(--primary); color: #fff;
+ border: none; border-radius: 10px;
+ font-size: 16px; font-weight: 700; cursor: pointer;
+ font-family: inherit;
+ transition: background .2s;
+}
+.login-box button:hover { background: var(--secondary); }
+.login-error { color: var(--red); font-size: 13px; margin-top: 8px; height: 18px; }
+.login-logo { font-size: 48px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
+
+<div id="loginScreen">
+ <div class="login-box">
+  <div class="login-logo">📦</div>
+  <h2>國研化工</h2>
+  <p>員工出入庫系統<br>請輸入密碼登入</p>
+  <input type="password" id="loginPwd" placeholder="● ● ● ●" maxlength="20" onkeypress="if(event.key==='Enter')checkLogin()">
+  <button onclick="checkLogin()">登 入</button>
+  <div class="login-error" id="loginError"></div>
+ </div>
+</div>
+
+<script>
+function checkLogin(){
+  var pwd = document.getElementById('loginPwd').value.trim();
+  if(pwd === '1234'){
+    document.getElementById('loginScreen').style.display = 'none';
+    init();
+  } else {
+    document.getElementById('loginError').textContent = '密碼錯誤，請重新輸入';
+    document.getElementById('loginPwd').value = '';
+  }
+}
+</script>
 
 <header>
  <h1>📦 國研化工 | 員工出入庫系統</h1>
@@ -570,7 +634,9 @@ async function doOut(e) {
   if (confirm('已出庫 ' + qty + ' ' + unit + '，剩餘庫存 ' + p.stock + ' ' + unit + '。\n\n立即查看新庫存？')) { showTab('stock'); }
 }
 
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('loginPwd').focus();
+});
 </script>
 </body>
 </html>
