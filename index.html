@@ -220,6 +220,10 @@ tr:hover td { background: #eef5ff; }
 
 .tag-in { background: var(--green); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
 .tag-out { background: var(--red); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+.type-btn { padding: 5px 12px; border-radius: 16px; border: 1px solid rgba(180,140,60,0.35); background: rgba(255,255,255,0.2); color: #3d2810; cursor: pointer; font-size: 13px; margin-right: 6px; transition: all 0.2s; }
+.type-btn:hover { background: rgba(180,140,60,0.25); }
+.type-btn.active { background: rgba(180,140,60,0.65); border-color: rgba(180,140,60,0.5); color: #fff; font-weight: 600; }
+.type-filter-bar { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 
 #cloudLoading {
  position: fixed; top: 0; left: 0; right: 0;
@@ -372,7 +376,19 @@ function checkLogin(){
    <div class="search-bar">
     <input type="text" id="searchStock" placeholder="搜尋品名或顏色..." oninput="renderStock()">
    </div>
-   <div style="overflow-x:auto;">
+   <div class="type-filter-bar" id="typeFilterBar"></div>
+   <div class="category-manager" id="categoryManager" style="display:none; margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+     <input type="text" id="newCategoryInput" placeholder="新增類別名稱" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; width:140px;">
+     <button type="button" class="btn btn-success" style="padding:6px 14px; font-size:13px;" onclick="addCategory()">➕ 新增</button>
+     <span id="categoryList" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
+    <button type="button" class="btn btn-outline" style="padding:6px 10px; font-size:12px; margin-left:auto;" onclick="toggleCategoryMgr()">收起</button>
+    </div>
+   </div>
+   <div style="display:flex; gap:8px; margin-top:10px;">
+    <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:13px;" onclick="toggleCategoryMgr()">⚙️ 管理類別</button>
+   </div>
+   <div style="overflow-x:auto; margin-top:10px;">
    <table>
     <thead>
      <tr>
@@ -410,6 +426,12 @@ function checkLogin(){
      <label>單位</label>
      <select id="inUnit">
       <option>KG</option><option>桶</option><option>升</option><option>包</option><option>噸</option>
+     </select>
+    </div>
+    <div class="form-group">
+     <label>類別</label>
+     <select id="inType">
+      <option>原料</option><option>成品</option><option>其他</option>
      </select>
     </div>
     <div class="form-group">
@@ -524,6 +546,100 @@ function saveData(d, toCloud) {
   }
 }
 
+var _categories = null;
+
+function getTypes() {
+  if (_categories) return _categories;
+  try {
+    var x = localStorage.getItem('gyc_categories');
+    if (x) { _categories = JSON.parse(x); return _categories; }
+  } catch(e) {}
+  _categories = ['原料', '成品', '其他'];
+  return _categories;
+}
+
+function saveCategories(cats) {
+  _categories = cats;
+  try { localStorage.setItem('gyc_categories', JSON.stringify(cats)); } catch(e) {}
+}
+
+function buildTypeDropdown() {
+  var cats = getTypes();
+  // inForm type selector
+  var inType = document.getElementById('inType');
+  if (inType) {
+    inType.innerHTML = cats.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  }
+  // outForm type filter (if exists)
+  var outTypeFilter = document.getElementById('outTypeFilter');
+  if (outTypeFilter) {
+    outTypeFilter.innerHTML = '<option value="">全部類別</option>' + cats.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  }
+}
+
+function renderTypes() {
+  var cats = getTypes();
+  var selType = document.getElementById('filterType') ? document.getElementById('filterType').value : '';
+  var bar = document.getElementById('typeFilterBar');
+  if (!bar) return;
+  var btns = ['<button type="button" class="type-btn' + (selType === '' ? ' active' : '') + '" onclick="setTypeFilter('')">全部</button>'];
+  cats.forEach(function(c) {
+    btns.push('<button type="button" class="type-btn' + (selType === c ? ' active' : '') + '" onclick="setTypeFilter('' + c.replace(/'/g, "\'") + '')">' + c + '</button>');
+  });
+  bar.innerHTML = btns.join('');
+  // category manager list
+  var cl = document.getElementById('categoryList');
+  if (cl) {
+    cl.innerHTML = cats.map(function(c) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#e0e0e0;padding:4px 8px;border-radius:6px;font-size:13px;">' + c
+        + ' <span style="cursor:pointer;color:#c00;font-size:11px;" onclick="deleteCategory('' + c.replace(/'/g, "\'") + '')">✕</span></span>';
+    }).join('');
+  }
+}
+
+function setTypeFilter(t) {
+  var sel = document.getElementById('filterType');
+  if (!sel) { sel = document.createElement('select'); sel.id = 'filterType'; sel.style.display = 'none'; document.querySelector('.search-bar').appendChild(sel); }
+  sel.value = t;
+  renderTypes();
+  renderStock();
+}
+
+function toggleCategoryMgr() {
+  var m = document.getElementById('categoryManager');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+
+function addCategory() {
+  var inp = document.getElementById('newCategoryInput');
+  if (!inp) return;
+  var v = inp.value.trim();
+  if (!v) { alert('請輸入類別名稱'); return; }
+  var cats = getTypes();
+  if (cats.indexOf(v) >= 0) { alert('類別已存在'); return; }
+  cats.push(v);
+  saveCategories(cats);
+  inp.value = '';
+  renderTypes();
+  buildTypeDropdown();
+  alert('已新增類別：「' + v + '」');
+}
+
+function deleteCategory(c) {
+  var cats = getTypes();
+  var idx = cats.indexOf(c);
+  if (idx < 0) return;
+  if (!confirm('確定刪除類別「' + c + '」？')) return;
+  cats.splice(idx, 1);
+  saveCategories(cats);
+  // if currently filtered by this type, reset
+  var sel = document.getElementById('filterType');
+  if (sel && sel.value === c) { sel.value = ''; renderStock(); }
+  renderTypes();
+  buildTypeDropdown();
+  alert('已刪除類別：「' + c + '」');
+}
+
 function showLoading(show) {
   var el = document.getElementById('cloudLoading');
   if (show) {
@@ -560,6 +676,8 @@ async function init() {
   document.getElementById('inDate').max = today;
   document.getElementById('outDate').max = today;
   renderAll();
+  renderTypes();
+  buildTypeDropdown();
 }
 
 function showTab(tab) {
@@ -596,10 +714,12 @@ function renderStats() {
 function renderStock() {
   var d = getData();
   var kw = document.getElementById('searchStock').value.toLowerCase();
+  var typeFilter = document.getElementById('filterType') ? document.getElementById('filterType').value : '';
   var rows = [];
   for (var i = 0; i < d.products.length; i++) {
     var p = d.products[i];
     if (kw && p.name.toLowerCase().indexOf(kw) === -1 && (p.model || '').toLowerCase().indexOf(kw) === -1) continue;
+    if (typeFilter && p.type !== typeFilter) continue;
     var low = p.stock <= (p.safety || 50);
     rows.push('<tr>'
       + '<td><strong>' + p.name + '</strong></td>'
@@ -609,7 +729,7 @@ function renderStock() {
       + '<td><strong>' + (p.stock || 0).toLocaleString() + '</strong></td>'
       + '<td>' + (p.safety || 50) + '</td>'
       + '<td>' + (low ? '<span class="tag-out">低於存量</span>' : '<span class="tag-in">正常</span>') + '</td>'
-      + '<td><button class="action-btn in" onclick="quickIn(\'' + p.name.replace(/'/g, "\\'") + '\')">+ 入庫</button> <button class="action-btn out" onclick="quickOut(\'' + p.name.replace(/'/g, "\\'") + '\')">出庫</button></td>'
+      + '<td><button class="action-btn in" onclick="quickIn('' + p.name.replace(/'/g, "\'") + '')">+ 入庫</button> <button class="action-btn out" onclick="quickOut('' + p.name.replace(/'/g, "\'") + '')">出庫</button></td>'
       + '</tr>');
   }
   document.getElementById('stockTable').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;">尚無資料</td></tr>';
@@ -642,6 +762,7 @@ async function doIn(e) {
   var unit = document.getElementById('inUnit').value;
   var batch = document.getElementById('inBatch').value.trim();
   var date = document.getElementById('inDate').value;
+  var type = document.getElementById('inType') ? document.getElementById('inType').value : '原料';
   if (!name || !qty || qty <= 0) { alert('請填寫必填欄位'); return; }
   var d = getData();
   var p = null;
@@ -649,7 +770,7 @@ async function doIn(e) {
     if (d.products[i].name === name) { p = d.products[i]; break; }
   }
   if (p) { p.stock = (p.stock || 0) + qty; }
-  else { d.products.push({ name: name, model: model || '-', type: '原料', unit: unit, stock: qty, safety: 50 }); }
+  else { d.products.push({ name: name, model: model || '-', type: type, unit: unit, stock: qty, safety: 50 }); }
   var rec = { id: Date.now(), type: 'in', name: name, model: model || '-', qty: qty, unit: unit, customer: batch || '-', date: date };
   d.history.unshift(rec);
   saveData(d);
@@ -662,6 +783,7 @@ async function doIn(e) {
   renderAll();
   document.getElementById('inForm').reset();
   document.getElementById('inDate').value = today;
+  buildTypeDropdown();
   alert('✅ 入庫成功！\n品名：' + name + '\n顏色：' + model + '\n數量：' + qty + ' ' + unit);
 }
 
@@ -694,6 +816,7 @@ async function doOut(e) {
   renderAll();
   document.getElementById('outForm').reset();
   document.getElementById('outDate').value = today;
+  buildTypeDropdown();
   alert('✅ 出庫成功！\n品名：' + name + '\n數量：' + qty + ' ' + unit + '\n剩餘庫存：' + p.stock + ' ' + unit);
   if (confirm('已出庫 ' + qty + ' ' + unit + '，剩餘庫存 ' + p.stock + ' ' + unit + '。\n\n立即查看新庫存？')) { showTab('stock'); }
 }
@@ -704,6 +827,7 @@ window.doOut = doOut;
 window.renderStock = renderStock;
 window.renderHistory = renderHistory;
 window.quickOut = quickOut;
+window.quickIn = quickIn;
 window.saveData = saveData;
 
 window.addEventListener('DOMContentLoaded', function(){
