@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國研化工 | 員工出入庫系統</title>
+<style>
+:root {
+ --primary: #1a3c2a;
+ --secondary: #2d6a4f;
+ --accent: #f7c400;
+ --bg: #e8f5e9;
+ --white: #fafffe;
+ --text: #1a2e1a;
+ --muted: #5a7a5a;
+ --border: #b8d4ba;
+ --green: #27ae60;
+ --red: #c0392b;
+ --radius: 14px;
+ --shadow: 0 10px 30px rgba(26,60,42,0.10);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+ font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+ background: var(--bg);
+ color: var(--text);
+ line-height: 1.6;
+ min-width: 1100px;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+header {
+ background: var(--primary);
+ color: #fff;
+ padding: 0 40px;
+ height: 72px;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ position: sticky;
+ top: 0;
+ z-index: 100;
+ box-shadow: 0 4px 20px rgba(26,60,42,0.20);
+}
+header h1 { font-size: 32px; font-weight: 800; letter-spacing: 1px; }
+.header-badge {
+ background: #27ae60;
+ color: #fff;
+ padding: 4px 12px;
+ border-radius: 999px;
+ font-size: 12px;
+ font-weight: bold;
+}
+.emp-badge {
+ background: rgba(255,255,255,0.15);
+ color: #fff;
+ padding: 4px 12px;
+ border-radius: 999px;
+ font-size: 12px;
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 28px 32px; }
+
+.nav-tabs {
+ display: flex;
+ gap: 0;
+ margin-bottom: 28px;
+ background: transparent;
+ padding: 0;
+ border-radius: 14px 14px 0 0;
+ overflow: hidden;
+ box-shadow: none;
+}
+.tab-btn {
+ flex: 1;
+ text-align: center;
+ padding: 18px 20px;
+ border-radius: 14px 14px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+ background: rgba(39,174,96,0.5) !important;
+ backdrop-filter: blur(12px);
+ -webkit-backdrop-filter: blur(12px);
+ color: #fff;
+ transition: .25s;
+ border: 1px solid rgba(39,174,96,0.3);
+ border-bottom: none;
+ margin-right: 4px;
+}
+.tab-btn:hover {
+ background: rgba(39,174,96,0.7) !important;
+}
+.tab-btn.active {
+ background: rgba(192,57,43,0.8) !important;
+ border-color: rgba(192,57,43,0.5);
+ border-bottom: none;
+ box-shadow: 0 4px 16px rgba(192,57,43,0.3);
+}
+.tab-btn:last-child { margin-right: 0; }
+
+.card {
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ box-shadow: var(--shadow);
+ padding: 28px;
+ margin-bottom: 22px;
+}
+.card h2 { font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 18px; font-weight: 800; color: var(--text); }
+.form-group input, .form-group select {
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 12px 14px;
+ font-size: 18px;
+ font-family: inherit;
+ background: #fafcff;
+ outline: none;
+ transition: .2s;
+}
+.form-group input:focus, .form-group select:focus {
+ border-color: var(--secondary);
+ background: #fff;
+ box-shadow: 0 0 0 3px rgba(23,71,157,0.08);
+}
+
+.btn {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ padding: 12px 28px;
+ border-radius: 999px;
+ font-size: 18px;
+ font-weight: 600;
+ cursor: pointer;
+ border: none;
+ transition: .2s;
+ min-width: 120px;
+}
+.btn-success { background: var(--green); color: #fff; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+.btn-row { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+
+table { width: 100%; border-collapse: collapse; font-size: 17px; font-weight: 700; }
+th {
+ background: var(--primary);
+ color: #fff;
+ padding: 13px 16px;
+ text-align: left;
+ font-weight: 600;
+}
+th:first-child { border-radius: 10px 0 0 0; }
+th:last-child { border-radius: 0 10px 0 0; }
+td {
+ padding: 12px 16px;
+ border-bottom: 1px solid var(--border);
+ color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: #f8fafd; }
+tr:hover td { background: #eef5ff; }
+.action-btn { padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; color: #fff; }
+.action-btn.out { background: var(--red); }
+.action-btn.in { background: var(--green); }
+
+.stat-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 16px;
+ margin-bottom: 24px;
+}
+.stat-card {
+ background: var(--white);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ padding: 22px 18px;
+ text-align: center;
+ box-shadow: var(--shadow);
+}
+.stat-card h3 { font-size: 52px; font-weight: 800; color: var(--secondary); margin-bottom: 6px; }
+.stat-card p { color: var(--muted); font-size: 18px; font-weight: 700; }
+
+.search-bar {
+ display: flex;
+ gap: 12px;
+ margin-bottom: 18px;
+ flex-wrap: wrap;
+}
+.search-bar input {
+ border: 1px solid var(--border);
+ border-radius: 999px;
+ padding: 12px 18px;
+ font-size: 18px;
+ font-family: inherit;
+ outline: none;
+ background: var(--white);
+ width: 300px;
+}
+.search-bar input:focus { border-color: var(--secondary); }
+
+.page-section { display: none; }
+.page-section.active { display: block; }
+
+.footer {
+ text-align: center;
+ padding: 20px;
+ color: var(--muted);
+ font-size: 13px;
+ border-top: 1px solid var(--border);
+ margin-top: 24px;
+}
+
+.tag-in { background: var(--green); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+.tag-out { background: var(--red); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+
+#cloudLoading {
+ position: fixed; top: 0; left: 0; right: 0;
+ background: linear-gradient(90deg, #17479d, #27ae60);
+ color: #fff; text-align: center;
+ padding: 8px 16px; font-size: 14px; font-weight: bold;
+ z-index: 99999; letter-spacing: 0.5px;
+}
+
+.info-bar {
+ background: rgba(12,44,103,0.04);
+ border: 1px solid var(--border);
+ border-radius: 10px;
+ padding: 10px 16px;
+ margin-bottom: 16px;
+ font-size: 13px;
+ color: var(--muted);
+ display: flex;
+ gap: 20px;
+ align-items: center;
+}
+/* ===== GLASSMORPHISM CREAM ===== */
+body { background: linear-gradient(135deg, #f5e6c8 0%, #efe0b8 30%, #e8d4a0 60%, #ddd0a8 100%) fixed; }
+header { background: rgba(60,40,20,0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.15); }
+.container { background: transparent; padding-top: 24px; }
+.nav-tabs { background: rgba(60,40,20,0.2); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.2); }
+.tab-btn { background: rgba(60,40,20,0.15); border: 1px solid rgba(180,140,60,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.tab-btn.active { background: rgba(180,140,60,0.55); border-color: rgba(180,140,60,0.5); }
+.tab-btn:hover { background: rgba(60,40,20,0.3) !important; }
+.card { background: rgba(60,40,20,0.18); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.18); box-shadow: 0 8px 32px rgba(60,40,20,0.15), inset 0 1px 0 rgba(255,255,255,0.15); }
+.stat-card { background: rgba(60,40,20,0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(180,140,60,0.15); box-shadow: 0 8px 32px rgba(60,40,20,0.12), inset 0 1px 0 rgba(255,255,255,0.1); }
+.form-group input, .form-group select { background: rgba(255,255,255,0.25); border: 1px solid rgba(180,140,60,0.25); color: #3d2810; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.form-group input::placeholder { color: rgba(61,40,16,0.4); }
+.form-group input:focus, .form-group select:focus { background: rgba(255,255,255,0.4); border-color: rgba(180,140,60,0.5); }
+.search-bar input { background: rgba(255,255,255,0.25); border: 1px solid rgba(180,140,60,0.2); color: #3d2810; }
+.btn-outline { background: rgba(255,255,255,0.2); border: 1px solid rgba(180,140,60,0.3); color: #3d2810; }
+.btn-outline:hover { background: rgba(180,140,60,0.18); }
+.btn-primary { background: rgba(180,140,60,0.7) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(180,140,60,0.4); color: #fff; }
+.btn-primary:hover { background: rgba(180,140,60,0.9) !important; }
+.btn-success { background: rgba(100,160,80,0.65) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(100,160,80,0.35); color: #fff; }
+.btn-success:hover { background: rgba(100,160,80,0.85) !important; }
+table th { background: rgba(60,40,20,0.55) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+td { background: rgba(255,255,255,0.1); color: #3d2810; }
+tr:hover td { background: rgba(180,140,60,0.12); }
+tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+tr:last-child td { border-bottom: none; }
+.footer { border-top: 1px solid rgba(180,140,60,0.15); color: rgba(61,40,16,0.55); }
+.info-bar { background: rgba(60,40,20,0.1); border: 1px solid rgba(180,140,60,0.2); color: rgba(61,40,16,0.7); }
+.info-bar strong { color: rgba(60,40,20,0.9); }
+.login-box button:hover { background: #3d2810; }
+
+
+/* Login gate */
+#loginScreen {
+ position: fixed; inset: 0;
+ background: linear-gradient(135deg, #1a3c2a 0%, #2d6a4f 100%);
+ display: flex; align-items: center; justify-content: center;
+ z-index: 999999;
+}
+.login-box {
+ background: #fff;
+ border-radius: 20px;
+ padding: 40px 36px;
+ width: 360px;
+ text-align: center;
+ box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-box h2 { font-size: 24px; color: var(--primary); margin-bottom: 6px; }
+.login-box p { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+.login-box input {
+ width: 100%; padding: 14px 16px;
+ border: 2px solid var(--border);
+ border-radius: 10px;
+ font-size: 18px; text-align: center; letter-spacing: 4px;
+ font-family: inherit; outline: none;
+ transition: border-color .2s;
+ margin-bottom: 16px;
+ box-sizing: border-box;
+}
+.login-box input:focus { border-color: var(--secondary); }
+.login-box button {
+ width: 100%; padding: 14px;
+ background: var(--primary); color: #fff;
+ border: none; border-radius: 10px;
+ font-size: 16px; font-weight: 700; cursor: pointer;
+ font-family: inherit;
+ transition: background .2s;
+}
+.login-box button:hover { background: var(--secondary); }
+.login-error { color: var(--red); font-size: 13px; margin-top: 8px; height: 18px; }
+.login-logo { font-size: 48px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+ <div class="login-box">
+  <div class="login-logo">📦</div>
+  <h2>國研化工</h2>
+  <p>員工出入庫系統<br>請輸入密碼登入</p>
+  <input type="password" id="loginPwd" placeholder="● ● ● ●" maxlength="20" onkeypress="if(event.key==='Enter')checkLogin()">
+  <button onclick="checkLogin()">登 入</button>
+  <div class="login-error" id="loginError"></div>
+  <div id="qrcode" style="margin:16px auto 0;width:150px;height:150px;"></div>
+  <p style="font-size:11px;color:var(--muted);margin-top:8px;">手機掃描直接開啟</p>
+ </div>
+</div>
+
+<script src="qrcode.min.js"></script>
+<script>
+var QR_URL = "https://sukmff-oss.github.io/GYC-warehouse/";
+var qr = qrcode(0, 'M');
+qr.addData(QR_URL);
+qr.make();
+document.getElementById('qrcode').innerHTML = qr.createSvgTag(4, 8);
+
+function checkLogin(){
+  var pwd = document.getElementById('loginPwd').value.trim();
+  if(pwd === '1234'){
+    document.getElementById('loginScreen').style.display = 'none';
+    init();
+  } else {
+    document.getElementById('loginError').textContent = '密碼錯誤，請重新輸入';
+    document.getElementById('loginPwd').value = '';
+  }
+}
+</script>
+
+<header>
+ <h1>📦 國研化工 | 員工出入庫系統</h1>
+ <div style="display:flex;gap:10px;align-items:center;">
+   <span class="emp-badge">👤 員工專用</span>
+   <span class="header-badge">☁️ 雲端同步</span>
+ </div>
+</header>
+
+<div class="container">
+ <div class="stat-grid" id="statGrid"></div>
+
+ <div class="nav-tabs">
+  <button class="tab-btn active" id="tab-stock" onclick="showTab('stock')">📦 庫存查詢</button>
+  <button class="tab-btn" id="tab-in" onclick="showTab('in')">📥 入庫作業</button>
+  <button class="tab-btn" id="tab-out" onclick="showTab('out')">📤 出庫作業</button>
+ </div>
+
+ <!-- 庫存查詢 -->
+ <div class="page-section active" id="page-stock">
+  <div class="card">
+   <h2>📦 庫存查詢</h2>
+   <div class="search-bar">
+    <input type="text" id="searchStock" placeholder="搜尋品名或顏色..." oninput="renderStock()">
+   </div>
+   <div style="overflow-x:auto;">
+   <table>
+    <thead>
+     <tr>
+      <th>品名</th><th>顏色</th><th>類型</th><th>單位</th>
+      <th>目前庫存</th><th>安全存量</th><th>狀態</th><th>操作</th>
+     </tr>
+    </thead>
+    <tbody id="stockTable"></tbody>
+   </table>
+   </div>
+  </div>
+ </div>
+
+ <!-- 入庫作業 -->
+ <div class="page-section" id="page-in">
+  <div class="card">
+   <h2>📥 入庫作業</h2>
+   <div class="info-bar">
+    <span>💡 入庫作業</span>
+    <span>✏️ 可新增品名或入庫既有品名</span>
+    <span>🔒 僅供入庫使用</span>
+   </div>
+   <form id="inForm" onsubmit="doIn(event)">
+   <div class="form-grid">
+    <div class="form-group">
+     <label>品名 *</label>
+     <input type="text" id="inName" list="productList" placeholder="選擇或輸入品名" autocomplete="off" required>
+     <datalist id="productList"></datalist>
+    </div>
+    <div class="form-group">
+     <label>入庫數量 *</label>
+     <input type="number" id="inQty" placeholder="0" min="1" required>
+    </div>
+    <div class="form-group">
+     <label>單位</label>
+     <select id="inUnit">
+      <option>KG</option><option>桶</option><option>升</option><option>包</option><option>噸</option>
+     </select>
+    </div>
+    <div class="form-group">
+     <label>顏色</label>
+     <input type="text" id="inModel" placeholder="例：White 白">
+    </div>
+    <div class="form-group">
+     <label>批號 / 備註</label>
+     <input type="text" id="inBatch" placeholder="批號或備註（選填）">
+    </div>
+    <div class="form-group">
+     <label>入庫日期 *</label>
+     <input type="date" id="inDate" required>
+    </div>
+   </div>
+   <div class="btn-row">
+    <button type="submit" class="btn btn-success">✅ 確認入庫</button>
+    <button type="reset" class="btn btn-outline">🔄 清除</button>
+   </div>
+   </form>
+  </div>
+ </div>
+
+ <!-- 出庫作業 -->
+ <div class="page-section" id="page-out">
+  <div class="card">
+   <h2>📤 出庫作業</h2>
+   <div class="info-bar">
+    <span>💡 出庫作業</span>
+    <span>⚠️ 庫存不足時無法出庫</span>
+    <span>🔒 僅供出庫使用</span>
+   </div>
+   <form id="outForm" onsubmit="doOut(event)">
+   <div class="form-grid">
+    <div class="form-group">
+     <label>品名 *</label>
+     <input type="text" id="outName" list="productList2" placeholder="選擇或輸入品名" autocomplete="off" required>
+     <datalist id="productList2"></datalist>
+    </div>
+    <div class="form-group">
+     <label>出庫數量 *</label>
+     <input type="number" id="outQty" placeholder="0" min="1" required>
+    </div>
+    <div class="form-group">
+     <label>單位</label>
+     <select id="outUnit">
+      <option>KG</option><option>桶</option><option>升</option><option>包</option><option>噸</option>
+     </select>
+    </div>
+    <div class="form-group">
+     <label>客戶 / 用途</label>
+     <input type="text" id="outCustomer" placeholder="客戶名稱或用途">
+    </div>
+    <div class="form-group">
+     <label>備註</label>
+     <input type="text" id="outRemark" placeholder="選填">
+    </div>
+    <div class="form-group">
+     <label>出庫日期 *</label>
+     <input type="date" id="outDate" required>
+    </div>
+   </div>
+   <div class="btn-row">
+    <button type="submit" class="btn btn-primary">✅ 確認出庫</button>
+    <button type="reset" class="btn btn-outline">🔄 清除</button>
+   </div>
+   </form>
+  </div>
+ </div>
+</div>
+
+<div class="footer">
+ © 2026 國研化工實業股份有限公司 | 員工出入庫系統 v1.0 ☁️
+</div>
+
+<script>
+var today = new Date().toISOString().split('T')[0];
+var API_URL = 'https://script.google.com/macros/s/AKfycbzBsPjUM6wQRju3yUTP2VdLH7l9-5fPfo3RMMpwjEK_z4ThNfku0ENgEouSEDrndsxX/exec';
+var _cachedData = null;
+
+function api(action, params) {
+  return new Promise(function(resolve, reject) {
+    var url = API_URL + '?action=' + action;
+    if (params) {
+      for (var k in params) {
+        url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+      }
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function() {
+      try { resolve(JSON.parse(xhr.responseText)); }
+      catch(e) { reject(e); }
+    };
+    xhr.onerror = function() { reject(new Error('Network error')); };
+    xhr.send();
+  });
+}
+
+function getData() { return _cachedData || { products: [], history: [] }; }
+function saveData(d) { _cachedData = d; }
+
+function showLoading(show) {
+  var el = document.getElementById('cloudLoading');
+  if (show) {
+    if (!el) {
+      var div = document.createElement('div');
+      div.id = 'cloudLoading';
+      div.textContent = '☁️ 同步中，請稍候...';
+      document.body.prepend(div);
+    }
+  } else {
+    if (el) el.remove();
+  }
+}
+
+async function init() {
+  showLoading(true);
+  try {
+    var t = await api('getData');
+    if (t.success) {
+      saveData({ products: t.data.products || [], history: [] });
+    }
+  } catch(e) { console.error('Load error:', e); }
+  try {
+    var h = await api('getHistory');
+    if (h.success && h.data) {
+      var d = getData();
+      d.history = h.data || [];
+      saveData(d);
+    }
+  } catch(e) { console.error('History error:', e); }
+  showLoading(false);
+  document.getElementById('inDate').value = today;
+  document.getElementById('outDate').value = today;
+  document.getElementById('inDate').max = today;
+  document.getElementById('outDate').max = today;
+  renderAll();
+}
+
+function showTab(tab) {
+  var sections = document.querySelectorAll('.page-section');
+  for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+  var tabs = document.querySelectorAll('.tab-btn');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function renderAll() { renderStats(); renderStock(); renderDatalist(); }
+
+function renderStats() {
+  var d = getData();
+  var total = d.products.length;
+  var totalStock = 0;
+  for (var i = 0; i < d.products.length; i++) totalStock += d.products[i].stock || 0;
+  var inToday = 0, outToday = 0;
+  for (var i = 0; i < d.history.length; i++) {
+    if (d.history[i].date === today) {
+      if (d.history[i].type === 'in') inToday += d.history[i].qty;
+      else outToday += d.history[i].qty;
+    }
+  }
+  var el = document.getElementById('statGrid');
+  el.innerHTML = ''
+    + '<div class="stat-card"><h3>' + total + '</h3><p>產品項目</p></div>'
+    + '<div class="stat-card"><h3>' + totalStock.toLocaleString() + '</h3><p>總庫存 (KG)</p></div>'
+    + '<div class="stat-card"><h3 style="color:var(--green)">' + inToday + '</h3><p>今日入庫</p></div>'
+    + '<div class="stat-card"><h3 style="color:' + (outToday > 0 ? 'var(--red)' : 'var(--green)') + '">' + outToday + '</h3><p>今日出庫</p></div>';
+}
+
+function renderStock() {
+  var d = getData();
+  var kw = document.getElementById('searchStock').value.toLowerCase();
+  var rows = [];
+  for (var i = 0; i < d.products.length; i++) {
+    var p = d.products[i];
+    if (kw && p.name.toLowerCase().indexOf(kw) === -1 && (p.model || '').toLowerCase().indexOf(kw) === -1) continue;
+    var low = p.stock <= (p.safety || 50);
+    rows.push('<tr>'
+      + '<td><strong>' + p.name + '</strong></td>'
+      + '<td>' + (p.model || '-') + '</td>'
+      + '<td>' + (p.type || '-') + '</td>'
+      + '<td>' + (p.unit || 'KG') + '</td>'
+      + '<td><strong>' + (p.stock || 0).toLocaleString() + '</strong></td>'
+      + '<td>' + (p.safety || 50) + '</td>'
+      + '<td>' + (low ? '<span class="tag-out">低於存量</span>' : '<span class="tag-in">正常</span>') + '</td>'
+      + '<td><button class="action-btn in" onclick="quickIn(\'' + p.name.replace(/'/g, "\\'") + '\')">+ 入庫</button> <button class="action-btn out" onclick="quickOut(\'' + p.name.replace(/'/g, "\\'") + '\')">出庫</button></td>'
+      + '</tr>');
+  }
+  document.getElementById('stockTable').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px;">尚無資料</td></tr>';
+}
+
+function renderDatalist() {
+  var d = getData();
+  var opts = [];
+  for (var i = 0; i < d.products.length; i++) { opts.push('<option value="' + d.products[i].name + '">'); }
+  var o = opts.join('');
+  document.getElementById('productList').innerHTML = o;
+  document.getElementById('productList2').innerHTML = o;
+}
+
+function quickIn(name) {
+  document.getElementById('inName').value = name;
+  showTab('in');
+}
+
+function quickOut(name) {
+  document.getElementById('outName').value = name;
+  showTab('out');
+}
+
+async function doIn(e) {
+  e.preventDefault();
+  var name = document.getElementById('inName').value.trim();
+  var model = document.getElementById('inModel').value.trim();
+  var qty = parseFloat(document.getElementById('inQty').value);
+  var unit = document.getElementById('inUnit').value;
+  var batch = document.getElementById('inBatch').value.trim();
+  var date = document.getElementById('inDate').value;
+  if (!name || !qty || qty <= 0) { alert('請填寫必填欄位'); return; }
+  var d = getData();
+  var p = null;
+  for (var i = 0; i < d.products.length; i++) {
+    if (d.products[i].name === name) { p = d.products[i]; break; }
+  }
+  if (p) { p.stock = (p.stock || 0) + qty; }
+  else { d.products.push({ name: name, model: model || '-', type: '原料', unit: unit, stock: qty, safety: 50 }); }
+  var rec = { id: Date.now(), type: 'in', name: name, model: model || '-', qty: qty, unit: unit, customer: batch || '-', date: date };
+  d.history.unshift(rec);
+  saveData(d);
+  showLoading(true);
+  try {
+    await api('saveData', { data: JSON.stringify({ products: d.products }) });
+    await api('addHistory', { record: JSON.stringify(rec) });
+  } catch(err) { console.error(err); }
+  showLoading(false);
+  renderAll();
+  document.getElementById('inForm').reset();
+  document.getElementById('inDate').value = today;
+  alert('✅ 入庫成功！\n品名：' + name + '\n顏色：' + model + '\n數量：' + qty + ' ' + unit);
+}
+
+async function doOut(e) {
+  e.preventDefault();
+  var name = document.getElementById('outName').value.trim();
+  var qty = parseFloat(document.getElementById('outQty').value);
+  var unit = document.getElementById('outUnit').value;
+  var customer = document.getElementById('outCustomer').value.trim();
+  var remark = document.getElementById('outRemark').value.trim();
+  var date = document.getElementById('outDate').value;
+  if (!name || !qty || qty <= 0) { alert('請填寫必填欄位'); return; }
+  var d = getData();
+  var p = null;
+  for (var i = 0; i < d.products.length; i++) {
+    if (d.products[i].name === name) { p = d.products[i]; break; }
+  }
+  if (!p) { alert('查無此品名，請先至入庫作業新增'); return; }
+  if ((p.stock || 0) < qty) { alert('庫存不足！\n目前庫存：' + p.stock + ' ' + unit); return; }
+  p.stock -= qty;
+  var rec = { id: Date.now(), type: 'out', name: name, model: p.model, qty: qty, unit: unit, customer: customer || remark || '-', date: date };
+  d.history.unshift(rec);
+  showLoading(true);
+  try {
+    await api('saveData', { data: JSON.stringify({ products: d.products }) });
+    await api('addHistory', { record: JSON.stringify(rec) });
+  } catch(err) { console.error(err); }
+  showLoading(false);
+  saveData(d);
+  renderAll();
+  document.getElementById('outForm').reset();
+  document.getElementById('outDate').value = today;
+  alert('✅ 出庫成功！\n品名：' + name + '\n數量：' + qty + ' ' + unit + '\n剩餘庫存：' + p.stock + ' ' + unit);
+  if (confirm('已出庫 ' + qty + ' ' + unit + '，剩餘庫存 ' + p.stock + ' ' + unit + '。\n\n立即查看新庫存？')) { showTab('stock'); }
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('loginPwd').focus();
+});
+</script>
+</body>
+</html>
