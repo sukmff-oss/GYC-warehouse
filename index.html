@@ -377,17 +377,8 @@ function checkLogin(){
     <input type="text" id="searchStock" placeholder="搜尋品名或顏色..." oninput="renderStock()">
    </div>
    <div class="type-filter-bar" id="typeFilterBar"></div>
-   <div class="category-manager" id="categoryManager" style="display:none; margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
-    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-     <input type="text" id="newCategoryInput" placeholder="新增類別名稱" style="padding:6px 10px; border:1px solid #ccc; border-radius:6px; width:140px;">
-     <button type="button" class="btn btn-success" style="padding:6px 14px; font-size:13px;" onclick="addCategory()">➕ 新增</button>
-     <span id="categoryList" style="display:flex; gap:6px; flex-wrap:wrap;"></span>
-    <button type="button" class="btn btn-outline" style="padding:6px 10px; font-size:12px; margin-left:auto;" onclick="toggleCategoryMgr()">收起</button>
-    </div>
-   </div>
-   <div style="display:flex; gap:8px; margin-top:10px;">
-    <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:13px;" onclick="toggleCategoryMgr()">⚙️ 管理類別</button>
-   </div>
+   <div class="category-manager" id="categoryManager" style="display:none;"></div>
+   <div style="display:flex; gap:8px; margin-top:10px;"></div>
    <div style="overflow-x:auto; margin-top:10px;">
    <table>
     <thead>
