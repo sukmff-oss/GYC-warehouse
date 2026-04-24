@@ -510,7 +510,19 @@ function api(action, params) {
 }
 
 function getData() { return _cachedData || { products: [], history: [] }; }
-function saveData(d) { _cachedData = d; }
+function saveData(d, toCloud) {
+  _cachedData = d;
+  try {
+    var x = localStorage.getItem("gyc_v11");
+    var prev = { products: [], history: [] };
+    if (x) { try { prev = JSON.parse(x); } catch(e) {} }
+    var merged = { products: d.products || prev.products || [], history: d.history || prev.history || [] };
+    localStorage.setItem("gyc_v11", JSON.stringify(merged));
+  } catch(e) {}
+  if (toCloud !== false) {
+    try { api('saveData', { data: JSON.stringify({ products: d.products }) }); } catch(e) {}
+  }
+}
 
 function showLoading(show) {
   var el = document.getElementById('cloudLoading');
@@ -640,13 +652,13 @@ async function doIn(e) {
   else { d.products.push({ name: name, model: model || '-', type: '原料', unit: unit, stock: qty, safety: 50 }); }
   var rec = { id: Date.now(), type: 'in', name: name, model: model || '-', qty: qty, unit: unit, customer: batch || '-', date: date };
   d.history.unshift(rec);
+  saveData(d);
   showLoading(true);
   try {
     await api('saveData', { data: JSON.stringify({ products: d.products }) });
     await api('addHistory', { record: JSON.stringify(rec) });
   } catch(err) { console.error(err); }
   showLoading(false);
-  saveData(d);
   renderAll();
   document.getElementById('inForm').reset();
   document.getElementById('inDate').value = today;
@@ -672,19 +684,27 @@ async function doOut(e) {
   p.stock -= qty;
   var rec = { id: Date.now(), type: 'out', name: name, model: p.model, qty: qty, unit: unit, customer: customer || remark || '-', date: date };
   d.history.unshift(rec);
+  saveData(d);
   showLoading(true);
   try {
     await api('saveData', { data: JSON.stringify({ products: d.products }) });
     await api('addHistory', { record: JSON.stringify(rec) });
   } catch(err) { console.error(err); }
   showLoading(false);
-  saveData(d);
   renderAll();
   document.getElementById('outForm').reset();
   document.getElementById('outDate').value = today;
   alert('✅ 出庫成功！\n品名：' + name + '\n數量：' + qty + ' ' + unit + '\n剩餘庫存：' + p.stock + ' ' + unit);
   if (confirm('已出庫 ' + qty + ' ' + unit + '，剩餘庫存 ' + p.stock + ' ' + unit + '。\n\n立即查看新庫存？')) { showTab('stock'); }
 }
+
+window.showTab = showTab;
+window.doIn = doIn;
+window.doOut = doOut;
+window.renderStock = renderStock;
+window.renderHistory = renderHistory;
+window.quickOut = quickOut;
+window.saveData = saveData;
 
 window.addEventListener('DOMContentLoaded', function(){
   document.getElementById('loginPwd').focus();
