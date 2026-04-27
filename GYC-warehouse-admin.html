@@ -138,11 +138,11 @@ input:focus{border-color:var(--accent)}
  min-width:20px;height:20px;padding:0 5px;
  background:var(--danger);color:#fff;border-radius:999px;
  font-size:11px;font-weight:700;margin-left:auto;
- animation:badge-pulse 1.5s ease-in-out infinite;
+ animation:badgePulse 1.5s ease-in-out infinite;
 }
-@keyframes badge-pulse{
- 0%,100%{box-shadow:0 0 0 0 rgba(224,80,80,.5)}
- 50%{box-shadow:0 0 0 6px rgba(224,80,80,0)}
+@keyframes badgePulse{
+ 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(224,80,80,.5)}
+ 50%{opacity:.8;box-shadow:0 0 0 6px rgba(224,80,80,0)}
 }
 
 /* 老闆報告系統 */
@@ -321,10 +321,10 @@ input[type="date"]{color:#e8dfd0}
     <p>歡迎：RBAC 管理系統</p>
   </div>
 <div class="menu-grid">
-<button class="menu-btn" onclick="showPage('stockPage')"><span class="icon">📦</span>庫存查詢</button>
+<button class="menu-btn" onclick="showPage('stockPage')"><span class="icon">📦</span>庫存查詢<span id="badgeStock" class="menu-badge" style="display:none">0</span></button>
 <button class="menu-btn" onclick="showPage('prodPage')"><span class="icon">🏭</span>生產作業</button>
 <button class="menu-btn" onclick="showPage('outPage')"><span class="icon">📤</span>出庫作業</button>
-<button class="menu-btn" onclick="showPage('inPage')"><span class="icon">📥</span>入庫作業<span id="badgeIn" class="menu-badge" style="display:none">0</span></button>
+<button class="menu-btn" onclick="showPage('inPage')"><span class="icon">📥</span>入庫作業<span id="badgeIn" class="menu-badge" style="display:none">0</span><span id="badgeIn2" class="menu-badge" style="display:none">0</span></button>
 <button class="menu-btn" onclick="showPage('historyPage')"><span class="icon">📋</span>簽收列印<span id="badgeHist" class="menu-badge" style="display:none">0</span></button>
 <button class="menu-btn" onclick="showPage('catPage')"><span class="icon">⚙️</span>類別管理</button>
 <button class="menu-btn wide" onclick="doLogout()"><span class="icon">🚪</span>登出</button>
@@ -341,12 +341,16 @@ input[type="date"]{color:#e8dfd0}
  <span class="page-title">📦 庫存查詢</span>
  </div>
 
+ <!-- 待簽收區（來自出庫，僅採購可見） -->
+ <div id="pendingOutSection" style="margin-bottom:10px"></div>
+
  <!-- 報告類型切換 -->
- <div class="report-tabs" id="reportTabs">
-  <button class="r-tab active" onclick="switchReport('daily',this)">📅 每日</button>
-  <button class="r-tab" onclick="switchReport('monthly',this)">📆 每月</button>
-  <button class="r-tab" onclick="switchReport('total',this)">📊 總庫存</button>
-  <button class="r-tab" onclick="switchReport('custom',this)">🔍 自訂查詢</button>
+<div class="report-tabs" id="reportTabs">
+ <button class="r-tab active" onclick="switchReport('daily',this)">📅 每日</button>
+ <button class="r-tab" onclick="switchReport('monthly',this)">📆 每月</button>
+ <button class="r-tab" onclick="switchReport('total',this)">📊 總庫存</button>
+ <button class="r-tab" onclick="switchReport('custom',this)">🔍 自訂查詢</button>
+ <button class="r-tab" id="rTabPendingOut" onclick="switchReport('pendingOut',this)" style="display:none">🔒 待簽收<span id="tabPendingOutBadge" class="menu-badge" style="display:none">0</span></button>
  </div>
 
  <!-- 每日報告 -->
@@ -386,7 +390,16 @@ input[type="date"]{color:#e8dfd0}
    <input type="date" id="customEnd" onchange="renderCustomReport()" style="padding:7px 12px;border-radius:999px;border:1.5px solid rgba(255,220,180,.15);background:rgba(20,16,10,.8);color:#e8dfd0;font-size:13px">
    <button class="btn-print" onclick="window.print()">🖨️ 列印</button>
   </div>
-  <div id="customReportContent"></div>
+<div id="customReportContent"></div>
+</div>
+
+ <!-- 待簽收報告（僅採購可見） -->
+ <div id="reportPendingOut" class="report-body" style="display:none">
+  <div class="report-toolbar">
+   <span style="font-size:13px;color:var(--danger);font-weight:700">🔒 待簽收記錄</span>
+   <button class="btn-print" onclick="window.print()">🖨️ 列印</button>
+  </div>
+  <div id="pendingOutContent"></div>
  </div>
 </div>
 
@@ -618,7 +631,7 @@ function api(action,params={}){
 function getData(){
  if(_cachedData) return _cachedData;
  try{let x=localStorage.getItem(STORAGE_KEY);if(x){_cachedData=JSON.parse(x);return _cachedData}}catch(e){}
- return {products:[],history:[],pendingIn:[]};
+ return {products:[],history:[],pendingIn:[],pendingOut:[]};
 }
 
 function saveData(d){
@@ -627,7 +640,7 @@ function saveData(d){
   let prev={products:[],history:[],pendingIn:[]};
   let old=localStorage.getItem(STORAGE_KEY);
   if(old)try{prev=JSON.parse(old)}catch(e){}
-  let merged={products:d.products||prev.products||[],history:d.history||prev.history||[],pendingIn:d.pendingIn||prev.pendingIn||[]};
+  let merged={products:d.products||prev.products||[],history:d.history||prev.history||[],pendingIn:d.pendingIn||prev.pendingIn||[],pendingOut:d.pendingOut||prev.pendingOut||[]};
   localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
  }catch(e){}
 }
@@ -670,6 +683,7 @@ function switchReport(type, btn){
  else if(type==='monthly') renderMonthlyReport();
  else if(type==='total') renderTotalReport();
  else if(type==='custom') renderCustomReport();
+ else if(type==='pendingOut') renderPendingOutReport();
 }
 
 function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -765,17 +779,64 @@ function renderReportTable(containerId, rows, title){
  let html = '<table class="report-table"><thead><tr><th>日期</th><th>品名</th><th>出入</th><th>數量</th><th>單位</th><th>備註</th></tr></thead><tbody>';
  rows.forEach(h=>{
   html += '<tr>'+
-   '<td>'+h.date+'</td>'+
-   '<td><strong>'+h.name+'</strong></td>'+
-   '<td class="'+(h.type==='in'?'report-in':'report-out')+'">'+(h.type==='in'?'入庫':'出庫')+'</td>'+
-   '<td>'+h.qty.toLocaleString()+'</td>'+
-   '<td>'+(h.unit||'KG')+'</td>'+
-   '<td style="color:#888">'+((h.customer||'')==='-'?'—':(h.customer||'—'))+'</td>'+
+  '<td>'+h.date+'</td>'+
+  '<td><strong>'+h.name+'</strong></td>'+
+  '<td class="'+(h.type==='in'?'report-in':'report-out')+'">'+(h.type==='in'?'入庫':'出庫')+'</td>'+
+  '<td>'+h.qty.toLocaleString()+'</td>'+
+  '<td>'+(h.unit||'KG')+'</td>'+
+  '<td style="color:#888">'+((h.customer||'')==='-'?'—':(h.customer||'—'))+'</td>'+
   '</tr>';
  });
  html += '</tbody></table>';
  wrap.innerHTML = html;
  el.prepend(wrap);
+}
+
+// ════════════════════════════════════════
+// 待簽收報告（採購專用）
+// ════════════════════════════════════════
+function renderPendingOutReport(){
+ let d = getData();
+ let list = d.pendingOut || [];
+
+ // 同步顯示 tab badge
+ let tabBadge = document.getElementById('tabPendingOutBadge');
+ let rTab = document.getElementById('rTabPendingOut');
+ if(list.length>0){
+  if(tabBadge){ tabBadge.textContent=list.length; tabBadge.style.display='inline-flex'; tabBadge.style.animation='badgePulse 1.5s ease-in-out infinite'; }
+  if(rTab) rTab.style.display='inline-flex';
+ } else {
+  if(tabBadge){ tabBadge.style.display='none'; tabBadge.style.animation='none'; }
+  if(rTab) rTab.style.display='none';
+ }
+
+ let el = document.getElementById('pendingOutContent');
+ if(list.length===0){
+  el.innerHTML = '<div class="empty" style="padding:30px;text-align:center">✅ 暫無待簽收記錄</div>';
+  return;
+ }
+
+ let html = '<table class="report-table"><thead><tr><th>日期</th><th>品名</th><th>出入</th><th>數量</th><th>備註</th><th>🔒 簽收</th><th>🗑️ 刪除</th></tr></thead><tbody>';
+ list.forEach(h=>{
+  let isPurchase = (_currentRole==='purchase' || _currentRole==='admin');
+  let signBtn = isPurchase
+   ? '<button onclick="signOut('+h.id+')" style="padding:5px 12px;background:var(--accent);color:#0d0a08;border:none;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer">✅ 簽收</button>'
+   : '<span style="color:#888;font-size:12px">需採購</span>';
+  let delBtn = isPurchase
+   ? '<button onclick="promptDelPendingOut('+h.id+')" style="padding:5px 10px;background:rgba(224,80,80,.15);color:var(--danger);border:1px solid rgba(224,80,80,.4);border-radius:999px;font-size:12px;cursor:pointer">🔓 刪除</button>'
+   : '<span style="color:#888;font-size:12px">—</span>';
+  html += '<tr style="background:rgba(224,80,80,.05)">'+
+   '<td>'+h.date+'</td>'+
+   '<td><strong>'+h.name+'</strong><br><span style="font-size:11px;color:#888">'+h.model+'</span></td>'+
+   '<td style="color:var(--danger);font-weight:700">📤 出庫</td>'+
+   '<td><strong style="color:var(--danger)">'+h.qty.toLocaleString()+'</strong><br><span style="font-size:11px;color:#888">'+h.unit+'</span></td>'+
+   '<td style="color:#888;font-size:12px">'+(h.customer==='-'?'—':h.customer)+'</td>'+
+   '<td>'+signBtn+'</td>'+
+   '<td>'+delBtn+'</td>'+
+   '</tr>';
+ });
+ html += '</tbody></table>';
+ el.innerHTML = html;
 }
 
 function showPage(id){
@@ -797,7 +858,7 @@ function showPage(id){
  target.style.zIndex='9999';
  target.style.overflowY='auto';
  updateBadges();
- if(id==='stockPage'){switchReport('daily',document.querySelector('.r-tab'));}
+ if(id==='stockPage'){switchReport('daily',document.querySelector('.r-tab'));renderPendingOutReport();}
  if(id==='prodPage'){console.log('[showPage] 呼叫 renderLineFilter + renderProdGrid');renderLineFilter('prodLineFilter');renderProdGrid();}
  if(id==='inPage'){console.log('[showPage] 呼叫 renderLineFilter + renderInGrid');renderLineFilter('inLineFilter');renderInGrid();renderPendingIn();}
  if(id==='outPage'){console.log('[showPage] 呼叫 renderLineFilter + renderOutGrid');renderLineFilter('outLineFilter');renderOutGrid();}
@@ -805,17 +866,42 @@ function showPage(id){
  if(id==='catPage') renderCat();
 }
 
-// 更新待點收徽章（簽收列印 + 入庫作業同時亮紅燈）
+// 更新待點收徽章（簽收列印 + 入庫作業 + 待簽收警示）
 function updateBadges(){
  let d=getData();
- let count = d.pendingIn ? d.pendingIn.length : 0;
+ let countIn = d.pendingIn ? d.pendingIn.length : 0;
+ let countOut = d.pendingOut ? d.pendingOut.length : 0;
  let badgeIn = document.getElementById('badgeIn');
  let badgeHist = document.getElementById('badgeHist');
+ let badgeStock = document.getElementById('badgeStock');
  if(badgeIn) {
-  if(count>0){badgeIn.textContent=count;badgeIn.style.display='inline-flex';} else {badgeIn.style.display='none';}
+  if(countIn>0){badgeIn.textContent=countIn;badgeIn.style.display='inline-flex';} else {badgeIn.style.display='none';}
  }
  if(badgeHist){
-  if(count>0){badgeHist.textContent=count;badgeHist.style.display='inline-flex';} else {badgeHist.style.display='none';}
+  if(countIn>0){badgeHist.textContent=countIn;badgeHist.style.display='inline-flex';} else {badgeHist.style.display='none';}
+ }
+ // 待簽收紅燈：庫存查詢 + 入庫作業
+ if(badgeStock){
+  if(countOut>0){
+   badgeStock.textContent=countOut;
+   badgeStock.style.display='inline-flex';
+   badgeStock.style.animation='badgePulse 1.5s ease-in-out infinite';
+  } else {
+   badgeStock.style.display='none';
+   badgeStock.style.animation='none';
+  }
+ }
+ // 入庫作業也亮紅燈（有待簽收時）
+ let badgeIn2 = document.getElementById('badgeIn2');
+ if(badgeIn2){
+  if(countOut>0){
+   badgeIn2.textContent=countOut;
+   badgeIn2.style.display='inline-flex';
+   badgeIn2.style.animation='badgePulse 1.5s ease-in-out infinite';
+  } else {
+   badgeIn2.style.display='none';
+   badgeIn2.style.animation='none';
+  }
  }
 }
 
@@ -823,6 +909,7 @@ function updateBadges(){
 // 登入
 // ════════════════════════════════════════
 const PWD_ADMIN = 'root';
+const DEL_PWD = '000';
 const ROLES = {
  admin:    {name:'管理員',pwd:'root',   pages:['stockPage','prodPage','inPage','outPage','historyPage','catPage']},
  su:       {name:'蘇董',  pwd:'9999',   pages:['stockPage']},
@@ -1074,6 +1161,42 @@ async function signIn(id){
  alert('✅ 簽收成功！\n品名：'+item.name+'\n數量：'+item.qty+' '+item.unit);
 }
 
+// 採購簽收出庫（把 pendingOut 移到正式 history）
+async function signOut(id){
+ let d=getData();
+ let item=d.pendingOut.find(h=>h.id===id);
+ if(!item){ alert('找不到該筆資料'); return; }
+ let isPurchase = (_currentRole==='purchase' || _currentRole==='admin');
+ if(!isPurchase){ alert('僅限採購或管理員簽收'); return; }
+ // 移入正式歷史
+ let rec={id:item.id,type:'out',name:item.name,model:item.model,qty:item.qty,unit:item.unit,customer:item.customer||'-',date:item.date||today};
+ d.history.unshift(rec);
+ // 從 pendingOut 移除
+ d.pendingOut=d.pendingOut.filter(h=>h.id!==id);
+ saveData(d);
+ try{await api('addHistory',{record:JSON.stringify(rec)})}catch(e){}
+ renderPendingOutReport();
+ updateBadges();
+ // 提示開立發票或送貨單
+ let choice = confirm('✅ 簽收成功！\n品名：'+item.name+'\n數量：'+item.qty+' '+item.unit+'\n\n要現在列印發票/送貨單嗎？\n「確定」→ 列印\n「取消」→ 稍後再印');
+ if(choice) window.print();
+}
+
+// 刪除待簽收（需密碼000 + 採購權限）
+function promptDelPendingOut(id){
+ let isPurchase = (_currentRole==='purchase' || _currentRole==='admin');
+ if(!isPurchase){ alert('僅限採購或管理員刪除'); return; }
+ let p=prompt('請輸入刪除密碼（000）：');
+ if(p===null) return;
+ if(p!==DEL_PWD){ alert('密碼錯誤'); return; }
+ let d=getData();
+ d.pendingOut=d.pendingOut.filter(h=>h.id!==id);
+ saveData(d);
+ renderPendingOutReport();
+ updateBadges();
+ alert('✅ 已刪除該筆待簽收記錄');
+}
+
 async function doIn(){
   if(!_selectedProd) return alert('請選擇品名');
   let qty=parseFloat(document.getElementById('inQty').value);
@@ -1137,21 +1260,23 @@ function renderOutGrid(){
 }
 
 async function doOut(){
-  if(!_selectedProd) return alert('請選擇品名');
-  let qty=parseFloat(document.getElementById('outQty').value);
-  if(!qty||qty<=0) return alert('請填寫數量');
-  let stock=calcStock(_selectedProd.name);
-  if(qty>stock) return alert('庫存不足！\n目前庫存：'+stock+' '+_selectedProd.unit);
-  let d=getData();
-  let rec={id:Date.now(),type:'out',name:_selectedProd.name,model:_selectedProd.color,qty,unit:_selectedProd.unit,customer:document.getElementById('outRemark').value||'-',date:document.getElementById('outDate').value||today};
-  d.history.unshift(rec);
-  saveData(d);
-  try{await api('addHistory',{record:JSON.stringify(rec)})}catch(e){}
-  alert('✅ 出庫成功！\n品名：'+_selectedProd.name+'\n數量：'+qty+' '+_selectedProd.unit);
-  document.getElementById('outQtySection').style.display='none';
-  document.querySelectorAll('#outGrid .prod-btn').forEach(b=>b.classList.remove('selected'));
-  _selectedProd=null;
-  renderOutGrid();
+ if(!_selectedProd) return alert('請選擇品名');
+ let qty=parseFloat(document.getElementById('outQty').value);
+ if(!qty||qty<=0) return alert('請填寫數量');
+ let stock=calcStock(_selectedProd.name);
+ if(qty>stock) return alert('庫存不足！\n目前庫存：'+stock+' '+_selectedProd.unit);
+ let d=getData();
+ // 建立待簽收記錄（不入正式 history，鎖定等待採購簽收）
+ let pending={id:Date.now(),type:'out',name:_selectedProd.name,model:_selectedProd.color,qty,unit:_selectedProd.unit,customer:document.getElementById('outRemark').value||'-',date:document.getElementById('outDate').value||today,status:'pendingOut'};
+ if(!d.pendingOut) d.pendingOut=[];
+ d.pendingOut.unshift(pending);
+ saveData(d);
+ updateBadges();
+ alert('✅ 出庫完成！等待採購簽收：\n品名：'+_selectedProd.name+'\n數量：'+qty+' '+_selectedProd.unit+'\n備註：'+(document.getElementById('outRemark').value||'-'));
+ document.getElementById('outQtySection').style.display='none';
+ document.querySelectorAll('#outGrid .prod-btn').forEach(b=>b.classList.remove('selected'));
+ _selectedProd=null;
+ renderOutGrid();
 }
 
 // ════════════════════════════════════════
@@ -1200,7 +1325,7 @@ function renderHistory(){
 function promptDelHistory(id, source){
  let p=prompt('請輸入刪除密碼：');
  if(p===null) return;
- if(p!==_deletePwd){ alert('密碼錯誤'); return; }
+ if(p!==DEL_PWD){ alert('密碼錯誤'); return; }
  let d=getData();
  if(source==='pending'){
   if(d.pendingIn) d.pendingIn=d.pendingIn.filter(h=>h.id!==id);
