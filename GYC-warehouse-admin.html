@@ -588,7 +588,7 @@ input[type="date"]{color:#e8dfd0}
 </div>
 </div>
 
-<script src="qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
 <script>
 // DOM 結構修復：確保所有 .page 都是 body 的直接子元素
 (function fixDOM(){
@@ -1663,12 +1663,10 @@ function addCategory(){
 // QR Code
 // ════════════════════════════════════════
 (function initQR(){
-  if(typeof qrcode==='undefined') return;
-  let q=qrcode(0,'M');
-  q.addData(QR_URL);
-  q.make();
-  let el=document.getElementById('qrcode');
-  if(el) el.innerHTML=q.createSvgTag(4,8);
+ if(typeof QRCode==='undefined') return;
+ let el=document.getElementById('qrcode');
+ if(!el) return;
+ new QRCode(el, {text:QR_URL, width:128, height:128, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M});
 })();
 
 // 預設 today
