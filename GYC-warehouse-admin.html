@@ -668,6 +668,9 @@ function api(action,params={}){
   });
 }
 
+let _cachedData = null;
+let _syncTimer = null;
+
 function getData(){
  if(_cachedData) return _cachedData;
  try{let x=localStorage.getItem(STORAGE_KEY);if(x){_cachedData=JSON.parse(x);return _cachedData}}catch(e){}
@@ -677,12 +680,15 @@ function getData(){
 function saveData(d){
  _cachedData=d;
  try{
-  let prev={products:[],history:[],pendingIn:[]};
-  let old=localStorage.getItem(STORAGE_KEY);
-  if(old)try{prev=JSON.parse(old)}catch(e){}
-  let merged={products:d.products||prev.products||[],history:d.history||prev.history||[],pendingIn:d.pendingIn||prev.pendingIn||[],pendingOut:d.pendingOut||prev.pendingOut||[]};
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
+ let prev={products:[],history:[],pendingIn:[]};
+ let old=localStorage.getItem(STORAGE_KEY);
+ if(old)try{prev=JSON.parse(old)}catch(e){}
+ let merged={products:d.products||prev.products||[],history:d.history||prev.history||[],pendingIn:d.pendingIn||prev.pendingIn||[],pendingOut:d.pendingOut||prev.pendingOut||[]};
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
  }catch(e){}
+ // 雲端同步（debounce 1秒避免頻繁寫入）
+ clearTimeout(_syncTimer);
+ _syncTimer=setTimeout(()=>syncToCloud(merged||d),1000);
 }
 
 function getTypes(){
@@ -963,6 +969,29 @@ function updateBadges(){
 // ════════════════════════════════════════
 const PWD_ADMIN = 'root';
 const DEL_PWD = '000';
+const JB_BIN = '69f00f9caaba8821974620d8';
+const JB_KEY = '$2a$10$0BModxSI.wviHHUTL9udHOVgjWcH4LjuWsmDBiWDYuH0luVENZuIi';
+
+// JSONBin 雲端同步
+async function syncToCloud(d){
+  try{
+    let r = await fetch(`https://api.jsonbin.io/v3/b/${JB_BIN}`, {
+      method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},
+      body: JSON.stringify(d)
+    });
+    if(!r.ok) console.warn('[syncToCloud] 失敗', r.status);
+  }catch(e){ console.warn('[syncToCloud] 網路錯誤', e); }
+}
+async function syncFromCloud(){
+  try{
+    let r = await fetch(`https://api.jsonbin.io/v3/b/${JB_BIN}/latest`, {
+      headers:{'X-Master-Key':JB_KEY}
+    });
+    if(!r.ok) return null;
+    let j = await r.json();
+    return j.record;
+  }catch(e){ return null; }
+}
 const ROLES = {
  admin: {name:'管理員',pwd:'root', pages:['stockPage','prodPage','inPage','outPage','historyPage','catPage']},
  su: {name:'蘇董', pwd:'9999', pages:['stockPage']},
@@ -1000,17 +1029,27 @@ function tryLogin(){
  document.getElementById('loginErr').style.display='none';
  console.log('[tryLogin] 登入成功，角色：', role.name);
 
- try {
-  // 手動初始化（跳過 async initApp）
+tryLogin.init = async function(){
   let d=getData();
-  if(d.products.length===0){
-   d.products=PRODUCTS.map(p=>({...p,stock:0,safety:50}));
-   saveData(d);
+  let cloud = null;
+  try{
+    cloud = await syncFromCloud();
+  }catch(e){ console.warn('[syncFromCloud] 失敗',e); }
+  if(cloud){
+    _cachedData = cloud;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cloud));
   }
-  let inDateEl = document.getElementById('inDate');
-  if(inDateEl){ inDateEl.value=today; inDateEl.max=today; }
+  d = getData();
+  if(d.products.length===0){
+    d.products = PRODUCTS.map(p=>({...p,stock:0,safety:50}));
+    saveData(d);
+  }
   updateBadges();
   applyRolePermissions();
+};
+
+try {
+  await tryLogin.init();
  } catch(e){
   console.error('[tryLogin init error]', e);
   alert('初始化錯誤：'+e);
