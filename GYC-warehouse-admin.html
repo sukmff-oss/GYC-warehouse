@@ -50,35 +50,15 @@ body{
 /* 登入畫面 */
 #loginPage{justify-content:center;align-items:center;gap:20px;background:radial-gradient(ellipse 80% 60% at 30% 20%,rgba(106,191,74,0.12) 0%,transparent 50%),radial-gradient(ellipse 60% 50% at 70% 80%,rgba(168,85,247,0.08) 0%,transparent 50%),radial-gradient(ellipse 100% 100% at 50% 0%,rgba(61,158,221,0.05) 0%,transparent 50%),linear-gradient(180deg,#0d0a08 0%,#1e1810 100%)}
 .login-box{
- background:rgba(20,14,8,0.95);
- backdrop-filter:blur(30px) saturate(200%);
- -webkit-backdrop-filter:blur(30px) saturate(200%);
+ background:rgba(20,14,8,0.97);
  border:1px solid rgba(255,220,180,0.15);
  border-radius:24px;
  padding:36px 32px;
  width:min(400px,92vw);
  text-align:center;
- box-shadow:var(--shadow-xl),0 0 80px rgba(106,191,74,0.1),inset 0 1px 1px rgba(255,255,255,0.08),inset 0 -1px 1px rgba(0,0,0,0.3);
- position:relative;overflow:hidden;
- transform-style:preserve-3d;transition:all .25s ease;
-}
-.login-box:hover{
- transform:translateY(-4px);
- box-shadow:var(--shadow-xl),0 0 100px rgba(106,191,74,0.15),inset 0 1px 1px rgba(255,255,255,0.1),inset 0 -1px 1px rgba(0,0,0,0.3);
-}
-.login-box::before{
- content:'';position:absolute;top:0;left:0;right:0;height:3px;
- background:var(--grad-main);border-radius:24px 24px 0 0;
-}
-.login-box::after{
- content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
- background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,0.03) 50%,rgba(255,255,255,0.06) 55%,transparent 65%);
- pointer-events:none;
- animation:shimmer 8s linear infinite;
-}
-@keyframes shimmer{
- 0%{transform:translateX(-33%) translateY(-33%)}
- 100%{transform:translateX(33%) translateY(33%)}
+ box-shadow:0 8px 32px rgba(0,0,0,0.5),0 0 60px rgba(106,191,74,0.08);
+ position:relative;
+ z-index:1;
 }
 .login-box h2{
  font-size:1.75rem;font-weight:800;margin-bottom:8px;letter-spacing:4px;color:#e8dfd0;
@@ -202,25 +182,13 @@ input:focus{
 .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .role-btn{
  padding:16px 10px;border-radius:16px;font-size:14px;font-weight:700;
- background:rgba(30,24,18,0.7);border:1.5px solid rgba(255,220,180,0.15);
- color:#e8dfd0;cursor:pointer;transition:all .25s;text-align:center;
- position:relative;overflow:hidden;
- transform-style:preserve-3d;
- box-shadow:var(--shadow-md);
- backdrop-filter:blur(10px);
- -webkit-tap-highlight-color:transparent;
- touch-action:manipulation;
+ background:rgba(30,24,18,0.8);border:1.5px solid rgba(255,220,180,0.18);
+ color:#e8dfd0;cursor:pointer;transition:border-color .2s,background .2s;
+ text-align:center;position:relative;z-index:2;
+ -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
-.role-btn::before{
- content:'';position:absolute;top:0;left:0;right:0;height:50%;
- background:linear-gradient(to bottom,rgba(255,255,255,0.08),transparent);
- pointer-events:none;
-}
-.role-btn:hover,.role-btn:active{
- border-color:#6abf4a;
- background:rgba(106,191,74,0.12);
- transform:translateY(-4px) scale(1.02);
- box-shadow:var(--shadow-lg),0 0 25px rgba(106,191,74,0.2);
+.role-btn:active{
+ border-color:#6abf4a;background:rgba(106,191,74,0.15);
 }
 .role-btn.wide{grid-column:1/-1;width:100%;padding:18px 10px;font-size:15px}
 
