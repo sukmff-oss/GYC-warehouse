@@ -1452,7 +1452,7 @@ input[type="date"] {
     <div id="prodMgrSection" style="display:none">
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">➕ 新增產品</p>
       <div class="cat-add">
-        <select id="newProdLine" onchange="renderProdList(this.value)" style="padding:10px 14px;border-radius:50px;border:1.5px solid rgba(59,130,246,.2);background:var(--bg-card);color:var(--text-primary);font-size:0.9rem;min-width:85px">
+        <select id="newProdLine" class="col-line" onchange="renderProdList(this.value)" style="padding:10px 14px;border-radius:50px;border:1.5px solid rgba(59,130,246,.2);background:var(--bg-card);color:var(--text-primary);font-size:0.9rem;min-width:85px">
           <option value="">產品線</option>
           <option value="TU">TU</option>
           <option value="TW">TW</option>
@@ -1461,9 +1461,9 @@ input[type="date"] {
           <option value="CO">CO</option>
           <option value="特殊">特殊</option>
         </select>
-        <input type="text" id="newProdName" placeholder="品名（如 TW-999）">
-        <input type="text" id="newProdColor" placeholder="顏色（如 BLACK）">
-        <button class="btn btn-primary" onclick="addProduct()" style="padding:10px 18px;min-height:unset;font-size:0.85rem">新增</button>
+        <input type="text" id="newProdName" class="col-name" placeholder="品名（如 TW-999）">
+        <input type="text" id="newProdColor" class="col-color" placeholder="顏色（如 BLACK）">
+        <button class="btn btn-primary col-btn" onclick="addProduct()" style="padding:10px 18px;min-height:unset;font-size:0.85rem">新增</button>
       </div>
 
       <div id="prodEditSection" style="display:none;margin-top:16px;padding:14px;background:var(--bg-card);border-radius:var(--radius-md);border:1px solid rgba(59,130,246,.15)">
