@@ -2022,9 +2022,7 @@ function renderPendingInAlert() {
       html += '<span style="color:var(--danger)">🔒</span>';
       html += '<strong style="color:var(--text-primary);font-size:0.85rem">' + h.name + '</strong>';
       html += '</div>';
-      html += '<div style="font-size:0.8rem;color:var(--text-secondary)">' + h.qty + ' ' + h.unit + '</div>';
-      html += '</div>';
-    });
+      html += '<div style="font-size:0.8rem;color:var(--text-secondary)">' + h.qty + ' ' + h.unit + '</div>'; let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin'); if (isWarehouse) { html += '<button onclick="signIn(' + h.id + ')" style="width:100%;padding:6px 12px;background:var(--danger);color:#fff;border:none;border-radius:50px;font-size:0.8rem;font-weight:700;cursor:pointer">🔒 簽收</button>'; } else { html += '<span style="font-size:0.75rem;color:var(--text-muted)">🔒 需倉儲</span>'; } html += '</div>';});
     html += '</div>';
     html += '</div>';
   }
