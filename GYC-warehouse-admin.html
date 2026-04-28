@@ -337,7 +337,7 @@ input[type="date"]{color:#e8dfd0}
 <div class="login-box">
 <h2>📦 國研化工</h2>
 <p class="sub">倉儲管理系統 v4</p>
-<div class="qr-box" id="qrcode"></div>
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALcAAAC3AQAAAAB4FfIyAAAEDElEQVR4nM1YvYodNxT+tLqgheCZTWUXutaFfYLtZDDoksYvkDKV8wCZWdeZn6Rxk5nkBfIe28lg0O38AjHIzMKW0dw0M0QzJ4VdGocRBDLlQXyco/Od73waRvjcRxefDQP/dRwRUC35SvB+QiEA8ABU23FqkpkBtM+tr8zQ2mGkmIBTCNUhVpoHHXMr84mPVm7G2QEA9P1PINjDWWB84b90/kvxpcGhnvblJe9ueG//9fzn4/nEGyHPgn9NS3Namvk5jE/AadkyvAZOSzjhpcDLd0vNdptxdpyA8ztk88OV5vvjk6c3/mfazkPE0qnWDUEPDSRzkVlfu2HdjEMdqBO80zSS6gT1NPTEE3AaIyGQGdTuUz7M+RQe6php1RkKeggGhebBbOchIgSYUx8RVhMrIyuTUhcRNeCrGTr4SqAQsUBCXUQENvHeAZqvhgdDQW+f94ulPFKdz2HmvZO/3b1v7xb1Om7XHwpaMjd0n8gDZlWHhHumcaKgY2ZiTqqffD1RTyrhnvtJtY5WEDnJLCeLzKToWDnFklRArDQFwzuhyG3P54Jf4dBfvmntPcA6+L/s2/64NNv7tRwd3SET11eneD7tV/28uHnYjIOYOzDrC3hoFIavgpPbzucL3sz+xxeHTFz3lp7O8td5vtLvt+dDjVEjxZoks5FZCYDZFP3pHQWo1slyos5Qh6En2l4XMLN+QnbD88v97bzcYl+y7f1CrEQshBonyYgH8GB87RLy4a/sgd0tef7QnJAJZPPz87xP4M8VfKb5OstCL6+m97fv3mZ4m+A3mEXpIgQP4AFDMBEp8x5LG8sJFWKmVTv5nFDp7feDWGkwh9rKkiSzYNbnNsn/WGqJAiQjool6iixpLi70frncwfA/j/vmdDi/eeiS5oIcNdoXRpY0BIPC8D4hn0/6TD35DMNqYmYoiJR+Metzy1s7rBqFkJXgq06Z0xV8dL60qDAEIzMjCyTUFUvnc1KdGTo99BOtiJXevk93yOZDcfww3u3Gfs9uvvsWh+/tV3+n+OehdYpsZC7mE5GlxqTwOXc8CF8J6om3VtZWFgm+ZQd6RqO+jt8s4eQfPf7j0eMnVxgS/GGhkdNAhAzDKvgqKOiUfZqZoZ98TsOqUZIvSdZTUt8nNVrVTh/5MwQDZlNwIKideOt4p6l31E8oKc2PydwitxQgISSzHiLNH8bSyUyrllRnqCdfuxRfx9j1U+2BpTktr+xye8IZ298piDWp0cbSeUY8GBQm1m47Dy8wXi6/1Hj0DD8w/A6fzbv2mPLOLYTqSY12WA0yoYKgkKA/FwCW29OH/XG5mnnQ97hZOjxL2O81qZZQ6aER1E8xnyggQQ8jIGsLIGY6MovcyiLBz7P/2X+JfwAksIQU/TqfIAAAAASUVORK5CYII=" alt="QR Code" style="width:128px;height:128px;display:block;margin:0 auto;border-radius:10px;background:#fff;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">
 <div class="role-grid" id="roleGrid">
 <button class="role-btn" onclick="showPwdInput('su')">👑 蘇董登入</button>
 <button class="role-btn" onclick="showPwdInput('factory')">🏭 廠長登入</button>
@@ -588,7 +588,6 @@ input[type="date"]{color:#e8dfd0}
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
 <script>
 // DOM 結構修復：確保所有 .page 都是 body 的直接子元素
 (function fixDOM(){
@@ -1658,16 +1657,6 @@ function addCategory(){
  renderCat();
  alert('已新增：「'+v+'」');
 }
-
-// ════════════════════════════════════════
-// QR Code
-// ════════════════════════════════════════
-(function initQR(){
- if(typeof QRCode==='undefined') return;
- let el=document.getElementById('qrcode');
- if(!el) return;
- new QRCode(el, {text:QR_URL, width:128, height:128, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M});
-})();
 
 // 預設 today
 document.getElementById&&(document.getElementById('inDate')||{}).value&&(document.getElementById('inDate').value=today);
