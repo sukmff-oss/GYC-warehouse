@@ -208,19 +208,30 @@ input:focus{
  transform-style:preserve-3d;
  box-shadow:var(--shadow-md);
  backdrop-filter:blur(10px);
+ -webkit-tap-highlight-color:transparent;
+ touch-action:manipulation;
 }
 .role-btn::before{
  content:'';position:absolute;top:0;left:0;right:0;height:50%;
  background:linear-gradient(to bottom,rgba(255,255,255,0.08),transparent);
  pointer-events:none;
 }
-.role-btn:hover{
+.role-btn:hover,.role-btn:active{
  border-color:#6abf4a;
  background:rgba(106,191,74,0.12);
  transform:translateY(-4px) scale(1.02);
  box-shadow:var(--shadow-lg),0 0 25px rgba(106,191,74,0.2);
 }
 .role-btn.wide{grid-column:1/-1;width:100%;padding:18px 10px;font-size:15px}
+
+/* 手機響應式：360px以下 2列保持正常大小 */
+@media(max-width:400px){
+ .role-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .role-btn{padding:14px 8px;font-size:13px}
+ .role-btn.wide{font-size:14px}
+ .login-box h2{font-size:1.4rem;letter-spacing:2px}
+ .qr-box,#loginPage img{max-width:110px!important;height:auto!important}
+}
 
 /* 產品線篩選列 */
 .line-filter{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
@@ -337,7 +348,7 @@ input[type="date"]{color:#e8dfd0}
 <div class="login-box">
 <h2>📦 國研化工</h2>
 <p class="sub">倉儲管理系統 v4</p>
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALcAAAC3AQAAAAB4FfIyAAAEDElEQVR4nM1YvYodNxT+tLqgheCZTWUXutaFfYLtZDDoksYvkDKV8wCZWdeZn6Rxk5nkBfIe28lg0O38AjHIzMKW0dw0M0QzJ4VdGocRBDLlQXyco/Od73waRvjcRxefDQP/dRwRUC35SvB+QiEA8ABU23FqkpkBtM+tr8zQ2mGkmIBTCNUhVpoHHXMr84mPVm7G2QEA9P1PINjDWWB84b90/kvxpcGhnvblJe9ueG//9fzn4/nEGyHPgn9NS3Namvk5jE/AadkyvAZOSzjhpcDLd0vNdptxdpyA8ztk88OV5vvjk6c3/mfazkPE0qnWDUEPDSRzkVlfu2HdjEMdqBO80zSS6gT1NPTEE3AaIyGQGdTuUz7M+RQe6php1RkKeggGhebBbOchIgSYUx8RVhMrIyuTUhcRNeCrGTr4SqAQsUBCXUQENvHeAZqvhgdDQW+f94ulPFKdz2HmvZO/3b1v7xb1Om7XHwpaMjd0n8gDZlWHhHumcaKgY2ZiTqqffD1RTyrhnvtJtY5WEDnJLCeLzKToWDnFklRArDQFwzuhyG3P54Jf4dBfvmntPcA6+L/s2/64NNv7tRwd3SET11eneD7tV/28uHnYjIOYOzDrC3hoFIavgpPbzucL3sz+xxeHTFz3lp7O8td5vtLvt+dDjVEjxZoks5FZCYDZFP3pHQWo1slyos5Qh6En2l4XMLN+QnbD88v97bzcYl+y7f1CrEQshBonyYgH8GB87RLy4a/sgd0tef7QnJAJZPPz87xP4M8VfKb5OstCL6+m97fv3mZ4m+A3mEXpIgQP4AFDMBEp8x5LG8sJFWKmVTv5nFDp7feDWGkwh9rKkiSzYNbnNsn/WGqJAiQjool6iixpLi70frncwfA/j/vmdDi/eeiS5oIcNdoXRpY0BIPC8D4hn0/6TD35DMNqYmYoiJR+Metzy1s7rBqFkJXgq06Z0xV8dL60qDAEIzMjCyTUFUvnc1KdGTo99BOtiJXevk93yOZDcfww3u3Gfs9uvvsWh+/tV3+n+OehdYpsZC7mE5GlxqTwOXc8CF8J6om3VtZWFgm+ZQd6RqO+jt8s4eQfPf7j0eMnVxgS/GGhkdNAhAzDKvgqKOiUfZqZoZ98TsOqUZIvSdZTUt8nNVrVTh/5MwQDZlNwIKideOt4p6l31E8oKc2PydwitxQgISSzHiLNH8bSyUyrllRnqCdfuxRfx9j1U+2BpTktr+xye8IZ298piDWp0cbSeUY8GBQm1m47Dy8wXi6/1Hj0DD8w/A6fzbv2mPLOLYTqSY12WA0yoYKgkKA/FwCW29OH/XG5mnnQ97hZOjxL2O81qZZQ6aER1E8xnyggQQ8jIGsLIGY6MovcyiLBz7P/2X+JfwAksIQU/TqfIAAAAASUVORK5CYII=" alt="QR Code" style="width:128px;height:128px;display:block;margin:0 auto;border-radius:10px;background:#fff;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">
+<img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code" style="width:128px;height:128px;display:block;margin:0 auto;border-radius:10px;background:#fff;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">
 <div class="role-grid" id="roleGrid">
 <button class="role-btn" onclick="showPwdInput('su')">👑 蘇董登入</button>
 <button class="role-btn" onclick="showPwdInput('factory')">🏭 廠長登入</button>
@@ -668,7 +679,6 @@ function api(action,params={}){
 }
 
 let _cachedData = null;
-let _syncTimer = null;
 
 function getData(){
  if(_cachedData) return _cachedData;
@@ -684,18 +694,18 @@ function saveData(d){
  if(old)try{prev=JSON.parse(old)}catch(e){}
  let merged={products:d.products||prev.products||[],history:d.history||prev.history||[],pendingIn:d.pendingIn||prev.pendingIn||[],pendingOut:d.pendingOut||prev.pendingOut||[]};
  localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
+ // 即時同步雲端（每次變更立刻上傳）
+ syncToCloud(merged);
  }catch(e){}
- // 雲端同步（debounce 1秒避免頻繁寫入）
- clearTimeout(_syncTimer);
- _syncTimer=setTimeout(()=>syncToCloud(merged||d),1000);
 }
 
-function getTypes(){
-  if(_categories) return _categories;
-  try{let x=localStorage.getItem(CAT_KEY);if(x){_categories=JSON.parse(x);return _categories}}catch(e){}
-  _categories=['原料','成品','其他'];
-  return _categories;
-}
+const ROLES = {
+ admin: {name:'管理員',pwd:'root', pages:['stockPage','prodPage','inPage','outPage','historyPage','catPage']},
+ su: {name:'蘇董', pwd:'9999', pages:['stockPage']},
+ factory: {name:'廠長', pwd:'8888', pages:['prodPage','stockPage']},
+ warehouse:{name:'倉儲', pwd:'7777', pages:['inPage','outPage','stockPage']},
+ purchase: {name:'採購', pwd:'6666', pages:['outPage','stockPage']},
+};
 
 function saveCategories(cats){
   _categories=cats;
@@ -971,28 +981,7 @@ const DEL_PWD = '000';
 const JB_BIN = '69f00f9caaba8821974620d8';
 const JB_KEY = '$2a$10$0BModxSI.wviHHUTL9udHOVgjWcH4LjuWsmDBiWDYuH0luVENZuIi';
 
-// JSONBin 雲端同步
-async function syncToCloud(d){
-  try{
-    let r = await fetch(`https://api.jsonbin.io/v3/b/${JB_BIN}`, {
-      method:'PUT', headers:{'Content-Type':'application/json','X-Master-Key':JB_KEY},
-      body: JSON.stringify(d)
-    });
-    if(!r.ok) console.warn('[syncToCloud] 失敗', r.status);
-  }catch(e){ console.warn('[syncToCloud] 網路錯誤', e); }
-}
-async function syncFromCloud(){
-  try{
-    let r = await fetch(`https://api.jsonbin.io/v3/b/${JB_BIN}/latest`, {
-      headers:{'X-Master-Key':JB_KEY}
-    });
-    if(!r.ok) return null;
-    let j = await r.json();
-    return j.record;
-  }catch(e){ return null; }
-}
 const ROLES = {
- admin: {name:'管理員',pwd:'root', pages:['stockPage','prodPage','inPage','outPage','historyPage','catPage']},
  su: {name:'蘇董', pwd:'9999', pages:['stockPage']},
  factory: {name:'廠長', pwd:'8888', pages:['prodPage','stockPage']},
  warehouse:{name:'倉儲', pwd:'7777', pages:['inPage','outPage','stockPage']},
