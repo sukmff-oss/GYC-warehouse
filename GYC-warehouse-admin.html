@@ -2523,9 +2523,9 @@ function addCategory() {
 // ==================== 初始化 ====================
 function initApp() {
  try {
-  // 檢查上次登入角色，自動恢復
+  // 檢查上次登入角色，自動恢復（需要是有效角色才放行）
   let savedRole = localStorage.getItem('_savedRole');
-  if (savedRole && ROLES[savedRole]) {
+  if (savedRole && typeof ROLES[savedRole] === 'object' && ROLES[savedRole].name) {
    _currentRole = savedRole;
    console.log('[initApp] 自動恢復登入角色：', savedRole);
    document.getElementById('loginPage').classList.remove('active');
@@ -2535,6 +2535,8 @@ function initApp() {
    applyRolePermissions();
    updateBadges();
    return;
+  } else {
+   localStorage.removeItem('_savedRole'); // 無效角色，清除乾淨
   }
   let d = getData();
     if (d.products.length === 0) {
