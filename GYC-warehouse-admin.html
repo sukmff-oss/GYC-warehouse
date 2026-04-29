@@ -1466,15 +1466,20 @@ input[type="date"] {
     <div id="prodMgrSection" style="display:none">
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px">➕ 新增產品</p>
       <div class="cat-add">
-        <select id="newProdLine" class="col-line" onchange="renderProdList(this.value)" style="padding:10px 14px;border-radius:50px;border:1.5px solid rgba(59,130,246,.2);background:var(--bg-card);color:var(--text-primary);font-size:0.9rem;min-width:85px">
-          <option value="">產品線</option>
-          <option value="TU">TU</option>
-          <option value="TW">TW</option>
-          <option value="WO">WO</option>
-          <option value="WP">WP</option>
-          <option value="CO">CO</option>
-          <option value="特殊">特殊</option>
-        </select>
+<select id="newProdLine" class="col-line" onchange="renderProdList(this.value)" style="padding:10px 14px;border-radius:50px;border:1.5px solid rgba(59,130,246,.2);background:var(--bg-card);color:var(--text-primary);font-size:0.9rem;min-width:85px">
+ <option value="">產品線</option>
+ <option value="TU">TU</option>
+ <option value="TW">TW</option>
+ <option value="WO">WO</option>
+ <option value="WP">WP</option>
+ <option value="CO">CO</option>
+ <option value="特殊">特殊</option>
+ <option value="溶劑" disabled style="color:var(--text-muted)">溶劑 🔒</option>
+ <option value="助劑" disabled style="color:var(--text-muted)">助劑 🔒</option>
+ <option value="色粉" disabled style="color:var(--text-muted)">色粉 🔒</option>
+ <option value="樹酯" disabled style="color:var(--text-muted)">樹酯 🔒</option>
+ <option value="其他" disabled style="color:var(--text-muted)">其他 🔒</option>
+ </select>
         <input type="text" id="newProdName" class="col-name" placeholder="品名（如 TW-999）">
         <input type="text" id="newProdColor" class="col-color" placeholder="顏色（如 BLACK）">
         <button class="btn btn-primary col-btn" onclick="addProduct()" style="padding:10px 18px;min-height:unset;font-size:0.85rem">新增</button>
@@ -2015,31 +2020,36 @@ function getProducts() {
 }
 
 function renderLineFilter(containerId) {
-  let container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  let allBtn = document.createElement('button');
-  allBtn.className = 'line-btn' + (_filterLine === '' ? ' active' : '');
-  allBtn.textContent = '全部';
-  allBtn.setAttribute('data-line', '');
-  container.appendChild(allBtn);
-  for (let line of LINES) {
-    let b = document.createElement('button');
-    b.className = 'line-btn' + (_filterLine === line ? ' active' : '');
-    b.textContent = line;
-    b.setAttribute('data-line', line);
-    container.appendChild(b);
-  }
+ let container = document.getElementById(containerId);
+ if (!container) return;
+ container.innerHTML = '';
+ let LOCKED_LINES = ['溶劑', '助劑', '色粉', '樹酯', '其他'];
+ let allBtn = document.createElement('button');
+ allBtn.className = 'line-btn' + (_filterLine === '' ? ' active' : '');
+ allBtn.textContent = '全部';
+ allBtn.setAttribute('data-line', '');
+ container.appendChild(allBtn);
+ for (let line of LINES) {
+  let b = document.createElement('button');
+  let isLocked = LOCKED_LINES.includes(line);
+  b.className = 'line-btn' + (_filterLine === line ? ' active' : '') + (isLocked ? ' locked' : '');
+  b.textContent = isLocked ? line + ' 🔒' : line;
+  b.setAttribute('data-line', line);
+  if (isLocked) b.style.opacity = '0.4';
+  container.appendChild(b);
+ }
 container.onclick = function(e) {
-  let btn = e.target.closest('.line-btn');
-  if (!btn) return;
-  e.stopPropagation(); // 防止冒泡到產品按鈕，阻止 DOM 被意外重建
-  _filterLine = btn.getAttribute('data-line') || '';
-  buildProdGrid('prodGrid', null);
-  buildProdGrid('inGrid', null);
-  buildProdGrid('outGrid', null);
-  renderLineFilter(containerId);
- };
+ let btn = e.target.closest('.line-btn');
+ if (!btn) return;
+ let line = btn.getAttribute('data-line') || '';
+ if (['溶劑', '助劑', '色粉', '樹酯', '其他'].includes(line)) return; // 鎖定的不響應
+ e.stopPropagation();
+ _filterLine = line;
+ buildProdGrid('prodGrid', null);
+ buildProdGrid('inGrid', null);
+ buildProdGrid('outGrid', null);
+ renderLineFilter(containerId);
+};
 }
 
 // ==================== 入庫作業 ====================
