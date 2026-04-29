@@ -1946,18 +1946,23 @@ function renderPendingOutReport() {
 // ==================== 產品網格 ====================
 let _renderingGrid = false;
 function buildProdGrid(containerId, onSelect) {
- if (_renderingGrid) { console.log('[buildProdGrid] 防重入：跳過', containerId); return; }
- _renderingGrid = true;
+ console.log('[buildProdGrid] 開始，', containerId, '防重入:', _renderingGrid);
  let container = document.getElementById(containerId);
- if (!container) { _renderingGrid = false; return; }
+ if (!container) { console.error('[buildProdGrid] 找不到:', containerId); _renderingGrid = false; return; }
+ if (_renderingGrid) { console.log('[buildProdGrid] 跳過（防重入）', containerId); return; }
+ _renderingGrid = true;
+ // Safety: 2秒後強制解鎖，防止卡死
+ setTimeout(() => { if (_renderingGrid) { console.warn('[buildProdGrid] safety unlock'); _renderingGrid = false; } }, 2000);
  container.innerHTML = '';
  let prods = getProducts();
  if (_filterLine) prods = prods.filter(p => p.line === _filterLine);
+ console.log('[buildProdGrid]', containerId, '產品數:', prods.length);
  for (let p of prods) {
   let btn = document.createElement('button');
   btn.className = 'prod-btn';
   btn.innerHTML = '<span class="name">' + p.name + '</span><span class="color">' + p.color + '</span>';
   btn.onclick = () => {
+   console.log('[產品按鈕點擊]', p.name, 'containerId:', containerId);
    document.querySelectorAll('#' + containerId + ' .prod-btn.selected').forEach(b => b.classList.remove('selected'));
    btn.classList.add('selected');
    if (onSelect) onSelect(p);
@@ -2524,7 +2529,9 @@ function addCategory() {
 function initApp() {
  try {
   // 檢查上次登入角色，自動恢復（需要是有效角色才放行）
+  // 重置所有篩選狀態，避免殘留導致 UI 異常
   let savedRole = localStorage.getItem('_savedRole');
+  _filterLine = ''; // 重置篩選，避免殘留舊狀態
   if (savedRole && typeof ROLES[savedRole] === 'object' && ROLES[savedRole].name) {
    _currentRole = savedRole;
    console.log('[initApp] 自動恢復登入角色：', savedRole);
