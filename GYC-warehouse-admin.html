@@ -1358,10 +1358,11 @@ input[type="date"] {
 
 <!-- ═══ 生產作業 ═══ -->
 <div class="page" id="prodPage">
-  <div class="func-header">
-    <button class="back-btn" onclick="showPage('menuPage')">←</button>
-    <span class="page-title">🏭 生產作業</span>
-  </div>
+ <div class="func-header">
+  <button class="back-btn" onclick="showPage('menuPage')">←</button>
+  <span class="page-title">🏭 生產作業</span>
+  <button class="back-btn" style="background:rgba(59,130,246,.2);color:var(--accent-primary)" onclick="freshGrids()">🔄</button>
+ </div>
 
   <!-- 生產確認警示區塊 - 藍燈（待廠長回報） -->
   <div id="pendingConfirmAlertSection" style="margin-bottom:16px"></div>
@@ -1944,6 +1945,8 @@ function renderPendingOutReport() {
 }
 
 // ==================== 產品網格 ====================
+// 產品網格 - 用事件委託避免 DOM 重建後事件消失
+let _prodGridDelegate = false;
 let _renderingGrid = false;
 function buildProdGrid(containerId, onSelect) {
  console.log('[buildProdGrid] 開始，', containerId, '防重入:', _renderingGrid);
@@ -1951,7 +1954,6 @@ function buildProdGrid(containerId, onSelect) {
  if (!container) { console.error('[buildProdGrid] 找不到:', containerId); _renderingGrid = false; return; }
  if (_renderingGrid) { console.log('[buildProdGrid] 跳過（防重入）', containerId); return; }
  _renderingGrid = true;
- // Safety: 2秒後強制解鎖，防止卡死
  setTimeout(() => { if (_renderingGrid) { console.warn('[buildProdGrid] safety unlock'); _renderingGrid = false; } }, 2000);
  container.innerHTML = '';
  let prods = getProducts();
@@ -1960,27 +1962,47 @@ function buildProdGrid(containerId, onSelect) {
  for (let p of prods) {
   let btn = document.createElement('button');
   btn.className = 'prod-btn';
+  btn.dataset.name = p.name;
+  btn.dataset.containerId = containerId;
   btn.innerHTML = '<span class="name">' + p.name + '</span><span class="color">' + p.color + '</span>';
-  btn.onclick = () => {
-   console.log('[產品按鈕點擊]', p.name, 'containerId:', containerId);
+  container.appendChild(btn);
+ }
+ // 事件委託：只綁一次在容器上，不受 DOM 重建影響
+ if (!_prodGridDelegate) {
+  _prodGridDelegate = true;
+  document.addEventListener('click', function(e) {
+   let btn = e.target.closest('.prod-btn');
+   if (!btn) return;
+   let containerId = btn.dataset.containerId;
+   let name = btn.dataset.name;
+   let prods = getProducts();
+   if (_filterLine) prods = prods.filter(p => p.line === _filterLine);
+   let p = prods.find(x => x.name === name);
+   if (!p) return;
+   console.log('[產品按鈕 Delegate 點擊]', p.name, 'containerId:', containerId);
    document.querySelectorAll('#' + containerId + ' .prod-btn.selected').forEach(b => b.classList.remove('selected'));
    btn.classList.add('selected');
-   if (onSelect) {
-    console.log('[onSelect] 開始執行', p.name);
-    try {
-     requestAnimationFrame(() => {
-      onSelect(p);
-      console.log('[onSelect] 完成', p.name);
-     });
-    } catch(e) {
-     console.error('[onSelect] 錯誤:', e);
-    }
-   }
-  };
-  container.appendChild(btn);
+   // 呼叫對應的 onSelect
+   if (containerId === 'prodGrid') { renderProdGrid.__onSelect(p); }
+   else if (containerId === 'inGrid') { renderInGrid.__onSelect(p); }
+   else if (containerId === 'outGrid') { renderOutGrid.__onSelect(p); }
+  });
  }
  console.log('[buildProdGrid] 完成，', containerId, '子元素:', container.children.length);
  _renderingGrid = false;
+}
+
+// 應急：重新整理所有網格（清除卡死狀態）
+function freshGrids() {
+ _renderingGrid = false;
+ _filterLine = '';
+ renderLineFilter('prodLineFilter');
+ renderLineFilter('inLineFilter');
+ renderLineFilter('outLineFilter');
+ renderProdGrid();
+ renderInGrid();
+ renderOutGrid();
+ renderPendingConfirm();
 }
 
 function getProducts() {
@@ -2022,14 +2044,15 @@ container.onclick = function(e) {
 
 // ==================== 入庫作業 ====================
 function renderInGrid() {
-  buildProdGrid('inGrid', (p) => {
-    _selectedProd = p;
-    document.getElementById('inQtySection').style.display = 'block';
-    document.getElementById('inProdLabel').textContent = p.name + '（' + p.color + '）';
-    document.getElementById('inUnitTag').textContent = p.unit;
-    document.getElementById('inQty').value = '';
-    document.getElementById('inRemark').value = '';
-  });
+ renderInGrid.__onSelect = (p) => {
+  _selectedProd = p;
+  document.getElementById('inQtySection').style.display = 'block';
+  document.getElementById('inProdLabel').textContent = p.name + '（' + p.color + '）';
+  document.getElementById('inUnitTag').textContent = p.unit;
+  document.getElementById('inQty').value = '';
+  document.getElementById('inRemark').value = '';
+ };
+ buildProdGrid('inGrid', renderInGrid.__onSelect);
 }
 
 // ==================== 入庫作業警示系統 ====================
@@ -2278,16 +2301,17 @@ async function doIn() {
 
 // ==================== 生產作業 ====================
 function renderProdGrid() {
-  buildProdGrid('prodGrid', (p) => {
-    _selectedProd = p;
-    document.getElementById('prodQtySection').style.display = 'block';
-    document.getElementById('prodProdLabel').textContent = p.name + '（' + p.color + '）';
-    document.getElementById('prodUnitTag').textContent = p.unit;
-    document.getElementById('prodQty').value = '';
-    document.getElementById('prodBatch').value = '';
-    let prodDate = document.getElementById('prodDate');
-    if (prodDate) prodDate.value = today;
-  });
+ renderProdGrid.__onSelect = (p) => {
+  _selectedProd = p;
+  document.getElementById('prodQtySection').style.display = 'block';
+  document.getElementById('prodProdLabel').textContent = p.name + '（' + p.color + '）';
+  document.getElementById('prodUnitTag').textContent = p.unit;
+  document.getElementById('prodQty').value = '';
+  document.getElementById('prodBatch').value = '';
+  let prodDate = document.getElementById('prodDate');
+  if (prodDate) prodDate.value = today;
+ };
+ buildProdGrid('prodGrid', renderProdGrid.__onSelect);
 }
 
 async function doProd() {
@@ -2310,14 +2334,15 @@ async function doProd() {
 
 // ==================== 出庫作業 ====================
 function renderOutGrid() {
-  buildProdGrid('outGrid', (p) => {
-    _selectedProd = p;
-    document.getElementById('outQtySection').style.display = 'block';
-    document.getElementById('outProdLabel').textContent = p.name + '（' + p.color + '）';
-    document.getElementById('outUnitTag').textContent = p.unit;
-    document.getElementById('outQty').value = '';
-    document.getElementById('outRemark').value = '';
-  });
+ renderOutGrid.__onSelect = (p) => {
+  _selectedProd = p;
+  document.getElementById('outQtySection').style.display = 'block';
+  document.getElementById('outProdLabel').textContent = p.name + '（' + p.color + '）';
+  document.getElementById('outUnitTag').textContent = p.unit;
+  document.getElementById('outQty').value = '';
+  document.getElementById('outRemark').value = '';
+ };
+ buildProdGrid('outGrid', renderOutGrid.__onSelect);
 }
 
 async function doOut() {
