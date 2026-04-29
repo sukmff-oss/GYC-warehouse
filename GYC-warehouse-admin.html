@@ -1473,7 +1473,7 @@ input[type="date"] {
  <option value="WO">WO</option>
  <option value="WP">WP</option>
  <option value="CO">CO</option>
- <option value="特殊">特殊</option>
+ <option value="特殊" disabled style="color:var(--text-muted)">特殊 🔒</option>
  <option value="溶劑" disabled style="color:var(--text-muted)">溶劑 🔒</option>
  <option value="助劑" disabled style="color:var(--text-muted)">助劑 🔒</option>
  <option value="色粉" disabled style="color:var(--text-muted)">色粉 🔒</option>
@@ -2023,7 +2023,7 @@ function renderLineFilter(containerId) {
  let container = document.getElementById(containerId);
  if (!container) return;
  container.innerHTML = '';
- let LOCKED_LINES = ['溶劑', '助劑', '色粉', '樹酯', '其他'];
+ let LOCKED_LINES = ['特殊', '溶劑', '助劑', '色粉', '樹酯', '其他'];
  let allBtn = document.createElement('button');
  allBtn.className = 'line-btn' + (_filterLine === '' ? ' active' : '');
  allBtn.textContent = '全部';
@@ -2042,7 +2042,7 @@ container.onclick = function(e) {
  let btn = e.target.closest('.line-btn');
  if (!btn) return;
  let line = btn.getAttribute('data-line') || '';
- if (['溶劑', '助劑', '色粉', '樹酯', '其他'].includes(line)) return; // 鎖定的不響應
+ if (['特殊', '溶劑', '助劑', '色粉', '樹酯', '其他'].includes(line)) return; // 鎖定的不響應
  e.stopPropagation();
  _filterLine = line;
  buildProdGrid('prodGrid', null);
