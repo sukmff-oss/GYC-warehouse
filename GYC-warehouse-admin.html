@@ -1965,7 +1965,17 @@ function buildProdGrid(containerId, onSelect) {
    console.log('[產品按鈕點擊]', p.name, 'containerId:', containerId);
    document.querySelectorAll('#' + containerId + ' .prod-btn.selected').forEach(b => b.classList.remove('selected'));
    btn.classList.add('selected');
-   if (onSelect) onSelect(p);
+   if (onSelect) {
+    console.log('[onSelect] 開始執行', p.name);
+    try {
+     requestAnimationFrame(() => {
+      onSelect(p);
+      console.log('[onSelect] 完成', p.name);
+     });
+    } catch(e) {
+     console.error('[onSelect] 錯誤:', e);
+    }
+   }
   };
   container.appendChild(btn);
  }
