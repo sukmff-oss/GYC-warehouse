@@ -1993,15 +1993,16 @@ function renderLineFilter(containerId) {
     b.setAttribute('data-line', line);
     container.appendChild(b);
   }
-  container.onclick = function(e) {
-    let btn = e.target.closest('.line-btn');
-    if (!btn) return;
-    _filterLine = btn.getAttribute('data-line') || '';
-    buildProdGrid('prodGrid', null);
-    buildProdGrid('inGrid', null);
-    buildProdGrid('outGrid', null);
-    renderLineFilter(containerId);
-  };
+container.onclick = function(e) {
+  let btn = e.target.closest('.line-btn');
+  if (!btn) return;
+  e.stopPropagation(); // 防止冒泡到產品按鈕，阻止 DOM 被意外重建
+  _filterLine = btn.getAttribute('data-line') || '';
+  buildProdGrid('prodGrid', null);
+  buildProdGrid('inGrid', null);
+  buildProdGrid('outGrid', null);
+  renderLineFilter(containerId);
+ };
 }
 
 // ==================== 入庫作業 ====================
