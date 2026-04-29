@@ -1665,7 +1665,8 @@ function tryLogin() {
 }
 
 function performLogin(role) {
-  let d = getData();
+ localStorage.setItem('_savedRole', _currentRole); // 刷新不跳回登入
+ let d = getData();
   if (d.products.length === 0) {
     d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
     saveData(d);
@@ -1690,31 +1691,38 @@ function applyRolePermissions() {
 }
 
 function doLogout() {
-  if (!confirm('確定要登出？')) return;
-  _currentRole = null;
-  showPage('loginPage');
+ if (!confirm('確定要登出？')) return;
+ _currentRole = null;
+ localStorage.removeItem('_savedRole');
+ showPage('loginPage');
   backToRoles();
 }
 
 // ==================== 頁面切換 ====================
+let _isNavigating = false;
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.display = 'none';
-    p.hidden = true;
-  });
-  let target = document.getElementById(id);
-  target.classList.add('active');
-  target.hidden = false;
-  target.style.display = 'flex';
+ if (_isNavigating) { console.log('[showPage] 防重入：跳過', id); return; }
+ _isNavigating = true;
+ document.querySelectorAll('.page').forEach(p => {
+  p.classList.remove('active');
+  p.style.display = 'none';
+  p.hidden = true;
+ });
+ let target = document.getElementById(id);
+ target.classList.add('active');
+ target.hidden = false;
+ target.style.display = 'flex';
 
-  updateBadges();
+ updateBadges();
+ try {
   if (id === 'stockPage') {switchReport('daily', document.querySelector('.r-tab')); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
   if (id === 'inPage') {renderLineFilter('inLineFilter'); renderInGrid(); renderPendingInAlert(); renderPendingIn();}
   if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid();}
   if (id === 'historyPage') renderHistory();
   if (id === 'catPage') renderCat();
+ } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
+ _isNavigating = false;
 }
 
 // ==================== 徽章更新 ====================
@@ -1936,23 +1944,28 @@ function renderPendingOutReport() {
 }
 
 // ==================== 產品網格 ====================
+let _renderingGrid = false;
 function buildProdGrid(containerId, onSelect) {
-  let container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  let prods = getProducts();
-  if (_filterLine) prods = prods.filter(p => p.line === _filterLine);
-  for (let p of prods) {
-    let btn = document.createElement('button');
-    btn.className = 'prod-btn';
-    btn.innerHTML = '<span class="name">' + p.name + '</span><span class="color">' + p.color + '</span>';
-    btn.onclick = () => {
-      document.querySelectorAll('#' + containerId + ' .prod-btn.selected').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      if (onSelect) onSelect(p);
-    };
-    container.appendChild(btn);
-  }
+ if (_renderingGrid) { console.log('[buildProdGrid] 防重入：跳過', containerId); return; }
+ _renderingGrid = true;
+ let container = document.getElementById(containerId);
+ if (!container) { _renderingGrid = false; return; }
+ container.innerHTML = '';
+ let prods = getProducts();
+ if (_filterLine) prods = prods.filter(p => p.line === _filterLine);
+ for (let p of prods) {
+  let btn = document.createElement('button');
+  btn.className = 'prod-btn';
+  btn.innerHTML = '<span class="name">' + p.name + '</span><span class="color">' + p.color + '</span>';
+  btn.onclick = () => {
+   document.querySelectorAll('#' + containerId + ' .prod-btn.selected').forEach(b => b.classList.remove('selected'));
+   btn.classList.add('selected');
+   if (onSelect) onSelect(p);
+  };
+  container.appendChild(btn);
+ }
+ console.log('[buildProdGrid] 完成，', containerId, '子元素:', container.children.length);
+ _renderingGrid = false;
 }
 
 function getProducts() {
@@ -2508,8 +2521,21 @@ function addCategory() {
 
 // ==================== 初始化 ====================
 function initApp() {
-  try {
-    let d = getData();
+ try {
+  // 檢查上次登入角色，自動恢復
+  let savedRole = localStorage.getItem('_savedRole');
+  if (savedRole && ROLES[savedRole]) {
+   _currentRole = savedRole;
+   console.log('[initApp] 自動恢復登入角色：', savedRole);
+   document.getElementById('loginPage').classList.remove('active');
+   document.getElementById('loginPage').hidden = true;
+   showPage('menuPage');
+   document.getElementById('welcomeName').textContent = ROLES[savedRole].name;
+   applyRolePermissions();
+   updateBadges();
+   return;
+  }
+  let d = getData();
     if (d.products.length === 0) {
       d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
       saveData(d);
