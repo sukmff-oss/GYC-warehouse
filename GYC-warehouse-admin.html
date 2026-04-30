@@ -1780,6 +1780,29 @@ function calcStock(name) {
   return stock;
 }
 
+// 根據 name + model (color) 動態計算即時庫存
+function calcProdStock(name, model) {
+  let d = getData();
+  let stock = 0;
+  for (let h of d.history) {
+    if (h.deleted || h.name !== name) continue;
+    if (model && h.model !== model) continue;
+    stock += (h.type === 'in' ? h.qty : -h.qty);
+  }
+  return stock;
+}
+
+// 更新 products[i].stock（寫入 history 後同步）
+function syncProductStock(name, model, qty, type) {
+  let d = getData();
+  let idx = d.products.findIndex(p => p.name === name && (p.color || p.model || '') === model);
+  if (idx >= 0) {
+    d.products[idx].stock = d.products[idx].stock || 0;
+    d.products[idx].stock += (type === 'in' ? qty : -qty);
+    if (d.products[idx].stock < 0) d.products[idx].stock = 0;
+  }
+}
+
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 // ==================== 登入功能 ====================
@@ -1964,16 +1987,20 @@ function renderSuDashboard() {
     }
   }
   renderSu30dChart(d);
-  let lowProducts = d.products.filter(p => (p.stock || 0) < (p.safety || 50));
+  let lowProducts = d.products.filter(p => {
+    let stock = calcProdStock(p.name, p.color || p.model || '');
+    return stock < (p.safety || 50);
+  });
   let alertEl = document.getElementById('suLowStockSection');
   let listEl = document.getElementById('suLowStockList');
   if (alertEl && listEl) {
     if (lowProducts.length > 0) {
       alertEl.style.display = 'block';
       listEl.innerHTML = lowProducts.map(p => {
-        let pct = Math.round((p.stock / (p.safety || 50)) * 100);
+        let stock = calcProdStock(p.name, p.color || p.model || '');
+        let pct = Math.round((stock / (p.safety || 50)) * 100);
         let color = pct < 40 ? 'var(--danger)' : 'var(--warning, #ffa726)';
-        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem"><span>'+p.name+' '+p.color+'</span><span style="color:'+color+';font-weight:700">'+p.stock+' / '+p.safety+'KG ('+pct+'%)</span></div>';
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem"><span>'+p.name+' '+(p.color||p.model||'')+'</span><span style="color:'+color+';font-weight:700">'+stock+' / '+(p.safety||50)+'KG ('+pct+'%)</span></div>';
       }).join('');
     } else { alertEl.style.display = 'none'; }
   }
@@ -2429,6 +2456,7 @@ async function factoryConfirm(id) {
 
   let rec = {id: item.id, type: 'in', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
+  syncProductStock(rec.name, rec.model, rec.qty, rec.type);
   d.pendingIn = d.pendingIn.filter(h => h.id !== id);
   saveData(d);
   renderPendingInAlert();
@@ -2526,6 +2554,7 @@ async function doIn() {
   let d = getData();
   let rec = {id: Date.now(), type: 'in', name: _selectedProd.name, model: _selectedProd.color, qty, unit: _selectedProd.unit, customer: document.getElementById('inRemark').value || '-', date: document.getElementById('inDate').value || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
+  syncProductStock(rec.name, rec.model, rec.qty, rec.type);
   saveData(d);
   alert('✅ 入庫成功！\n品名：' + _selectedProd.name + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('inQtySection').style.display = 'none';
@@ -2611,6 +2640,7 @@ async function signOut(id) {
 
   let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
+  syncProductStock(rec.name, rec.model, rec.qty, rec.type);
   d.pendingOut = d.pendingOut.filter(h => h.id !== id);
   saveData(d);
   renderPendingOutAlert();
