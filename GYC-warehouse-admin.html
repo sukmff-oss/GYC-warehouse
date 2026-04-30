@@ -2427,7 +2427,7 @@ async function factoryConfirm(id) {
   let confirmSign = confirm('🏭 確認回報入庫\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成回報？');
   if (!confirmSign) return;
 
-  let rec = {id: item.id, type: 'in', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today}, operator: ROLES[_currentRole]?.name || _currentRole};
+  let rec = {id: item.id, type: 'in', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   d.pendingIn = d.pendingIn.filter(h => h.id !== id);
   saveData(d);
@@ -2524,7 +2524,7 @@ async function doIn() {
   let qty = parseFloat(document.getElementById('inQty').value);
   if (!qty || qty <= 0) return alert('請填寫數量');
   let d = getData();
-  let rec = {id: Date.now(), type: 'in', name: _selectedProd.name, model: _selectedProd.color, qty, unit: _selectedProd.unit, customer: document.getElementById('inRemark').value || '-', date: document.getElementById('inDate').value || today}, operator: ROLES[_currentRole]?.name || _currentRole};
+  let rec = {id: Date.now(), type: 'in', name: _selectedProd.name, model: _selectedProd.color, qty, unit: _selectedProd.unit, customer: document.getElementById('inRemark').value || '-', date: document.getElementById('inDate').value || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   saveData(d);
   alert('✅ 入庫成功！\n品名：' + _selectedProd.name + '\n數量：' + qty + ' ' + _selectedProd.unit);
@@ -2609,7 +2609,7 @@ async function signOut(id) {
   let confirmSign = confirm('🔐 確認簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
   if (!confirmSign) return;
 
-  let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today}, operator: ROLES[_currentRole]?.name || _currentRole};
+  let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   d.pendingOut = d.pendingOut.filter(h => h.id !== id);
   saveData(d);
