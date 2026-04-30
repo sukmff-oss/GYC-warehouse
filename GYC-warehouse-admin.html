@@ -3087,195 +3087,148 @@ document.addEventListener('DOMContentLoaded', function() {
   initApp();
 });
 
-// ==================== 蘇董語音功能 ====================
-let _recognition = null;
-let _isListening = false;
 
-function speakText(text, callback) {
-  // Try MiniMax TTS first
+// ==================== 蘇董語音功能 ====================
+window._recognition = null;
+window._isListening = false;
+
+window.speakText = function(text, callback) {
   fetch('https://api.minimax.io/v1/t2a_v2', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + MINIMAX_TTS_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model: 'speech-02-hd', text: text })
   })
-  .then(r => r.arrayBuffer())
-  .then(buf => {
-    const blob = new Blob([buf], { type: 'audio/mp3' });
-    const url = URL.createObjectURL(blob);
-    const a = new Audio(url);
-    a.play().catch(() => {});
-    a.onended = () => { URL.revokeObjectURL(url); if (callback) callback(); };
+  .then(function(r) { return r.arrayBuffer(); })
+  .then(function(buf) {
+    var blob = new Blob([buf], { type: 'audio/mp3' });
+    var url = URL.createObjectURL(blob);
+    var a = new Audio(url);
+    a.onended = function() { URL.revokeObjectURL(url); if (callback) callback(); };
+    a.play();
   })
-  .catch(() => {
-    // Fallback: browser speech synthesis
+  .catch(function() {
     if ('speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text);
+      var u = new SpeechSynthesisUtterance(text);
       u.lang = 'zh-TW';
-      u.rate = 1.0;
-      u.pitch = 1.0;
       speechSynthesis.speak(u);
     }
     if (callback) callback();
   });
-}
+};
 
-function parseAndAnswer(query) {
-  query = query.replace(/[？?。.!！]/g, '').trim().toLowerCase();
-  let d = getData();
-  let today = new Date().toISOString().slice(0, 10);
-  let now = Date.now();
-  let answer = '';
+window.parseAndAnswer = function(query) {
+  query = query.replace(/[？！?。.!！]/g, '').trim().toLowerCase();
+  var d = getData();
+  var today = new Date().toISOString().slice(0, 10);
+  var now = Date.now();
+  var answer = '';
 
-  // 今日入庫
   if (/今日.*入/.test(query) || /入.*今日/.test(query)) {
-    let todayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === today);
-    if (todayIn.length === 0) {
-      answer = '今日沒有入庫記錄';
-    } else {
-      let total = todayIn.reduce((s, h) => s + (h.qty || 0), 0);
-      let details = todayIn.map(h => h.name + ' ' + h.model + ' ' + h.qty + h.unit).join('、');
-      answer = '今日入庫共' + total + '公斤，' + todayIn.length + '筆。' + details;
+    var recs = d.history.filter(function(h) { return !h.deleted && h.type === 'in' && h.date === today; });
+    if (recs.length === 0) { answer = '今日沒有入庫記錄'; }
+    else {
+      var total = recs.reduce(function(s, h) { return s + (h.qty||0); }, 0);
+      var det = recs.map(function(h) { return h.name + ' ' + h.model + ' ' + h.qty + h.unit; }).join('、');
+      answer = '今日入庫共' + total + '公斤，' + recs.length + '筆。' + det;
     }
   }
-  // 今日出庫
   else if (/今日.*出/.test(query) || /出.*今日/.test(query)) {
-    let todayOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === today);
-    if (todayOut.length === 0) {
-      answer = '今日沒有出庫記錄';
-    } else {
-      let total = todayOut.reduce((s, h) => s + (h.qty || 0), 0);
-      let details = todayOut.map(h => h.name + ' ' + h.model + ' ' + h.qty + h.unit).join('、');
-      answer = '今日出庫共' + total + '公斤，' + todayOut.length + '筆。' + details;
-    }
-  }
-  // 昨日入庫
-  else if (/昨天.*入/.test(query) || /入.*昨天/.test(query)) {
-    let yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    let yesIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === yesterday);
-    if (yesIn.length === 0) { answer = '昨日沒有入庫記錄'; }
+    var recs = d.history.filter(function(h) { return !h.deleted && h.type === 'out' && h.date === today; });
+    if (recs.length === 0) { answer = '今日沒有出庫記錄'; }
     else {
-      let total = yesIn.reduce((s, h) => s + (h.qty || 0), 0);
-      answer = '昨日入庫共' + total + '公斤，' + yesIn.length + '筆';
+      var total = recs.reduce(function(s, h) { return s + (h.qty||0); }, 0);
+      var det = recs.map(function(h) { return h.name + ' ' + h.model + ' ' + h.qty + h.unit; }).join('、');
+      answer = '今日出庫共' + total + '公斤，' + recs.length + '筆。' + det;
     }
   }
-  // 昨日出庫
-  else if (/昨天.*出/.test(query) || /出.*昨天/.test(query)) {
-    let yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    let yesOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === yesterday);
-    if (yesOut.length === 0) { answer = '昨日沒有出庫記錄'; }
-    else {
-      let total = yesOut.reduce((s, h) => s + (h.qty || 0), 0);
-      answer = '昨日出庫共' + total + '公斤，' + yesOut.length + '筆';
-    }
+  else if (/昨天/.test(query) && /入/.test(query)) {
+    var yd = new Date(now - 86400000).toISOString().slice(0, 10);
+    var recs = d.history.filter(function(h) { return !h.deleted && h.type === 'in' && h.date === yd; });
+    answer = recs.length === 0 ? '昨日沒有入庫記錄' : '昨日入庫共' + recs.reduce(function(s,h){return s+(h.qty||0);},0) + '公斤，' + recs.length + '筆';
   }
-  // 這個月淨變化
-  else if (/本月|這個月|到現在.*淨|淨.*本月|淨.*現在/.test(query)) {
-    let thisMonth = today.slice(0, 7);
-    let monthIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date.startsWith(thisMonth));
-    let monthOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date.startsWith(thisMonth));
-    let inTot = monthIn.reduce((s, h) => s + (h.qty||0), 0);
-    let outTot = monthOut.reduce((s, h) => s + (h.qty||0), 0);
-    let net = inTot - outTot;
-    answer = '本月入庫' + inTot + '公斤，出庫' + outTot + '公斤，' + (net >= 0 ? '淨增加' : '淨減少') + Math.abs(net) + '公斤';
+  else if (/昨天/.test(query) && /出/.test(query)) {
+    var yd = new Date(now - 86400000).toISOString().slice(0, 10);
+    var recs = d.history.filter(function(h) { return !h.deleted && h.type === 'out' && h.date === yd; });
+    answer = recs.length === 0 ? '昨日沒有出庫記錄' : '昨日出庫共' + recs.reduce(function(s,h){return s+(h.qty||0);},0) + '公斤，' + recs.length + '筆';
   }
-  // 上個月
+  else if (/本月|這個月|淨.*(本月|現在)/.test(query)) {
+    var m = today.slice(0, 7);
+    var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var n = i - o;
+    answer = '本月入庫' + i + '公斤，出庫' + o + '公斤，' + (n>=0?'淨增加':'淨減少') + Math.abs(n) + '公斤';
+  }
   else if (/上月|上個月/.test(query)) {
-    let lastMonthDate = new Date(now - 30 * 86400000);
-    let lm = lastMonthDate.toISOString().slice(0, 7);
-    let lmIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date.startsWith(lm));
-    let lmOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date.startsWith(lm));
-    let inTot = lmIn.reduce((s, h) => s + (h.qty||0), 0);
-    let outTot = lmOut.reduce((s, h) => s + (h.qty||0), 0);
-    answer = '上個月入庫' + inTot + '公斤，出庫' + outTot + '公斤';
+    var lm = new Date(now - 30*86400000).toISOString().slice(0, 7);
+    var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    answer = '上個月入庫' + i + '公斤，出庫' + o + '公斤';
   }
-  // 低庫存
   else if (/低.*庫|庫存.*低|哪.*低|最低.*庫/.test(query)) {
-    let low = d.products.filter(p => {
-      let stock = calcProdStock(p.name, p.color || p.model || '');
-      return stock < (p.safety || 50);
-    }).sort((a, b) => {
-      let sa = calcProdStock(a.name, a.color || a.model || '');
-      let sb = calcProdStock(b.name, b.color || b.model || '');
-      return sa - sb;
+    var low = d.products.filter(function(p) {
+      return calcProdStock(p.name, p.color||p.model||'') < (p.safety||50);
+    }).sort(function(a,b) {
+      return calcProdStock(a.name,a.color||a.model||'') - calcProdStock(b.name,b.color||b.model||'');
     });
-    if (low.length === 0) { answer = '目前沒有低庫存警示，所有產品都安全'; }
-    else {
-      let top = low.slice(0, 3).map(p => {
-        let stock = calcProdStock(p.name, p.color || p.model || '');
-        return p.name + ' ' + (p.color||'') + ' ' + stock + '公斤';
-      }).join('、');
-      answer = '最低庫存產品：' + top;
-    }
+    answer = low.length === 0 ? '目前沒有低庫存警示，所有產品都安全' : '最低庫存：' + low.slice(0,3).map(function(p) {
+      var s = calcProdStock(p.name, p.color||p.model||'');
+      return p.name + ' ' + (p.color||'') + ' ' + s + '公斤';
+    }).join('、');
   }
-  // 總庫存
   else if (/總庫存|目前.*庫存|現在.*庫存/.test(query)) {
-    let total = d.products.reduce((s, p) => s + calcProdStock(p.name, p.color || p.model || ''), 0);
-    answer = '目前總庫存約' + total + '公斤';
+    var tot = d.products.reduce(function(s,p){return s+calcProdStock(p.name,p.color||p.model||'');},0);
+    answer = '目前總庫存約' + tot + '公斤';
   }
-  // 操作人員 - 今天誰進了什麼
-  else if (/誰.*入|誰.*出|今天.*誰/.test(query)) {
-    let todayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === today);
-    if (todayIn.length === 0) { answer = '今日沒有入庫操作記錄'; }
-    else {
-      let details = todayIn.map(h => (h.operator||'未知') + '入庫' + h.name + ' ' + h.qty + h.unit).join('、');
-      answer = '今日入庫記錄：' + details;
-    }
+  else if (/誰/.test(query)) {
+    var recs = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date===today;});
+    answer = recs.length === 0 ? '今日沒有入庫操作記錄' : '今日入庫：' + recs.map(function(h){return (h.operator||'未知')+'入庫'+h.name+h.qty+h.unit;}).join('、');
   }
   else {
-    answer = '抱歉，請再說一次。例如：今日入庫多少？今日出庫多少？本月淨變化？';
+    answer = '請再說一次。例如：今日入庫多少？本月淨變化？最低庫存？';
   }
   return answer;
-}
+};
 
-function startVoiceInput() {
-  if (_isListening) {
-    stopVoiceInput();
-    return;
-  }
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert('語音輸入不支援此瀏覽器，請使用 Chrome 或 Edge');
-    return;
-  }
-  _recognition = new SpeechRecognition();
-  _recognition.lang = 'zh-TW';
-  _recognition.continuous = false;
-  _recognition.interimResults = false;
+window.startVoiceInput = function() {
+  if (window._isListening) { window.stopVoiceInput(); return; }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('請使用 Chrome 或 Edge'); return; }
+  window._recognition = new SR();
+  window._recognition.lang = 'zh-TW';
+  window._recognition.continuous = false;
+  window._recognition.interimResults = false;
+  window._recognition.onstart = function() {
+    window._isListening = true;
+    var b = document.getElementById('suVoiceBtn');
+    if (b) { b.textContent = '🔴 聆聽中'; b.style.background = 'var(--danger)'; }
+  };
+  window._recognition.onend = function() {
+    window._isListening = false;
+    var b = document.getElementById('suVoiceBtn');
+    if (b) { b.textContent = '🎤 語音查詢'; b.style.background = ''; }
+  };
+  window._recognition.onerror = function() {
+    window._isListening = false;
+    var b = document.getElementById('suVoiceBtn');
+    if (b) { b.textContent = '🎤 語音查詢'; b.style.background = ''; }
+  };
+  window._recognition.onresult = function(e) {
+    var text = e.results[0][0].transcript;
+    var ans = window.parseAndAnswer(text);
+    var el = document.getElementById('suVoiceAnswer');
+    if (el) { el.textContent = '❓ ' + text + '\n💬 ' + ans; el.style.display = 'block'; }
+    window.speakText(ans);
+  };
+  window._recognition.start();
+};
 
-  _recognition.onstart = () => {
-    _isListening = true;
-    let btn = document.getElementById('suVoiceBtn');
-    if (btn) { btn.textContent = '🔴 聆聽中'; btn.style.background = 'var(--danger)'; }
-  };
-  _recognition.onend = () => {
-    _isListening = false;
-    let btn = document.getElementById('suVoiceBtn');
-    if (btn) { btn.textContent = '🎤 語音查詢'; btn.style.background = ''; }
-  };
-  _recognition.onerror = (e) => {
-    _isListening = false;
-    let btn = document.getElementById('suVoiceBtn');
-    if (btn) { btn.textContent = '🎤 語音查詢'; btn.style.background = ''; }
-  };
-  _recognition.onresult = (event) => {
-    let transcript = event.results[0][0].transcript;
-    let answer = parseAndAnswer(transcript);
-    // Show text result
-    let ansEl = document.getElementById('suVoiceAnswer');
-    if (ansEl) { ansEl.textContent = '❓ ' + transcript + '
-💬 ' + answer; ansEl.style.display = 'block'; }
-    // Speak answer
-    speakText(answer);
-  };
-  _recognition.start();
-}
+window.stopVoiceInput = function() {
+  if (window._recognition) { window._recognition.stop(); window._recognition = null; }
+  window._isListening = false;
+  var b = document.getElementById('suVoiceBtn');
+  if (b) { b.textContent = '🎤 語音查詢'; b.style.background = ''; }
+};
 
-function stopVoiceInput() {
-  if (_recognition) { _recognition.stop(); _recognition = null; }
-  _isListening = false;
-  let btn = document.getElementById('suVoiceBtn');
-  if (btn) { btn.textContent = '🎤 語音查詢'; btn.style.background = ''; }
-}
 
 </script>
 
