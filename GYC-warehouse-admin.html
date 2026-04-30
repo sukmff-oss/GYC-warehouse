@@ -1545,7 +1545,7 @@ window.onerror = function(msg, src, line, col, err) {
 const STORAGE_KEY = 'gyc_v4';
 const CAT_KEY = 'gyc_categories';
 const DEL_PWD = '000';
-const JSONBIN_KEY = '$2a$10$0BModxSI.wviHHUTL9udHOVgjWcH4LjuWsmDBiWDYuH0luVENZuIi'; // JSONBin Master Key（需替換）
+const JSONBIN_KEY = '$2a$10$hF/oSN.17AgBQ8RhDv8uEukBD/0dj6YhQnmnEZB/RvbEJrd2nevty'; // JSONBin Master Key（需替換）
 const JSONBIN_ID = '69f00f9caaba8821974620d8';
 const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 
@@ -1602,7 +1602,7 @@ function getData() {
 async function syncFromCloud() {
  try {
   let res = await fetch(JSONBIN_URL + '/latest', {
-   headers: {'X-Access-Key': JSONBIN_KEY}
+   headers: {'X-Access-Key': JSONBIN_KEY, 'User-Agent': 'Mozilla/5.0'}
   });
   if (!res.ok) return null;
   let json = await res.json();
@@ -1618,7 +1618,7 @@ function syncToCloud(data) {
  let d = JSON.stringify(data);
  fetch(JSONBIN_URL, {
   method: 'PUT',
-  headers: {'Content-Type': 'application/json', 'X-Access-Key': JSONBIN_KEY},
+  headers: {'Content-Type': 'application/json', 'X-Access-Key': JSONBIN_KEY, 'User-Agent': 'Mozilla/5.0'},
   body: d
  }).catch(e => console.warn('[syncToCloud] 失敗', e));
 }
