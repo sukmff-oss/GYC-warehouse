@@ -1701,18 +1701,39 @@ function tryLogin() {
 
 function performLogin(role) {
  localStorage.setItem('_savedRole', _currentRole); // 刷新不跳回登入
- let d = getData();
+ // 登入時自動從雲端合併資料
+ (async () => {
+  try {
+   let cloud = await syncFromCloud();
+   let local = getData();
+   if (cloud && (cloud.products.length > local.products.length || cloud.history.length > local.history.length)) {
+    let merged = {
+     products: (cloud.products && cloud.products.length >= local.products.length) ? cloud.products : local.products,
+     history: cloud.history || local.history || [],
+     pendingIn: cloud.pendingIn || local.pendingIn || [],
+     pendingOut: cloud.pendingOut || local.pendingOut || []
+    };
+    _cachedData = null;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    syncToCloud(merged);
+    let diff = merged.products.length - local.products.length;
+    if (diff > 0) alert('📥 登入同步：從雲端載入 ' + merged.products.length + ' 筆產品（+ ' + diff + ' 筆）');
+    else if (cloud.products.length < local.products.length) alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
+    else alert('✅ 登入同步：資料已是最新（' + local.products.length + ' 筆）');
+   }
+  } catch(e) { console.warn('[登入同步] 失敗', e); }
+  let d = getData();
   if (d.products.length === 0) {
-    d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
-    saveData(d);
+   d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
+   saveData(d);
   }
   updateBadges();
   applyRolePermissions();
-
   document.getElementById('loginPage').classList.remove('active');
   document.getElementById('loginPage').hidden = true;
   showPage('menuPage');
   document.getElementById('welcomeName').textContent = role.name;
+ })();
 }
 
 function applyRolePermissions() {
