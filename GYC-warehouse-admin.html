@@ -130,10 +130,18 @@ html, body {
 /* 副標題 */
 .system-subtitle {
   font-size: 1rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  letter-spacing: 2px;
+  font-weight: 700;
+  color: #00d4ff;
+  letter-spacing: 3px;
   margin-bottom: 32px;
+  text-shadow:
+    0 1px 0 #006b80,
+    0 2px 0 #005a6e,
+    0 3px 0 #004957,
+    0 4px 0 #003840,
+    0 5px 8px rgba(0, 212, 255, 0.4),
+    0 0 20px rgba(0, 212, 255, 0.3),
+    0 0 40px rgba(0, 212, 255, 0.15);
 }
 
 /* QR Code 區塊 */
@@ -1237,7 +1245,7 @@ input[type="date"] {
 <div class="page active" id="loginPage">
   <div class="login-container">
     <h1 class="system-title">國研化工管理系統</h1>
-    <p class="system-subtitle">RBAC 系統 V5.3</p>
+    <p class="system-subtitle">RBAC FOR GYC V5.3</p>
     <div class="qr-section">
       <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
     </div>
