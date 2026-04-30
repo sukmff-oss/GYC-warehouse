@@ -1718,8 +1718,9 @@ function performLogin(role) {
     syncToCloud(merged);
     let diff = merged.products.length - local.products.length;
     if (diff > 0) alert('📥 登入同步：從雲端載入 ' + merged.products.length + ' 筆產品（+ ' + diff + ' 筆）');
-    else if (cloud.products.length < local.products.length) alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
-    else alert('✅ 登入同步：資料已是最新（' + local.products.length + ' 筆）');
+    else alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
+   } else if (cloud) {
+    alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
    }
   } catch(e) { console.warn('[登入同步] 失敗', e); }
   let d = getData();
