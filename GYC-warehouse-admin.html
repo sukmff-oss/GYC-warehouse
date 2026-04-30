@@ -1545,6 +1545,9 @@ window.onerror = function(msg, src, line, col, err) {
 const STORAGE_KEY = 'gyc_v4';
 const CAT_KEY = 'gyc_categories';
 const DEL_PWD = '000';
+const JSONBIN_KEY = '$2a$10$0BModxSI.wviHHUTL9udHOVgjWcH4LjuWsmDBiWDYuH0luVENZuIi'; // JSONBin Master Key（需替換）
+const JSONBIN_ID = '69f00f9caaba8821974620d8';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_ID;
 
 const LINES = ['TU', 'TW', 'WO', 'WP', 'CO', '特殊', '溶劑', '助劑', '色粉', '樹酯', '其他'];
 
@@ -1587,28 +1590,54 @@ const ROLES = {
 
 // ==================== 工具函數 ====================
 function getData() {
-  if (_cachedData) return _cachedData;
-  try {
-    let x = localStorage.getItem(STORAGE_KEY);
-    if (x) {_cachedData = JSON.parse(x); return _cachedData;}
-  } catch(e) {}
-  return {products: [], history: [], pendingIn: [], pendingOut: []};
+ if (_cachedData) return _cachedData;
+ try {
+  let x = localStorage.getItem(STORAGE_KEY);
+  if (x) {_cachedData = JSON.parse(x); return _cachedData;}
+ } catch(e) {}
+ return {products: [], history: [], pendingIn: [], pendingOut: []};
+}
+
+// 從 JSONBin 雲端取得資料
+async function syncFromCloud() {
+ try {
+  let res = await fetch(JSONBIN_URL + '/latest', {
+   headers: {'X-Access-Key': JSONBIN_KEY}
+  });
+  if (!res.ok) return null;
+  let json = await res.json();
+  return json.record || null;
+ } catch(e) {
+  console.warn('[syncFromCloud] 失敗', e);
+  return null;
+ }
+}
+
+// 寫入 JSONBin 雲端（非同步，不卡 UI）
+function syncToCloud(data) {
+ let d = JSON.stringify(data);
+ fetch(JSONBIN_URL, {
+  method: 'PUT',
+  headers: {'Content-Type': 'application/json', 'X-Access-Key': JSONBIN_KEY},
+  body: d
+ }).catch(e => console.warn('[syncToCloud] 失敗', e));
 }
 
 function saveData(d) {
-  _cachedData = d;
-  try {
-    let prev = {products: [], history: [], pendingIn: []};
-    let old = localStorage.getItem(STORAGE_KEY);
-    if (old) try {prev = JSON.parse(old)} catch(e) {}
-    let merged = {
-      products: d.products || prev.products || [],
-      history: d.history || prev.history || [],
-      pendingIn: d.pendingIn || prev.pendingIn || [],
-      pendingOut: d.pendingOut || prev.pendingOut || []
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-  } catch(e) {}
+ _cachedData = d;
+ try {
+  let prev = {products: [], history: [], pendingIn: []};
+  let old = localStorage.getItem(STORAGE_KEY);
+  if (old) try {prev = JSON.parse(old)} catch(e) {}
+  let merged = {
+   products: d.products || prev.products || [],
+   history: d.history || prev.history || [],
+   pendingIn: d.pendingIn || prev.pendingIn || [],
+   pendingOut: d.pendingOut || prev.pendingOut || []
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  syncToCloud(merged); // 背景同步到 JSONBin
+ } catch(e) {}
 }
 
 function saveCategories(cats) {
@@ -2573,6 +2602,26 @@ function addCategory() {
 // ==================== 初始化 ====================
 function initApp() {
  try {
+  // 背景同步：嘗試從 JSONBin 取雲端資料合併（不阻塞 UI）
+  (async () => {
+   try {
+    let cloud = await syncFromCloud();
+    if (cloud) {
+     let local = getData();
+     // 以產品數多者為主（資料較新）
+     let merged = {
+      products: (cloud.products && cloud.products.length >= local.products.length) ? cloud.products : local.products,
+      history: cloud.history || local.history || [],
+      pendingIn: cloud.pendingIn || local.pendingIn || [],
+      pendingOut: cloud.pendingOut || local.pendingOut || []
+     };
+     _cachedData = null; // 清除快取
+     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+     console.log('[initApp] 雲端同步成功，產品數:', merged.products.length);
+    }
+   } catch(e) { console.warn('[initApp] 雲端同步失敗', e); }
+  })();
+
   // 檢查上次登入角色，自動恢復（需要是有效角色才放行）
   // 重置所有篩選狀態，避免殘留導致 UI 異常
   let savedRole = localStorage.getItem('_savedRole');
