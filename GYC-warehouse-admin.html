@@ -1172,7 +1172,7 @@ input[type="date"] {
 <div class="page active" id="loginPage">
   <div class="login-container">
     <h1 class="system-title">出入庫管理系統</h1>
-    <p class="system-subtitle">國研化工 RBAC 管理 V5.1</p>
+    <p class="system-subtitle">國研化工 RBAC 管理 V5.2</p>
 
     <div class="qr-section">
       <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
@@ -1701,40 +1701,18 @@ function tryLogin() {
 
 function performLogin(role) {
  localStorage.setItem('_savedRole', _currentRole); // 刷新不跳回登入
- // 登入時自動從雲端合併資料
- (async () => {
-  try {
-   let cloud = await syncFromCloud();
-   let local = getData();
-   if (cloud && (cloud.products.length > local.products.length || cloud.history.length > local.history.length)) {
-    let merged = {
-     products: (cloud.products && cloud.products.length >= local.products.length) ? cloud.products : local.products,
-     history: cloud.history || local.history || [],
-     pendingIn: cloud.pendingIn || local.pendingIn || [],
-     pendingOut: cloud.pendingOut || local.pendingOut || []
-    };
-    _cachedData = null;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    syncToCloud(merged);
-    let diff = merged.products.length - local.products.length;
-    if (diff > 0) alert('📥 登入同步：從雲端載入 ' + merged.products.length + ' 筆產品（+ ' + diff + ' 筆）');
-    else alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
-   } else if (cloud) {
-    alert('📤 登入同步：本地資料已上傳雲端（' + local.products.length + ' 筆）');
-   }
-  } catch(e) { console.warn('[登入同步] 失敗', e); }
-  let d = getData();
+ let d = getData();
   if (d.products.length === 0) {
-   d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
-   saveData(d);
+    d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
+    saveData(d);
   }
   updateBadges();
   applyRolePermissions();
+
   document.getElementById('loginPage').classList.remove('active');
   document.getElementById('loginPage').hidden = true;
   showPage('menuPage');
   document.getElementById('welcomeName').textContent = role.name;
- })();
 }
 
 function applyRolePermissions() {
