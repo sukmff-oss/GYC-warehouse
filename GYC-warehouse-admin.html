@@ -1169,7 +1169,7 @@ input[type="date"] {
 <body>
 
 <!-- ═══ 登入畫面 ═══ -->
-<div class="page active" id="loginPage" style="visibility:visible">
+<div class="page active" id="loginPage">
   <div class="login-container">
     <h1 class="system-title">出入庫管理系統</h1>
     <p class="system-subtitle">國研化工 RBAC 管理 V5.2</p>
@@ -1709,7 +1709,6 @@ function performLogin(role) {
   applyRolePermissions();
 
   document.getElementById('loginPage').classList.remove('active');
-  document.getElementById('loginPage').style.visibility = 'hidden';
   showPage('menuPage');
   document.getElementById('welcomeName').textContent = role.name;
 }
@@ -1737,15 +1736,11 @@ let _isNavigating = false;
 function showPage(id) {
  if (_isNavigating) { console.log('[showPage] 防重入：跳過', id); return; }
  _isNavigating = true;
- document.querySelectorAll('.page').forEach(p => {
-  p.style.visibility = 'hidden'; // 先 hide，防止殘影
+ document.querySelectorAll('.page.active').forEach(p => {
   p.classList.remove('active');
-  p.style.display = 'none';
  });
  let target = document.getElementById(id);
  target.classList.add('active');
- target.style.display = 'flex';
- target.style.visibility = 'visible';
 
  updateBadges();
  try {
@@ -2629,7 +2624,6 @@ function initApp() {
    _currentRole = savedRole;
    console.log('[initApp] 自動恢復登入角色：', savedRole);
    document.getElementById('loginPage').classList.remove('active');
-   document.getElementById('loginPage').style.visibility = 'hidden';
    showPage('menuPage');
    document.getElementById('welcomeName').textContent = ROLES[savedRole].name;
    applyRolePermissions();
