@@ -1238,6 +1238,7 @@ input[type="date"] {
   }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -1245,7 +1246,7 @@ input[type="date"] {
 <div class="page active" id="loginPage">
   <div class="login-container">
     <h1 class="system-title">國研化工管理系統</h1>
-    <p class="system-subtitle">RBAC FOR GYC V5.3</p>
+    <p class="system-subtitle">RBAC FOR GYC V5.4</p>
     <div class="qr-section">
       <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
     </div>
@@ -1356,15 +1357,60 @@ input[type="date"] {
       <span class="role-icon-wrap cat"><span class="role-icon">⚙️</span></span>
       <span class="menu-btn-name">類別管理</span>
     </button>
-<button class="menu-btn wide" onclick="doLogout()">
+<button class="menu-btn" id="menuSuBtn" onclick="showPage('stockPageSu')">
+      <span class="role-icon-wrap" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"><span class="role-icon">👁️</span></span>
+      <span class="menu-btn-name">蘇董視圖</span>
+    </button>
+    <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
       登出系統
     </button>
   </div>
 
-  <div class="version-info">GYC Warehouse v5.3</div>
+  <div class="version-info">GYC Warehouse v5.4</div>
 </div>
 
+
+<!-- ═══ 蘇董視圖 ═══ -->
+<div class="page" id="stockPageSu">
+  <div class="func-header">
+    <button class="back-btn" onclick="showPage('menuPage')">←</button>
+    <span class="page-title">👁️ 蘇董視圖</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:linear-gradient(135deg,#0d2b1a,#061510);border:2px solid #00bfa5;border-radius:16px;padding:16px 12px;text-align:center">
+      <div style="font-size:0.75rem;color:#00bfa5;margin-bottom:6px;font-weight:600">📥 今日入庫</div>
+      <div id="suTodayInNum" style="font-size:1.8rem;font-weight:900;color:#00bfa5;line-height:1.1">-</div>
+      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suTodayInCount">等待載入...</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#1a0d2b,#100618);border:2px solid #ef5350;border-radius:16px;padding:16px 12px;text-align:center">
+      <div style="font-size:0.75rem;color:#ef5350;margin-bottom:6px;font-weight:600">📤 今日出庫</div>
+      <div id="suTodayOutNum" style="font-size:1.8rem;font-weight:900;color:#ef5350;line-height:1.1">-</div>
+      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suTodayOutCount">等待載入...</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#0d1a2b,#060f18);border:2px solid #42a5f5;border-radius:16px;padding:16px 12px;text-align:center">
+      <div style="font-size:0.75rem;color:#42a5f5;margin-bottom:6px;font-weight:600">⚖️ 淨變化</div>
+      <div id="suNetNum" style="font-size:1.8rem;font-weight:900;color:#42a5f5;line-height:1.1">-</div>
+      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suNetLabel">今日對比</div>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-card);border-radius:16px;padding:14px;margin-bottom:14px">
+    <div style="font-size:0.9rem;font-weight:700;color:var(--accent-primary);margin-bottom:8px">📊 近30天出入庫趨勢</div>
+    <canvas id="suChart30d" height="120"></canvas>
+  </div>
+
+  <div style="background:var(--bg-card);border-radius:16px;padding:14px;margin-bottom:14px">
+    <div style="font-size:0.9rem;font-weight:700;color:var(--accent-primary);margin-bottom:8px">⏱ 最近出入庫動態（24H）</div>
+    <div id="suRecentActivity"></div>
+  </div>
+
+  <div id="suLowStockSection" style="background:var(--bg-card);border-radius:16px;padding:14px;display:none">
+    <div style="font-size:0.9rem;font-weight:700;color:var(--danger);margin-bottom:8px">⚠️ 低庫存警示</div>
+    <div id="suLowStockList"></div>
+  </div>
+</div>
 <!-- ═══ 庫存查詢 ═══ -->
 <div class="page" id="stockPage">
   <div class="func-header">
@@ -1653,11 +1699,11 @@ let _editProdOldName = null;
 let _currentReport = 'daily';
 
 const ROLES = {
-  su: {name: '蘇董', pwd: '9999', pages: ['stockPage']},
+  su: {name: '蘇董', pwd: '9999', pages: ['stockPage', 'stockPageSu']},
   factory: {name: '廠長', pwd: '8888', pages: ['prodPage', 'stockPage']},
   warehouse: {name: '倉儲', pwd: '7777', pages: ['inPage', 'outPage', 'stockPage']},
   purchase: {name: '採購', pwd: '6666', pages: ['outPage', 'stockPage']},
-  admin: {name: '管理員', pwd: 'root', pages: ['stockPage', 'prodPage', 'inPage', 'outPage', 'historyPage', 'catPage']}
+  admin: {name: '管理員', pwd: 'root', pages: ['stockPage', 'stockPageSu', 'prodPage', 'inPage', 'outPage', 'historyPage', 'catPage']}
 };
 
 // ==================== 工具函數 ====================
@@ -1822,6 +1868,7 @@ function showPage(id) {
   if (id === 'inPage') {renderLineFilter('inLineFilter'); renderInGrid(); renderPendingInAlert(); renderPendingIn();}
   if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid();}
   if (id === 'historyPage') renderHistory();
+   if (id === 'stockPageSu') { renderSuDashboard(); }
   if (id === 'catPage') renderCat();
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
@@ -1874,6 +1921,89 @@ function updateBadges() {
 }
 
 // ==================== 報告系統 ====================
+
+// ==================== 蘇董視圖 Dashboard ====================
+let _suChart = null;
+function renderSuDashboard() {
+  let d = getData();
+  let today = new Date().toISOString().slice(0, 10);
+  let now = Date.now();
+  let todayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === today);
+  let todayOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === today);
+  let totalIn = todayIn.reduce((s, h) => s + (h.qty || 0), 0);
+  let totalOut = todayOut.reduce((s, h) => s + (h.qty || 0), 0);
+  let net = totalIn - totalOut;
+  let inEl = document.getElementById('suTodayInNum');
+  let outEl = document.getElementById('suTodayOutNum');
+  let netEl = document.getElementById('suNetNum');
+  if (inEl) inEl.textContent = totalIn > 0 ? totalIn.toLocaleString() + 'KG' : '0';
+  if (outEl) outEl.textContent = totalOut > 0 ? totalOut.toLocaleString() + 'KG' : '0';
+  let cntIn = document.getElementById('suTodayInCount');
+  let cntOut = document.getElementById('suTodayOutCount');
+  if (cntIn) cntIn.textContent = todayIn.length + ' 筆入庫';
+  if (cntOut) cntOut.textContent = todayOut.length + ' 筆出庫';
+  if (netEl) {
+    netEl.textContent = (net >= 0 ? '+' : '') + net.toLocaleString() + 'KG';
+    netEl.style.color = net >= 0 ? '#42a5f5' : '#ef5350';
+  }
+  // 24H activity
+  let recent24 = d.history.filter(h => !h.deleted && (h.type === 'in' || h.type === 'out'))
+    .filter(h => { try { let d2 = new Date(h.id); return now - d2.getTime() <= 86400000; } catch(e) { return false; } })
+    .slice(0, 12);
+  let actEl = document.getElementById('suRecentActivity');
+  if (actEl) {
+    if (recent24.length === 0) {
+      actEl.innerHTML = '<div style="color:#555;font-size:0.9rem;text-align:center;padding:20px">尚無24小時內記錄</div>';
+    } else {
+      actEl.innerHTML = recent24.map(h => {
+        let t = h.type === 'in' ? '📥' : '📤';
+        let color = h.type === 'in' ? '#00bfa5' : '#ef5350';
+        let time = (() => { try { return new Date(h.id).toLocaleString('zh-TW', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); } catch(e) { return '--'; } })();
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem"><span style="color:'+color+';font-size:1rem">'+t+'</span><span style="color:#888;font-size:0.75rem;min-width:70px">'+time.replace(/\//g,'/')+'</span><span style="flex:1;color:var(--text-primary)">'+h.name+' '+h.model+'</span><span style="font-weight:700;color:'+color+'">'+h.qty+' '+h.unit+'</span></div>';
+      }).join('');
+    }
+  }
+  renderSu30dChart(d);
+  let lowProducts = d.products.filter(p => (p.stock || 0) < (p.safety || 50));
+  let alertEl = document.getElementById('suLowStockSection');
+  let listEl = document.getElementById('suLowStockList');
+  if (alertEl && listEl) {
+    if (lowProducts.length > 0) {
+      alertEl.style.display = 'block';
+      listEl.innerHTML = lowProducts.map(p => {
+        let pct = Math.round((p.stock / (p.safety || 50)) * 100);
+        let color = pct < 40 ? 'var(--danger)' : 'var(--warning, #ffa726)';
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem"><span>'+p.name+' '+p.color+'</span><span style="color:'+color+';font-weight:700">'+p.stock+' / '+p.safety+'KG ('+pct+'%)</span></div>';
+      }).join('');
+    } else { alertEl.style.display = 'none'; }
+  }
+}
+function renderSu30dChart(d) {
+  let ctx = document.getElementById('suChart30d');
+  if (!ctx) return;
+  let now = Date.now();
+  let days = [], inData = [], outData = [];
+  for (let i = 29; i >= 0; i--) {
+    let d2 = new Date(now - i * 86400000);
+    let dateStr = d2.toISOString().slice(0, 10);
+    days.push(d2.toLocaleString('zh-TW', {month:'numeric',day:'numeric'}));
+    let dayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === dateStr).reduce((s, h) => s + (h.qty||0), 0);
+    let dayOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === dateStr).reduce((s, h) => s + (h.qty||0), 0);
+    inData.push(dayIn); outData.push(dayOut);
+  }
+  if (_suChart) _suChart.destroy();
+  _suChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: days, datasets: [
+      { label: '入庫', data: inData, backgroundColor: 'rgba(0,191,165,0.75)', borderRadius: 4 },
+      { label: '出庫', data: outData, backgroundColor: 'rgba(239,83,80,0.75)', borderRadius: 4 }
+    ]},
+    options: { responsive: true, plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+      scales: { x: { ticks: { color: '#888', maxRotation: 45, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true } } }
+  });
+}
+
 function switchReport(type, btn) {
   _currentReport = type;
   document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active'));
@@ -2297,7 +2427,7 @@ async function factoryConfirm(id) {
   let confirmSign = confirm('🏭 確認回報入庫\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成回報？');
   if (!confirmSign) return;
 
-  let rec = {id: item.id, type: 'in', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today};
+  let rec = {id: item.id, type: 'in', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today}, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   d.pendingIn = d.pendingIn.filter(h => h.id !== id);
   saveData(d);
@@ -2394,7 +2524,7 @@ async function doIn() {
   let qty = parseFloat(document.getElementById('inQty').value);
   if (!qty || qty <= 0) return alert('請填寫數量');
   let d = getData();
-  let rec = {id: Date.now(), type: 'in', name: _selectedProd.name, model: _selectedProd.color, qty, unit: _selectedProd.unit, customer: document.getElementById('inRemark').value || '-', date: document.getElementById('inDate').value || today};
+  let rec = {id: Date.now(), type: 'in', name: _selectedProd.name, model: _selectedProd.color, qty, unit: _selectedProd.unit, customer: document.getElementById('inRemark').value || '-', date: document.getElementById('inDate').value || today}, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   saveData(d);
   alert('✅ 入庫成功！\n品名：' + _selectedProd.name + '\n數量：' + qty + ' ' + _selectedProd.unit);
@@ -2479,7 +2609,7 @@ async function signOut(id) {
   let confirmSign = confirm('🔐 確認簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
   if (!confirmSign) return;
 
-  let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today};
+  let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today}, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
   d.pendingOut = d.pendingOut.filter(h => h.id !== id);
   saveData(d);
