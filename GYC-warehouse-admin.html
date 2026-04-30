@@ -1567,7 +1567,7 @@ function stopVoiceInput() {
   <div class="func-header">
     <button class="back-btn" onclick="showPage('menuPage')">←</button>
     <span class="page-title">👁️ 蘇董視圖</span>
-    <button id="suVoiceBtn" onclick="startVoiceInput()" style="margin-left:auto;background:rgba(0,191,165,0.2);border:2px solid #00bfa5;color:#00bfa5;border-radius:50px;padding:8px 16px;font-size:0.85rem;font-weight:700;cursor:pointer">🎤 語音查詢</button>
+    <button id="suVoiceBtn" onclick="window.startVoiceInput();" style="margin-left:auto;background:rgba(0,191,165,0.2);border:2px solid #00bfa5;color:#00bfa5;border-radius:50px;padding:8px 16px;font-size:0.85rem;font-weight:700;cursor:pointer">🎤 語音查詢</button>
   </div>
   <div id="suVoiceAnswer" style="display:none;margin:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,191,165,0.3);border-radius:12px;padding:12px;font-size:0.9rem;color:var(--text-primary);white-space:pre-wrap;line-height:1.6"></div>
 
@@ -3093,6 +3093,20 @@ window._recognition = null;
 window._isListening = false;
 
 window.speakText = function(text, callback) {
+  // Try Web Speech Synthesis first (no API key needed, works offline)
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-TW';
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    u.onend = function() { if (callback) callback(); };
+    u.onerror = function() { if (callback) callback(); };
+    speechSynthesis.speak(u);
+    return;
+  }
+  // Fallback: MiniMax TTS (if Web Speech not available)
   fetch('https://api.minimax.io/v1/t2a_v2', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + MINIMAX_TTS_KEY, 'Content-Type': 'application/json' },
@@ -3104,16 +3118,10 @@ window.speakText = function(text, callback) {
     var url = URL.createObjectURL(blob);
     var a = new Audio(url);
     a.onended = function() { URL.revokeObjectURL(url); if (callback) callback(); };
+    a.onerror = function() { if (callback) callback(); };
     a.play();
   })
-  .catch(function() {
-    if ('speechSynthesis' in window) {
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = 'zh-TW';
-      speechSynthesis.speak(u);
-    }
-    if (callback) callback();
-  });
+  .catch(function(e) { console.warn('[TTS] MiniMax failed:', e); if (callback) callback(); });
 };
 
 window.parseAndAnswer = function(query) {
