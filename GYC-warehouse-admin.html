@@ -1432,14 +1432,14 @@ function parseAICommand(query) {
     var tIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;});
     if(tIn.length===0) return '今天沒有入庫';
     var r = fmtSum(tIn);
-    return '今天做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '今天做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 今日出庫 — "今日出去 901B 500公斤"
   if (/今日.*出|今天.*出|今天出去|今天出庫|今天出|現在出庫/.test(query)) {
     var tOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;});
     if(tOut.length===0) return '今日沒有出庫';
     var r = fmtSum(tOut);
-    return '今日出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '今日出去 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 昨日入庫 — "昨天做了 901B 500公斤"
   if (/昨天.*入|昨日.*入|昨天做了|昨日入庫/.test(query)) {
@@ -1447,7 +1447,7 @@ function parseAICommand(query) {
     var yesIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===yesterday;});
     if(yesIn.length===0) return '昨天沒有入庫';
     var r = fmtSum(yesIn);
-    return '昨天做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '昨天做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 昨日出庫 — "昨天出去 901B 500公斤"
   if (/昨天.*出|昨日.*出|昨天出去|昨日出庫/.test(query)) {
@@ -1455,7 +1455,7 @@ function parseAICommand(query) {
     var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
     if(yesOut.length===0) return '昨天沒有出庫';
     var r = fmtSum(yesOut);
-    return '昨天出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '昨天出去 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 上月入庫 — "上個月做了 901B 500公斤（共5筆）"
   if (/上月.*入|上個月.*入|上月做了|上個月做了/.test(query)) {
@@ -1463,7 +1463,7 @@ function parseAICommand(query) {
     var lmIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date.startsWith(lm);});
     if(lmIn.length===0) return '上個月沒有入庫';
     var r = fmtSum(lmIn);
-    return '上個月做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '上個月做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 上月出庫 — "上個月出去 901B 500公斤（共5筆）"
   if (/上月.*出|上個月.*出|上月出去了|上個月出去了/.test(query)) {
@@ -1471,7 +1471,7 @@ function parseAICommand(query) {
     var lmOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date.startsWith(lm);});
     if(lmOut.length===0) return '上個月沒有出庫';
     var r = fmtSum(lmOut);
-    return '上個月出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+    return '上個月出去 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
   // 本月統計
   if (/本月|這個月|這陣子|最近/.test(query)) {
@@ -3317,7 +3317,11 @@ window._isListening = false;
 
 // TTS 朗讀格式：阿拉伯數字加空格讓 TTS 逐字讀（175→1 7 5），中文數字不變
 function formatForTTS(text) {
-  return text.replace(/[0-9]/g, function(d) { return ' ' + d + ' '; }).replace(/\s+/g, ' ').trim();
+  // 純數字序列（產品代號如175、673）→ 逐字分開讀：175→1 7 5
+  // 有中文摻雜的文字 → 保持原樣，讓 TTS 自然讀取（如三百公斤）
+  return text.replace(/[0-9]+/g, function(digits) {
+    return digits.split('').join(' ');
+  });
 }
 
 window.speakText = function(text, callback) {
