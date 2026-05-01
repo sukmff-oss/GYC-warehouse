@@ -1349,7 +1349,7 @@ window.fmtAlertSpeech = function(msg) {
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
   });
-  // 4. 產品名稱中的數字（如175、901B）保持原樣，不轉換
+  // 4. 產品名稱數字（純數字群，不在KG/公斤後面）→ 保持原樣不轉換
   return msg.trim();
 }
 
@@ -3315,11 +3315,17 @@ document.addEventListener('DOMContentLoaded', function() {
 window._recognition = null;
 window._isListening = false;
 
+// TTS 朗讀格式：阿拉伯數字加空格讓 TTS 逐字讀（175→1 7 5），中文數字不變
+function formatForTTS(text) {
+  return text.replace(/[0-9]/g, function(d) { return ' ' + d + ' '; }).replace(/\s+/g, ' ').trim();
+}
+
 window.speakText = function(text, callback) {
+  var ttsText = formatForTTS(text);
   // Try Web Speech Synthesis first (no API key needed, works offline)
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
+    var u = new SpeechSynthesisUtterance(ttsText);
     u.lang = 'zh-TW';
     u.rate = 0.95;
     u.pitch = 1.0;
@@ -3521,7 +3527,7 @@ function sendAIMessage() {
     msgs.appendChild(aiDiv);
     msgs.scrollTop = msgs.scrollHeight;
     if ('speechSynthesis' in window) {
-      var u = new SpeechSynthesisUtterance(ans);
+      var u = new SpeechSynthesisUtterance(formatForTTS(ans));
       u.lang = 'zh-TW';
       u.rate = 1.0;
       speechSynthesis.speak(u);
@@ -3538,6 +3544,8 @@ window.alert = function(msg) {
   setTimeout(function() {
     try {
       var text = typeof window.fmtAlertSpeech === 'function' ? window.fmtAlertSpeech(msg) : String(msg);
+      // 用 formatForTTS 把數字逐字讀（175→1 7 5，WP-175→WP 1 7 5）
+      text = formatForTTS(text);
       if ('speechSynthesis' in window) {
         speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
