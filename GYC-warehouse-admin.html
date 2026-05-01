@@ -1262,9 +1262,10 @@ input[type="date"] {
 // ==================== 蘇董語音功能 ====================
 let _recognition = null;
 let _isListening = false;
-let _aiChatOpen = false;
-let _aiVoiceOn = false;
-let _aiVoiceRec = null;
+// AI Chat 狀態（全域以便 DOM onclick 觸發）
+window._aiChatOpen = false;
+window._aiVoiceOn = false;
+window._aiVoiceRec = null;
 
 // 蘇董簡化品名：只取型號（901B），不讀產品線代號
 // qty 為數字時自動轉換：≥1000公斤→X公噸，否則「X公斤」，整數不顯示小數點
