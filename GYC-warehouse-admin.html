@@ -1409,7 +1409,7 @@ function parseAICommand(query) {
   // ====== 蘇董簡化回覆 helper ======
   // 只取型號（901B），不讀TU/TW/CO/WO/WP產品線代號，除非特別問顏色才讀
   function fmtDetail(h) {
-    return fmtProd(h.name||'', h.qty, h.unit);
+    return window.fmtProd(h.name||'', h.qty, h.unit);
   }
   function fmtSum(records) {
     if(records.length===0) return null;
@@ -2999,7 +2999,7 @@ async function doProd() {
   d.pendingIn.unshift(pending);
   saveData(d);
   updateBadges();
-  alert('✅ 生產完成！待倉管簽收：\n品名：' + fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
+  alert('✅ 生產完成！待倉管簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
   document.getElementById('prodQtySection').style.display = 'none';
   document.querySelectorAll('#prodGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -3030,7 +3030,7 @@ async function doOut() {
   d.pendingOut.unshift(pending);
   saveData(d);
   updateBadges();
-  alert('✅ 出庫完成！等待採購簽收：\n品名：' + fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
+  alert('✅ 出庫完成！等待採購簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('outQtySection').style.display = 'none';
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -3522,7 +3522,7 @@ var _origAlert = window.alert;
 window.alert = function(msg) {
   _origAlert(msg);
   if('speechSynthesis' in window) {
-    var u = new SpeechSynthesisUtterance(fmtAlertSpeech(msg));
+    var u = new SpeechSynthesisUtterance(window.fmtAlertSpeech(msg));
     u.lang = 'zh-TW';
     speechSynthesis.speak(u);
   }
