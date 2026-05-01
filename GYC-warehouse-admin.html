@@ -3455,46 +3455,48 @@ window.stopVoiceInput = function() {
 
 // ====== AI Chat 功能 ======
 window.toggleAIChat = function() {
-  _aiChatOpen = !_aiChatOpen;
+  window._aiChatOpen = !window._aiChatOpen;
   var panel = document.getElementById('aiChatPanel');
-  if (panel) panel.style.display = _aiChatOpen ? 'flex' : 'none';
+  if (panel) panel.style.display = window._aiChatOpen ? 'flex' : 'none';
 };
 
 function toggleAIVoice() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { alert('請使用 Chrome 或 Edge'); return; }
-  if (_aiVoiceOn) {
-    if (_aiVoiceRec) { _aiVoiceRec.stop(); _aiVoiceRec = null; }
-    _aiVoiceOn = false;
+  if (window._aiVoiceOn) {
+    if (window._aiVoiceRec) { window._aiVoiceRec.stop(); window._aiVoiceRec = null; }
+    window._aiVoiceOn = false;
     document.getElementById('aiMicBtn').textContent = '🎤';
     document.getElementById('aiMicBtn').style.background = 'rgba(102,126,234,0.2)';
     return;
   }
-  _aiVoiceRec = new SR();
-  _aiVoiceRec.lang = 'zh-TW';
-  _aiVoiceRec.continuous = false;
-  _aiVoiceRec.onstart = function() {
-    _aiVoiceOn = true;
+  window._aiVoiceRec = new SR();
+  window._aiVoiceRec.lang = 'zh-TW';
+  window._aiVoiceRec.continuous = false;
+  window._aiVoiceRec.onstart = function() {
+    window._aiVoiceOn = true;
     document.getElementById('aiMicBtn').textContent = '🔴';
-    document.getElementById('aiMicBtn').style.background = 'var(--danger)';
+    document.getElementById('aiMicBtn').style.background = 'rgba(239,68,68,0.2)';
   };
-  _aiVoiceRec.onend = function() {
-    _aiVoiceOn = false;
+  window._aiVoiceRec.onend = function() {
+    window._aiVoiceOn = false;
     document.getElementById('aiMicBtn').textContent = '🎤';
     document.getElementById('aiMicBtn').style.background = 'rgba(102,126,234,0.2)';
   };
-  _aiVoiceRec.onresult = function(e) {
+  window._aiVoiceRec.onerror = function() {
+    window._aiVoiceOn = false;
+    document.getElementById('aiMicBtn').textContent = '🎤';
+    document.getElementById('aiMicBtn').style.background = 'rgba(102,126,234,0.2)';
+  };
+  window._aiVoiceRec.onresult = function(e) {
     var text = e.results[0][0].transcript;
     document.getElementById('aiChatInput').value = text;
     sendAIMessage();
   };
-  _aiVoiceRec.start();
+  window._aiVoiceRec.start();
 }
 
 function sendAIMessage() {
-  var input = document.getElementById('aiChatInput');
-  var text = input.value.trim();
-  if (!text) return;
   var msgs = document.getElementById('aiChatMessages');
   var userDiv = document.createElement('div');
   userDiv.style.cssText = 'background:rgba(102,126,234,0.2);padding:10px 14px;border-radius:12px 12px 4px 12px;margin:8px 0 8px auto;max-width:85%;text-align:right;font-size:0.9rem;color:#fff;word-break:break-all';
