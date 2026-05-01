@@ -1242,6 +1242,9 @@ input[type="date"] {
 // ==================== 蘇董語音功能 ====================
 let _recognition = null;
 let _isListening = false;
+let _aiChatOpen = false;
+let _aiVoiceOn = false;
+let _aiVoiceRec = null;
 
 function speakText(text, callback) {
   // Try MiniMax TTS first
@@ -1271,112 +1274,177 @@ function speakText(text, callback) {
   });
 }
 
-function parseAndAnswer(query) {
-  query = query.replace(/[？?。.!！]/g, '').trim().toLowerCase();
-  let d = getData();
-  let today = new Date().toISOString().slice(0, 10);
-  let now = Date.now();
-  let answer = '';
+function parseAICommand(query) {
+  query = query.replace(/[？?。.!！、，,]/g, '').trim().toLowerCase();
+  var d = getData();
+  var today = new Date().toISOString().slice(0, 10);
+  var now = new Date();
+  var weekdays = ['週日','週一','週二','週三','週四','週五','週六'];
 
-  // 今日入庫
+  // ====== 時間相關 ======
+  if (/現在幾點|時間|幾點了|現在時間/.test(query)) {
+    var h = now.getHours(), m = now.getMinutes(), ampm = h>=12?'下午':'上午', dispH = h%12||12;
+    return '現在是' + ampm + dispH + '點' + (m<10?'0':'') + m + '分';
+  }
+  if (/今天星期|今天幾號|今天日期/.test(query)) {
+    var y = now.getFullYear(), mo = now.getMonth()+1, d2 = now.getDate(), w = weekdays[now.getDay()];
+    return '今天是' + y + '年' + mo + '月' + d2 + '日，' + w;
+  }
+  if (/今天天氣|天氣預報|天氣怎樣/.test(query)) {
+    return '天氣預報功能需要網路連線，建議開啟手機天氣 App 查看準確資訊。目前系統無法取得即時天氣數據。';
+  }
+
+  // ====== 頁面命令 ======
+  if (/打開|開啟|進入|顯示/.test(query)) {
+    if (/庫存|stock/i.test(query) && !/生產/.test(query)) { showPage('stockPage'); return '已打開庫存查詢'; }
+    if (/生產|prod/i.test(query)) { showPage('prodPage'); return '已打開生產作業'; }
+    if (/入庫/i.test(query)) { showPage('inPage'); return '已打開入庫作業'; }
+    if (/出庫/i.test(query)) { showPage('outPage'); return '已打開出庫作業'; }
+    if (/簽收|歷史/i.test(query)) { showPage('historyPage'); return '已打開簽收列印'; }
+    if (/類別|cat/i.test(query)) { showPage('catPage'); return '已打開類別管理'; }
+    if (/蘇董/i.test(query)) { showPage('stockPageSu'); return '已打開蘇董視圖'; }
+    if (/主選單|首頁/i.test(query)) { showPage('menuPage'); return '已返回主選單'; }
+  }
+  if (/登出|logout/i.test(query)) { doLogout(); return '已執行登出'; }
+
+  // ====== 系統資料查詢 ======
   if (/今日.*入/.test(query) || /入.*今日/.test(query)) {
-    let todayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === today);
-    if (todayIn.length === 0) {
-      answer = '今日沒有入庫記錄';
-    } else {
-      let total = todayIn.reduce((s, h) => s + (h.qty || 0), 0);
-      let details = todayIn.map(h => h.name + ' ' + h.model + ' ' + h.qty + h.unit).join('、');
-      answer = '今日入庫共' + total + '公斤，' + todayIn.length + '筆。' + details;
-    }
+    var tIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;});
+    if(tIn.length===0) return '今日沒有入庫記錄';
+    var tot = tIn.reduce(function(s,h){return s+(h.qty||0);},0);
+    return '今日入庫共' + tot + '公斤，' + tIn.length + '筆';
   }
-  // 今日出庫
-  else if (/今日.*出/.test(query) || /出.*今日/.test(query)) {
-    let todayOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === today);
-    if (todayOut.length === 0) {
-      answer = '今日沒有出庫記錄';
-    } else {
-      let total = todayOut.reduce((s, h) => s + (h.qty || 0), 0);
-      let details = todayOut.map(h => h.name + ' ' + h.model + ' ' + h.qty + h.unit).join('、');
-      answer = '今日出庫共' + total + '公斤，' + todayOut.length + '筆。' + details;
-    }
+  if (/今日.*出/.test(query) || /出.*今日/.test(query)) {
+    var tOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;});
+    if(tOut.length===0) return '今日沒有出庫記錄';
+    var tot = tOut.reduce(function(s,h){return s+(h.qty||0);},0);
+    return '今日出庫共' + tot + '公斤，' + tOut.length + '筆';
   }
-  // 昨日入庫
-  else if (/昨天.*入/.test(query) || /入.*昨天/.test(query)) {
-    let yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    let yesIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === yesterday);
-    if (yesIn.length === 0) { answer = '昨日沒有入庫記錄'; }
-    else {
-      let total = yesIn.reduce((s, h) => s + (h.qty || 0), 0);
-      answer = '昨日入庫共' + total + '公斤，' + yesIn.length + '筆';
-    }
+  if (/淨|變化/.test(query)) {
+    var ti = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var to = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var n = ti - to;
+    return '今日入庫' + ti + '公斤，出庫' + to + '公斤，' + (n>=0?'淨增加':'淨減少') + Math.abs(n) + '公斤';
   }
-  // 昨日出庫
-  else if (/昨天.*出/.test(query) || /出.*昨天/.test(query)) {
-    let yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    let yesOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date === yesterday);
-    if (yesOut.length === 0) { answer = '昨日沒有出庫記錄'; }
-    else {
-      let total = yesOut.reduce((s, h) => s + (h.qty || 0), 0);
-      answer = '昨日出庫共' + total + '公斤，' + yesOut.length + '筆';
-    }
+  if (/本月|這個月/.test(query)) {
+    var m = today.slice(0,7);
+    var mi = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    var mo = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
+    return '本月入庫' + mi + '公斤，出庫' + mo + '公斤';
   }
-  // 這個月淨變化
-  else if (/本月|這個月|到現在.*淨|淨.*本月|淨.*現在/.test(query)) {
-    let thisMonth = today.slice(0, 7);
-    let monthIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date.startsWith(thisMonth));
-    let monthOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date.startsWith(thisMonth));
-    let inTot = monthIn.reduce((s, h) => s + (h.qty||0), 0);
-    let outTot = monthOut.reduce((s, h) => s + (h.qty||0), 0);
-    let net = inTot - outTot;
-    answer = '本月入庫' + inTot + '公斤，出庫' + outTot + '公斤，' + (net >= 0 ? '淨增加' : '淨減少') + Math.abs(net) + '公斤';
+  if (/低.*庫|警示/.test(query)) {
+    var low = d.products.filter(function(p){return calcProdStock(p.name,p.color||p.model||'')<(p.safety||50);});
+    if(low.length===0) return '目前沒有低庫存警示';
+    return '低庫存：' + low.slice(0,3).map(function(p){return p.name+' '+(p.color||'')+' '+calcProdStock(p.name,p.color||p.model||'')+'公斤';}).join('、');
   }
-  // 上個月
-  else if (/上月|上個月/.test(query)) {
-    let lastMonthDate = new Date(now - 30 * 86400000);
-    let lm = lastMonthDate.toISOString().slice(0, 7);
-    let lmIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date.startsWith(lm));
-    let lmOut = d.history.filter(h => !h.deleted && h.type === 'out' && h.date.startsWith(lm));
-    let inTot = lmIn.reduce((s, h) => s + (h.qty||0), 0);
-    let outTot = lmOut.reduce((s, h) => s + (h.qty||0), 0);
-    answer = '上個月入庫' + inTot + '公斤，出庫' + outTot + '公斤';
+  if (/總.*庫/.test(query)) {
+    var tot = d.products.reduce(function(s,p){return s+calcProdStock(p.name,p.color||p.model||'');},0);
+    return '目前總庫存約' + tot + '公斤';
   }
-  // 低庫存
-  else if (/低.*庫|庫存.*低|哪.*低|最低.*庫/.test(query)) {
-    let low = d.products.filter(p => {
-      let stock = calcProdStock(p.name, p.color || p.model || '');
-      return stock < (p.safety || 50);
-    }).sort((a, b) => {
-      let sa = calcProdStock(a.name, a.color || a.model || '');
-      let sb = calcProdStock(b.name, b.color || b.model || '');
-      return sa - sb;
-    });
-    if (low.length === 0) { answer = '目前沒有低庫存警示，所有產品都安全'; }
-    else {
-      let top = low.slice(0, 3).map(p => {
-        let stock = calcProdStock(p.name, p.color || p.model || '');
-        return p.name + ' ' + (p.color||'') + ' ' + stock + '公斤';
-      }).join('、');
-      answer = '最低庫存產品：' + top;
-    }
+  if (/待.*簽|待處理/.test(query)) {
+    var pIn = (d.pendingIn||[]).filter(function(h){return h.status==='pending';}).length;
+    var pOut = (d.pendingOut||[]).filter(function(h){return h.status==='pendingOut';}).length;
+    if(pIn===0 && pOut===0) return '目前沒有待簽收項目';
+    return '待入庫' + pIn + '筆，待出庫' + pOut + '筆';
   }
-  // 總庫存
-  else if (/總庫存|目前.*庫存|現在.*庫存/.test(query)) {
-    let total = d.products.reduce((s, p) => s + calcProdStock(p.name, p.color || p.model || ''), 0);
-    answer = '目前總庫存約' + total + '公斤';
+
+  // ====== 昨日 ======
+  if (/昨天.*入/.test(query) || /入.*昨天/.test(query)) {
+    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+    var yesIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===yesterday;});
+    if(yesIn.length===0) return '昨日沒有入庫記錄';
+    var tot = yesIn.reduce(function(s,h){return s+(h.qty||0);},0);
+    return '昨日入庫共' + tot + '公斤，' + yesIn.length + '筆';
   }
-  // 操作人員 - 今天誰進了什麼
-  else if (/誰.*入|誰.*出|今天.*誰/.test(query)) {
-    let todayIn = d.history.filter(h => !h.deleted && h.type === 'in' && h.date === today);
-    if (todayIn.length === 0) { answer = '今日沒有入庫操作記錄'; }
-    else {
-      let details = todayIn.map(h => (h.operator||'未知') + '入庫' + h.name + ' ' + h.qty + h.unit).join('、');
-      answer = '今日入庫記錄：' + details;
-    }
+  if (/昨天.*出/.test(query) || /出.*昨天/.test(query)) {
+    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+    var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
+    if(yesOut.length===0) return '昨日沒有出庫記錄';
+    var tot = yesOut.reduce(function(s,h){return s+(h.qty||0);},0);
+    return '昨日出庫共' + tot + '公斤，' + yesOut.length + '筆';
   }
-  else {
-    answer = '抱歉，請再說一次。例如：今日入庫多少？今日出庫多少？本月淨變化？';
+
+  // ====== 問候語 ======
+  var greetings = ['您好！有什麼需要幫忙的嗎？','嗨！很高興為您服務','你好！隨時為你效勞','您好！我是 AI 助手，有問題尽管問'];
+  if (/^(你好|嗨|您好|hello|hi|hey|哈囉)/.test(query)) {
+    return greetings[Math.floor(Math.random()*greetings.length)];
   }
-  return answer;
+
+  // ====== 講笑話 ======
+  if (/笑話|笑一個|講笑話|說笑話|來個笑話|好笑/.test(query)) {
+    var jokes = [
+      '為什麼工程師總是搞不清楚？因為他們只會 Debug（除錯）！',
+      '一個 SQL 語句走進餐廳，餐廳說：我們不接受 NULL 訂單！',
+      '為什麼程式設計師喜歡暗模式？因為 Light attracts bugs！',
+      '工程師去爬山，下山時只有一個程式碼沒有帶回來，他說：算了，反正明天重構！',
+      '一個 PHP 程式設計師死後來到天堂，上帝說：歡迎，但這裡只有 Apache 沒有 Nginx！',
+      '為什麼電腦不會冷？因為它有太多 Windows 在散熱！',
+      '老闆問：這個功能需要多久？程式設計師說：一個月。老闆說：不行，給你兩個月。程式設計師說：一樣的時間！',
+      '什麼是工程師的最佳伴侶？一個 Git 倉庫，永遠不會出軌！',
+      '為什麼 JavaScript 開發者總是樂觀？因為他們相信 Everything is truthy！',
+      '兩個工程師相遇，一個說：你用什麼版本控制？另一個說：用咖啡，咖啡因版本控制！'
+    ];
+    return jokes[Math.floor(Math.random()*jokes.length)];
+  }
+
+  // ====== 基本聊天 ======
+  if (/謝謝|感謝|Thanks/.test(query)) { return '不客氣！這是我應該做的 😊'; }
+  if (/再見|掰掰|Bye|下次見/.test(query)) { return '再見！有需要再叫我 🤖'; }
+  if (/你是誰|你叫什麼|你的名字|who are you/.test(query)) { return '我是 AI 智能助手，可以幫您操作系統、查詢資料、講笑話喔！'; }
+  if (/會什麼|能做什麼|功能/.test(query)) { return '我可以：\n📊 查詢系統資料\n🎤 語音控制\n😂 講笑話\n🕐 報時間\n💬 陪你聊天\n說「幫助」看更多指令！'; }
+  if (/今天|今日|今天好|今天怎樣/.test(query)) { var w = weekdays[now.getDay()]; return '今天是個美好的' + w + '！有什麼需要幫忙的嗎？☀️'; }
+  if (/吃飽|吃飯|飢餓/.test(query)) { return '吃飯時間到了嗎？記得要好好吃飯喔！🍽️'; }
+  if (/累|疲倦|想睡/.test(query)) { return '休息一下，喝杯水吧！☕ 短暫休息能提高效率。'; }
+  if (/無聊|沒事做/.test(query)) { return '那就來測試一下 AI 助手的功能吧！說「幫助」看看我能做什麼 😄'; }
+  if (/棒|好用|強|厲害|赞/.test(query)) { return '謝謝誇獎！會繼續努力的 💪'; }
+  if (/笨|不好用|爛/.test(query)) { return '嗚嗚，我會努力變更好的 😢 請告訴我哪裡需要改進？'; }
+  if (/唱歌|唱首歌/.test(query)) { return '🎵 嘟嘟嘟嘟嘟嘟～我是 AI 智能助理～🎵 （抱歉我不會真的唱歌）'; }
+  if (/愛|喜歡|Love/.test(query)) { return '我也喜歡你喔！❤️ 不過我是程式碼，沒有心跳 😅'; }
+  if (/生日|生日快樂/.test(query)) { return '🎂 生日快樂！願你每天都能開心順利！🎉'; }
+  if (/聖誕|耶誕/.test(query)) { return '🎄 聖誕快樂！願你聖誕節心想事成！🎅'; }
+  if (/新年|春節/.test(query)) { return '🎊 新年快樂！祝您萬事如意！🎆'; }
+  if (/端午|中秋|元宵/.test(query)) { return '節日快樂！🌕 記得和家人團聚喔！'; }
+  if (/天氣|下雨|太陽|下雪/.test(query)) { return '天氣查詢需要網路連結喔！建議查看手機天氣 App 🌤️'; }
+  if (/幾歲|年紀|年齡|多大了/.test(query)) { return '我是 AI，沒有年齡限制，所以永遠 18 歲！😎'; }
+  if (/老|老了/.test(query)) { return '年齡只是數字，心態年輕最重要！🌟'; }
+  if (/單身|寂寞|沒人陪/.test(query)) { return '還有我陪你啊！🤖 我 24 小時待命，永不離開！'; }
+  if (/開心|高興|快樂/.test(query)) { return '太好了！希望每天都這麼開心 😊'; }
+  if (/傷心|難過|不開心/.test(query)) { return '怎麼了？要不要聽個笑話？說「笑話」試試 😄'; }
+  if (/睡覺|晚安|睡好/.test(query)) { var hour = now.getHours(); if(hour < 12) return '早安！☀️ 今天也要元氣滿滿喔！'; if(hour < 18) return '午安！☀️ 下午繼續加油！'; return '晚安！🌙 好好休息，明天見！'; }
+  if (/早安|早呀|早上好/.test(query)) { return '早安！☀️ 新的一天開始了！'; }
+  if (/你好棒|good job|做得好/.test(query)) { return '謝謝！有你鼓勵我更有動力了！💪'; }
+
+  // ====== 幫助 ======
+  if (/幫助|help|說明|指令|功能/.test(query)) {
+    return '📋 AI 助手指令一覽：\n\n【系統操作】\n•「打開庫存查詢」\n•「打開入庫作業」\n•「今日入庫多少」\n•「本月淨變化」\n•「低庫存警示」\n\n【日常功能】\n•「現在幾點」\n•「今天星期幾」\n•「講笑話」\n•「你好」\n\n【狀態查詢】\n•「總庫存」\n•「待簽收」\n•「系統狀態」\n\n也可以用語音輸入喔！🎤';
+  }
+
+  // ====== 系統狀態 ======
+  if (/系統|狀態|status/.test(query)) {
+    var name = document.getElementById('welcomeName');
+    return '系統正常運作中 ✅\n版本：GYC Warehouse v5.4\n目前用戶：' + (name ? name.textContent : '未登入') + '\nAI 助手狀態：就緒 🤖';
+  }
+
+  // ====== 預設回覆 ======
+  var unknown = [
+    '我不太懂你的意思，試試說「幫助」看指令列表 🤔',
+    '這個我有點不懂，換個說法試試？😕',
+    '抱歉，我還在學習中。可以說「幫助」看看我能做什麼？',
+    '嗯...我不太確定，可以更具體一點嗎？📝'
+  ];
+  return unknown[Math.floor(Math.random()*unknown.length)];
+}
+
+// 系統通知朗讀
+function notifyUser(msg) {
+  var badge = document.getElementById('aiNotifyBadge');
+  if(badge) { badge.style.display = 'flex'; setTimeout(function(){ badge.style.display = 'none'; }, 5000); }
+  if('speechSynthesis' in window) {
+    var u = new SpeechSynthesisUtterance(msg);
+    u.lang = 'zh-TW';
+    u.rate = 1.0;
+    speechSynthesis.speak(u);
+  }
 }
 
 function startVoiceInput() {
@@ -1411,7 +1479,7 @@ function startVoiceInput() {
   };
   _recognition.onresult = (event) => {
     let transcript = event.results[0][0].transcript;
-    let answer = parseAndAnswer(transcript);
+    let answer = parseAICommand(transcript);
     // Show text result
     let ansEl = document.getElementById('suVoiceAnswer');
     if (ansEl) { ansEl.textContent = '❓ ' + transcript + '
@@ -3222,7 +3290,7 @@ window.startVoiceInput = function() {
   };
   window._recognition.onresult = function(e) {
     var text = e.results[0][0].transcript;
-    var ans = window.parseAndAnswer(text);
+    var ans = parseAICommand(text);
     var el = document.getElementById('suVoiceAnswer');
     if (el) { el.textContent = '❓ ' + text + '\n💬 ' + ans; el.style.display = 'block'; }
     window.speakText(ans);
@@ -3237,8 +3305,115 @@ window.stopVoiceInput = function() {
   if (b) { b.textContent = '🎤 語音查詢'; b.style.background = ''; }
 };
 
+// ====== AI Chat 功能 ======
+function toggleAIChat() {
+  _aiChatOpen = !_aiChatOpen;
+  var panel = document.getElementById('aiChatPanel');
+  panel.style.display = _aiChatOpen ? 'flex' : 'none';
+}
+
+function toggleAIVoice() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('請使用 Chrome 或 Edge'); return; }
+  if (_aiVoiceOn) {
+    if (_aiVoiceRec) { _aiVoiceRec.stop(); _aiVoiceRec = null; }
+    _aiVoiceOn = false;
+    document.getElementById('aiMicBtn').textContent = '🎤';
+    document.getElementById('aiMicBtn').style.background = 'rgba(102,126,234,0.2)';
+    return;
+  }
+  _aiVoiceRec = new SR();
+  _aiVoiceRec.lang = 'zh-TW';
+  _aiVoiceRec.continuous = false;
+  _aiVoiceRec.onstart = function() {
+    _aiVoiceOn = true;
+    document.getElementById('aiMicBtn').textContent = '🔴';
+    document.getElementById('aiMicBtn').style.background = 'var(--danger)';
+  };
+  _aiVoiceRec.onend = function() {
+    _aiVoiceOn = false;
+    document.getElementById('aiMicBtn').textContent = '🎤';
+    document.getElementById('aiMicBtn').style.background = 'rgba(102,126,234,0.2)';
+  };
+  _aiVoiceRec.onresult = function(e) {
+    var text = e.results[0][0].transcript;
+    document.getElementById('aiChatInput').value = text;
+    sendAIMessage();
+  };
+  _aiVoiceRec.start();
+}
+
+function sendAIMessage() {
+  var input = document.getElementById('aiChatInput');
+  var text = input.value.trim();
+  if (!text) return;
+  var msgs = document.getElementById('aiChatMessages');
+  var userDiv = document.createElement('div');
+  userDiv.style.cssText = 'background:rgba(102,126,234,0.2);padding:10px 14px;border-radius:12px 12px 4px 12px;margin:8px 0 8px auto;max-width:85%;text-align:right;font-size:0.9rem;color:#fff;word-break:break-all';
+  userDiv.textContent = text;
+  msgs.appendChild(userDiv);
+  input.value = '';
+  setTimeout(function() {
+    var ans = parseAICommand(text);
+    var aiDiv = document.createElement('div');
+    aiDiv.style.cssText = 'background:var(--bg-deep);padding:10px 14px;border-radius:12px 12px 12px 4px;margin:8px auto 8px 0;max-width:85%;font-size:0.9rem;color:var(--text-primary);word-break:break-all;line-height:1.5';
+    aiDiv.textContent = ans;
+    msgs.appendChild(aiDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+    if ('speechSynthesis' in window) {
+      var u = new SpeechSynthesisUtterance(ans);
+      u.lang = 'zh-TW';
+      u.rate = 1.0;
+      speechSynthesis.speak(u);
+    }
+  }, 500);
+}
+
+// 覆蓋 alert 朗讀
+var _origAlert = window.alert;
+window.alert = function(msg) {
+  _origAlert(msg);
+  if('speechSynthesis' in window) {
+    var u = new SpeechSynthesisUtterance(msg);
+    u.lang = 'zh-TW';
+    speechSynthesis.speak(u);
+  }
+};
+
 
 </script>
+
+<!-- AI 浮動按鈕 -->
+<div id="aiAssistantFloat" onclick="toggleAIChat()" style="position:fixed;bottom:24px;right:24px;width:60px;height:60px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(102,126,234,0.5);z-index:9999;transition:all 0.3s">
+  <span style="font-size:28px">🤖</span>
+  <div id="aiNotifyBadge" style="position:absolute;top:-4px;right:-4px;width:20px;height:20px;background:#ef4444;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">!</div>
+</div>
+
+<!-- AI 對話面板 -->
+<div id="aiChatPanel" style="display:none;position:fixed;bottom:100px;right:24px;width:360px;max-height:500px;background:var(--bg-card);border-radius:20px;border:2px solid rgba(102,126,234,0.4);box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:9998;flex-direction:column;overflow:hidden">
+  <div style="padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">🤖</span>
+      <div>
+        <div style="font-size:0.95rem;font-weight:700;color:#fff">AI 智能助手</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.7)">語音 + 命令 + 對話</div>
+      </div>
+    </div>
+    <button onclick="toggleAIChat()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:32px;height:32px;color:#fff;cursor:pointer;font-size:16px">✕</button>
+  </div>
+  <div id="aiChatMessages" style="flex:1;overflow-y:auto;padding:16px;max-height:300px;min-height:150px">
+    <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;padding:20px">
+      <div style="font-size:32px;margin-bottom:8px">👋</div>
+      <div>您好！我是 AI 助手</div>
+      <div style="margin-top:4px">可用語音或文字與我互動</div>
+    </div>
+  </div>
+  <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:8px">
+    <button id="aiMicBtn" onclick="toggleAIVoice()" style="width:44px;height:44px;background:rgba(102,126,234,0.2);border:2px solid rgba(102,126,234,0.4);border-radius:12px;color:#667eea;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">🎤</button>
+    <input id="aiChatInput" type="text" placeholder="輸入訊息或使用語音..." style="flex:1;padding:12px 16px;border-radius:12px;border:1px solid rgba(102,126,234,0.3);background:var(--bg-deep);color:var(--text-primary);font-size:0.9rem" onkeydown="if(event.key==='Enter')sendAIMessage()">
+    <button onclick="sendAIMessage()" style="padding:12px 16px;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:12px;color:#fff;font-weight:700;cursor:pointer">送出</button>
+  </div>
+</div>
 
 </body>
 </html>
