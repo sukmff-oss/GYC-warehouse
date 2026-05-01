@@ -1286,9 +1286,10 @@ function fmtProd(name, qty, unit) {
 window.fmtProd = fmtProd;
 
 // ====== 蘇董語音簡化工具（全域） ======
-// 數字 → 中文大寫（500→五百、1200→一千二、10→十）
+// 數字 → 中文大寫（500→五百、120→一百二十、1200→一千二百）
 function numToZh(n) {
   var digits = '零一二三四五六七八九';
+  var units = ['', '十', '百', '千'];
   n = parseFloat(n);
   if (isNaN(n)) return String(n);
   if (n === 0) return '零';
@@ -1296,17 +1297,28 @@ function numToZh(n) {
   n = Math.abs(n);
   var integer = Math.floor(n);
   var decimal = Math.round((n - integer) * 10);
-  var result = sign;
   var s = String(integer);
-  // 两位數特殊處理（十、十五、二十）
-  if (s.length === 2 && s[0] !== '0') {
-    var tens = digits[parseInt(s[0])];
-    var ones = digits[parseInt(s[1])];
-    if (s[1] === '0') result += tens + '十';
-    else result += tens + '十' + ones;
-  } else {
-    for (var i = 0; i < s.length; i++) result += digits[parseInt(s[i])];
+  var len = s.length;
+  var result = sign;
+  var prevNonZero = false; // 上一位是否非零（用於處理「零」）
+  for (var i = 0; i < len; i++) {
+    var d = parseInt(s[i]);
+    var place = len - i - 1; // 0=個位, 1=十位, 2=百位, 3=千位
+    if (d === 0) {
+      prevNonZero = false;
+    } else {
+      if (!prevNonZero && result !== sign && place < 3) {
+        // 前一位是零且即將寫非零→補一個「零」（只在個/十/百位，千位以上不補）
+        result += '零';
+      }
+      result += digits[d] + units[place];
+      prevNonZero = true;
+    }
   }
+  // 去掉末尾的「零」（如 500→五百 而非 五零零）
+  result = result.replace(/零+$/, '');
+  // 十尾最佳化：一十→十、二十→二十（保留數字）
+  // 特殊：一百一十→一百一十（OK）
   if (decimal > 0) result += '點' + digits[decimal];
   return result;
 }
@@ -1327,21 +1339,17 @@ function c2t(kg) {
 }
 window.c2t = c2t;
 
-// 蘇董 alert 語音轉換：去除代號、KG→公斤、≥1000→公噸（數字轉中文）
+// 蘇董 alert 語音轉換：去除代號、數量全部用 numToZh 轉中文（≥1000KG 也用公斤朗讀）
 window.fmtAlertSpeech = function(msg) {
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
-  // 2. 數字+KG → 中文公斤或公噸
+  // 2. 數字+KG → 中文公斤（全部用 numToZh）
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
-    var v = parseFloat(n);
-    if (v >= 1000) return c2t(v);
-    return numToZh(v) + '公斤';
+    return numToZh(parseFloat(n)) + '公斤';
   });
   // 3. 數字+公斤（劑量純數字）→ 中文
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
-    var v = parseFloat(n);
-    if (v >= 1000) return c2t(v);
-    return numToZh(v) + '公斤';
+    return numToZh(parseFloat(n)) + '公斤';
   });
   return msg.trim();
 }
