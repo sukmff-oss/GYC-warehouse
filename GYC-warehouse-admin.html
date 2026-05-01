@@ -1269,18 +1269,16 @@ window._aiVoiceOn = false;
 window._aiVoiceRec = null;
 
 // 蘇董簡化品名：只取型號（901B），不讀產品線代號
-// qty 為數字時自動轉換：≥1000公斤→X公噸，否則「X公斤」，整數不顯示小數點
+// qty 為數字時：數量用 numToZh 轉中文公斤，產品名稱中的數字保持原樣
 function fmtProd(name, qty, unit) {
   var base = (name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
   if (qty === undefined || qty === null) return base;
   var n = parseFloat(qty);
   if (isNaN(n)) return base + ' ' + qty + (unit||'');
-  var numStr = (n % 1 === 0) ? String(n) : String(n.toFixed(1));
   if (unit && (unit.toUpperCase().includes('KG') || unit.toUpperCase() === 'KG')) {
-    if (Math.abs(n) >= 1000) return base + ' ' + (n/1000) + '公噸';
-    return base + ' ' + numStr + '公斤';
+    return base + ' ' + numToZh(n) + '公斤';  // 始終用 numToZh + 公斤
   }
-  return base + ' ' + numStr + (unit||'');
+  return base + ' ' + n + (unit||'');
 }
 // 掛全域（蘇董視圖+alert override共用）
 window.fmtProd = fmtProd;
@@ -1339,9 +1337,8 @@ function c2t(kg) {
 }
 window.c2t = c2t;
 
-// 蘇董 alert 語音轉換：去除代號、數量用 numToZh、產品代號數字逐字讀
+// 蘇董 alert 語音轉換：去除代號、數量用 numToZh 轉中文公斤、產品代號數字保持原樣
 window.fmtAlertSpeech = function(msg) {
-  var digitWords = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
   // 2. 數字+KG → 中文公斤（numToZh）
@@ -1352,10 +1349,7 @@ window.fmtAlertSpeech = function(msg) {
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
   });
-  // 4. 產品代號數字（純數字群）→ 逐字讀：773→七七三，901B→901B（B非數字不動）
-  msg = msg.replace(/\b(\d+)\b/g, function(m) {
-    return m.split('').map(function(d) { return digitWords[parseInt(d)] || d; }).join('');
-  });
+  // 4. 產品名稱中的數字（如175、901B）保持原樣，不轉換
   return msg.trim();
 }
 
