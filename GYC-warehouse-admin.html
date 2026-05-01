@@ -1307,61 +1307,110 @@ function parseAICommand(query) {
   }
   if (/登出|logout/i.test(query)) { doLogout(); return '已執行登出'; }
 
-  // ====== 系統資料查詢 ======
-  if (/今日.*入/.test(query) || /入.*今日/.test(query)) {
+  // ====== 蘇董簡化回覆 helper ======
+  // 只取型號（901B），不讀TU/TW/CO/WO/WP產品線代號，除非特別問顏色才讀
+  function fmtDetail(h) {
+    var m = (h.name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
+    return m + ' ' + (h.qty||0) + h.unit;
+  }
+  function fmtSum(records) {
+    if(records.length===0) return null;
+    var parts = records.map(fmtDetail);
+    var total = records.reduce(function(s,h){return s+(h.qty||0);},0);
+    return {parts:parts, total:total};
+  }
+
+  // ====== 蘇董查詢（簡化：只說型號+數量，產品線代號不讀） ======
+  // 今日入庫 — "今天做了 901B 500公斤（共3筆）"
+  if (/今日.*入|今天.*入|今天做了|今天入庫|今天進|現在入庫/.test(query)) {
     var tIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;});
-    if(tIn.length===0) return '今日沒有入庫記錄';
-    var tot = tIn.reduce(function(s,h){return s+(h.qty||0);},0);
-    return '今日入庫共' + tot + '公斤，' + tIn.length + '筆';
+    if(tIn.length===0) return '今天沒有入庫';
+    var r = fmtSum(tIn);
+    return '今天做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
   }
-  if (/今日.*出/.test(query) || /出.*今日/.test(query)) {
+  // 今日出庫 — "今日出去 901B 500公斤"
+  if (/今日.*出|今天.*出|今天出去|今天出庫|今天出|現在出庫/.test(query)) {
     var tOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;});
-    if(tOut.length===0) return '今日沒有出庫記錄';
-    var tot = tOut.reduce(function(s,h){return s+(h.qty||0);},0);
-    return '今日出庫共' + tot + '公斤，' + tOut.length + '筆';
+    if(tOut.length===0) return '今日沒有出庫';
+    var r = fmtSum(tOut);
+    return '今日出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
   }
-  if (/淨|變化/.test(query)) {
+  // 昨日入庫 — "昨天做了 901B 500公斤"
+  if (/昨天.*入|昨日.*入|昨天做了|昨日入庫/.test(query)) {
+    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+    var yesIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===yesterday;});
+    if(yesIn.length===0) return '昨天沒有入庫';
+    var r = fmtSum(yesIn);
+    return '昨天做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+  }
+  // 昨日出庫 — "昨天出去 901B 500公斤"
+  if (/昨天.*出|昨日.*出|昨天出去|昨日出庫/.test(query)) {
+    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
+    var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
+    if(yesOut.length===0) return '昨天沒有出庫';
+    var r = fmtSum(yesOut);
+    return '昨天出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+  }
+  // 上月入庫 — "上個月做了 901B 500公斤（共5筆）"
+  if (/上月.*入|上個月.*入|上月做了|上個月做了/.test(query)) {
+    var lm = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
+    var lmIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date.startsWith(lm);});
+    if(lmIn.length===0) return '上個月沒有入庫';
+    var r = fmtSum(lmIn);
+    return '上個月做了 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+  }
+  // 上月出庫 — "上個月出去 901B 500公斤（共5筆）"
+  if (/上月.*出|上個月.*出|上月出去了|上個月出去了/.test(query)) {
+    var lm = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
+    var lmOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date.startsWith(lm);});
+    if(lmOut.length===0) return '上個月沒有出庫';
+    var r = fmtSum(lmOut);
+    return '上個月出去 ' + r.parts.join('、') + '（共' + r.total + '公斤）';
+  }
+  // 本月統計
+  if (/本月|這個月|這陣子|最近/.test(query)) {
+    var m = today.slice(0,7);
+    var mi = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);});
+    var mo = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);});
+    var totIn = mi.reduce(function(s,h){return s+(h.qty||0);},0);
+    var totOut = mo.reduce(function(s,h){return s+(h.qty||0);},0);
+    if(totIn===0 && totOut===0) return '本月還沒有出入庫記錄';
+    return '本月做了 ' + totIn + '公斤，出去 ' + totOut + '公斤';
+  }
+  // 淨變化
+  if (/淨|變化|增減/.test(query)) {
     var ti = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
     var to = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
     var n = ti - to;
-    return '今日入庫' + ti + '公斤，出庫' + to + '公斤，' + (n>=0?'淨增加':'淨減少') + Math.abs(n) + '公斤';
+    return (n>=0?'多了 ':'少了 ') + Math.abs(n) + '公斤';
   }
-  if (/本月|這個月/.test(query)) {
-    var m = today.slice(0,7);
-    var mi = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
-    var mo = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
-    return '本月入庫' + mi + '公斤，出庫' + mo + '公斤';
-  }
-  if (/低.*庫|警示/.test(query)) {
+  // 低庫存
+  if (/低.*庫|警示|庫存不夠|要補貨/.test(query)) {
     var low = d.products.filter(function(p){return calcProdStock(p.name,p.color||p.model||'')<(p.safety||50);});
-    if(low.length===0) return '目前沒有低庫存警示';
-    return '低庫存：' + low.slice(0,3).map(function(p){return p.name+' '+(p.color||'')+' '+calcProdStock(p.name,p.color||p.model||'')+'公斤';}).join('、');
+    if(low.length===0) return '庫存都充足，不用擔心';
+    var r = low.slice(0,3).map(function(p){
+      var m = (p.name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
+      return m + ' ' + calcProdStock(p.name,p.color||p.model||'') + '公斤';
+    }).join('、');
+    return '低庫存：' + r;
   }
-  if (/總.*庫/.test(query)) {
+  // 總庫存
+  if (/總.*庫|目前庫存|現在庫存|庫存多少/.test(query)) {
     var tot = d.products.reduce(function(s,p){return s+calcProdStock(p.name,p.color||p.model||'');},0);
-    return '目前總庫存約' + tot + '公斤';
+    return '目前庫存約 ' + tot + '公斤';
   }
-  if (/待.*簽|待處理/.test(query)) {
+  // 待簽收
+  if (/待.*簽|待處理|還沒簽|未簽收/.test(query)) {
     var pIn = (d.pendingIn||[]).filter(function(h){return h.status==='pending';}).length;
     var pOut = (d.pendingOut||[]).filter(function(h){return h.status==='pendingOut';}).length;
     if(pIn===0 && pOut===0) return '目前沒有待簽收項目';
-    return '待入庫' + pIn + '筆，待出庫' + pOut + '筆';
+    return (pIn>0?'待入庫'+pIn+'筆，':'')+(pOut>0?'待出庫'+pOut+'筆':'');
   }
-
-  // ====== 昨日 ======
-  if (/昨天.*入/.test(query) || /入.*昨天/.test(query)) {
-    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    var yesIn = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===yesterday;});
-    if(yesIn.length===0) return '昨日沒有入庫記錄';
-    var tot = yesIn.reduce(function(s,h){return s+(h.qty||0);},0);
-    return '昨日入庫共' + tot + '公斤，' + yesIn.length + '筆';
-  }
-  if (/昨天.*出/.test(query) || /出.*昨天/.test(query)) {
-    var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
-    var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
-    if(yesOut.length===0) return '昨日沒有出庫記錄';
-    var tot = yesOut.reduce(function(s,h){return s+(h.qty||0);},0);
-    return '昨日出庫共' + tot + '公斤，' + yesOut.length + '筆';
+  // 特別問顏色時才讀出
+  if (/顏色|什麼色|色號|是什麼顏色/.test(query)) {
+    var hits = d.products.filter(function(p){return (p.name||'').toLowerCase().indexOf(query.replace(/[^a-z0-9]/g,''))>-1;});
+    if(hits.length===0) return '找不到這個產品的顏色資料';
+    return hits.slice(0,2).map(function(p){return p.name+' 是 '+((p.color||'').toUpperCase()||'未設定');}).join('；');
   }
 
   // ====== 問候語 ======
