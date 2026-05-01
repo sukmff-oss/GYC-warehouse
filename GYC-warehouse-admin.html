@@ -1281,6 +1281,8 @@ function fmtProd(name, qty, unit) {
   }
   return base + ' ' + numStr + (unit||'');
 }
+// 掛全域（蘇董視圖+alert override共用）
+window.fmtProd = fmtProd;
 
 // ====== 蘇董語音簡化工具（全域） ======
 // 數字 → 中文大寫（500→五百、1200→一千二、10→十）
@@ -1307,6 +1309,7 @@ function numToZh(n) {
   if (decimal > 0) result += '點' + digits[decimal];
   return result;
 }
+window.numToZh = numToZh;
 
 // 公斤 → 公噸中文（1000→一公噸、1200→一點二公噸）
 function c2t(kg) {
@@ -1321,9 +1324,10 @@ function c2t(kg) {
   }
   return zh + '公噸';
 }
+window.c2t = c2t;
 
 // 蘇董 alert 語音轉換：去除代號、KG→公斤、≥1000→公噸（數字轉中文）
-function fmtAlertSpeech(msg) {
+window.fmtAlertSpeech = function(msg) {
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
   // 2. 數字+KG → 中文公斤或公噸
