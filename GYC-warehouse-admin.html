@@ -1263,6 +1263,20 @@ let _aiChatOpen = false;
 let _aiVoiceOn = false;
 let _aiVoiceRec = null;
 
+// 蘇董簡化品名：只取型號（901B），不讀產品線代號
+// qty 為數字時自動轉換：≥1000公斤→X公噸，否則「X公斤」
+function fmtProd(name, qty, unit) {
+  var base = (name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
+  if (qty === undefined || qty === null) return base;
+  var n = parseFloat(qty);
+  if (isNaN(n)) return base + ' ' + qty + (unit||'');
+  if (unit && unit.toUpperCase().includes('KG') || (unit||'').toUpperCase() === 'KG') {
+    if (Math.abs(n) >= 1000) return base + ' ' + (n/1000) + '公噸';
+    return base + ' ' + n + '公斤';
+  }
+  return base + ' ' + n + (unit||'');
+}
+
 function speakText(text, callback) {
   // Try MiniMax TTS first
   fetch('https://api.minimax.io/v1/t2a_v2', {
@@ -1327,8 +1341,7 @@ function parseAICommand(query) {
   // ====== 蘇董簡化回覆 helper ======
   // 只取型號（901B），不讀TU/TW/CO/WO/WP產品線代號，除非特別問顏色才讀
   function fmtDetail(h) {
-    var m = (h.name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
-    return m + ' ' + (h.qty||0) + h.unit;
+    return fmtProd(h.name||'', h.qty, h.unit);
   }
   function fmtSum(records) {
     if(records.length===0) return null;
@@ -2917,7 +2930,7 @@ async function doProd() {
   d.pendingIn.unshift(pending);
   saveData(d);
   updateBadges();
-  alert('✅ 生產完成！待倉管簽收：\n品名：' + _selectedProd.name + '\n數量：' + qty + ' ' + _selectedProd.unit);
+  alert('✅ 生產完成！待倉管簽收：\n品名：' + fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
   document.getElementById('prodQtySection').style.display = 'none';
   document.querySelectorAll('#prodGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -2948,7 +2961,7 @@ async function doOut() {
   d.pendingOut.unshift(pending);
   saveData(d);
   updateBadges();
-  alert('✅ 出庫完成！等待採購簽收：\n品名：' + _selectedProd.name + '\n數量：' + qty + ' ' + _selectedProd.unit);
+  alert('✅ 出庫完成！等待採購簽收：\n品名：' + fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('outQtySection').style.display = 'none';
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -3435,12 +3448,19 @@ function sendAIMessage() {
   }, 500);
 }
 
-// 覆蓋 alert 朗讀
+// 覆蓋 alert 朗讀（視覺保持原樣，語音自動轉換：KG→公斤，≥1000公斤→公噸）
 var _origAlert = window.alert;
 window.alert = function(msg) {
   _origAlert(msg);
   if('speechSynthesis' in window) {
-    var u = new SpeechSynthesisUtterance(msg);
+    var spoken = msg
+      .replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
+        var v = parseFloat(n);
+        if (v >= 1000) return (v/1000) + '公噸';
+        return v + '公斤';
+      })
+      .replace(/\bKG\b/gi, '公斤');
+    var u = new SpeechSynthesisUtterance(spoken);
     u.lang = 'zh-TW';
     speechSynthesis.speak(u);
   }
