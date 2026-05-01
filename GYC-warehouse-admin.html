@@ -1213,6 +1213,56 @@ input[type="date"] {
     box-shadow: 0 0 12px rgba(102, 126, 234, 0.4);
   }
 }
+
+/* ===== 3D 翻轉統計卡片 ===== */
+.stat-flip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.flip-card {
+  height: 130px;
+  perspective: 900px;
+  cursor: pointer;
+}
+.flip-card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.flip-card:hover .flip-card-inner,
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-front, .flip-back {
+  position: absolute; inset: 0;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: 16px 14px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.flip-front {
+  box-shadow: 16px 16px 40px rgba(0,0,0,0.35);
+}
+.flip-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, rgba(59,125,216,0.12), rgba(124,92,191,0.08));
+  border-color: rgba(99,139,237,0.25);
+}
+.stat-icon-lg { font-size: 26px; margin-bottom: 8px; }
+.stat-num-lg { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 3px; }
+.stat-lbl-lg { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.flip-back-content { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 5px; }
+.flip-back-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.flip-back-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+.flip-back-row span:last-child { font-weight: 600; color: var(--text); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -1750,21 +1800,51 @@ function stopVoiceInput() {
   </div>
   <div id="suVoiceAnswer" style="display:none;margin:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,191,165,0.3);border-radius:12px;padding:12px;font-size:0.9rem;color:var(--text-primary);white-space:pre-wrap;line-height:1.6"></div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-    <div style="background:linear-gradient(135deg,#0d2b1a,#061510);border:2px solid #00bfa5;border-radius:16px;padding:16px 12px;text-align:center">
-      <div style="font-size:0.75rem;color:#00bfa5;margin-bottom:6px;font-weight:600">📥 今日入庫</div>
-      <div id="suTodayInNum" style="font-size:1.8rem;font-weight:900;color:#00bfa5;line-height:1.1">-</div>
-      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suTodayInCount">等待載入...</div>
+  <div class="stat-flip-grid">
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-card-inner">
+        <div class="flip-front">
+          <div class="stat-icon-lg">📥</div>
+          <div id="suTodayInNum" class="stat-num-lg" style="color:#00bfa5">-</div>
+          <div class="stat-lbl-lg">今日入庫</div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-back-content">
+            <div class="flip-back-title">📥 入庫詳情</div>
+            <div class="flip-back-row"><span>今日入庫量</span><span id="suTodayInCount">-</span></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div style="background:linear-gradient(135deg,#1a0d2b,#100618);border:2px solid #ef5350;border-radius:16px;padding:16px 12px;text-align:center">
-      <div style="font-size:0.75rem;color:#ef5350;margin-bottom:6px;font-weight:600">📤 今日出庫</div>
-      <div id="suTodayOutNum" style="font-size:1.8rem;font-weight:900;color:#ef5350;line-height:1.1">-</div>
-      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suTodayOutCount">等待載入...</div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-card-inner">
+        <div class="flip-front">
+          <div class="stat-icon-lg">📤</div>
+          <div id="suTodayOutNum" class="stat-num-lg" style="color:#ef5350">-</div>
+          <div class="stat-lbl-lg">今日出庫</div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-back-content">
+            <div class="flip-back-title">📤 出庫詳情</div>
+            <div class="flip-back-row"><span>今日出庫量</span><span id="suTodayOutCount">-</span></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div style="background:linear-gradient(135deg,#0d1a2b,#060f18);border:2px solid #42a5f5;border-radius:16px;padding:16px 12px;text-align:center">
-      <div style="font-size:0.75rem;color:#42a5f5;margin-bottom:6px;font-weight:600">⚖️ 淨變化</div>
-      <div id="suNetNum" style="font-size:1.8rem;font-weight:900;color:#42a5f5;line-height:1.1">-</div>
-      <div style="font-size:0.7rem;color:#555;margin-top:4px" id="suNetLabel">今日對比</div>
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+      <div class="flip-card-inner">
+        <div class="flip-front">
+          <div class="stat-icon-lg">⚖️</div>
+          <div id="suNetNum" class="stat-num-lg" style="color:#42a5f5">-</div>
+          <div class="stat-lbl-lg">淨變化</div>
+        </div>
+        <div class="flip-back">
+          <div class="flip-back-content">
+            <div class="flip-back-title">⚖️ 庫存變化</div>
+            <div class="flip-back-row"><span>對比</span><span id="suNetLabel">-</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
