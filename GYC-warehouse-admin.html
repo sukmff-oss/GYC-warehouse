@@ -3518,14 +3518,25 @@ function sendAIMessage() {
 }
 
 // 覆蓋 alert 朗讀（視覺保持原樣，語音自動轉換：去除代號、KG→公斤、≥1000公斤→公噸）
-var _origAlert = window.alert;
+window._origAlert = window.alert;
 window.alert = function(msg) {
-  _origAlert(msg);
-  if('speechSynthesis' in window) {
-    var u = new SpeechSynthesisUtterance(window.fmtAlertSpeech(msg));
-    u.lang = 'zh-TW';
-    speechSynthesis.speak(u);
-  }
+  // 1. 先顯示視覺 alert
+  window._origAlert(msg);
+  // 2. 延迟朗讀（避免中斷 alert 顯示）
+  setTimeout(function() {
+    try {
+      var text = typeof window.fmtAlertSpeech === 'function' ? window.fmtAlertSpeech(msg) : String(msg);
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-TW';
+        u.rate = 1.0;
+        speechSynthesis.speak(u);
+      }
+    } catch(e) {
+      console.warn('[alert朗讀錯誤]', e);
+    }
+  }, 100);
 };
 
 
