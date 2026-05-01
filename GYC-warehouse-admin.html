@@ -1250,8 +1250,11 @@ input[type="date"] {
     background: rgba(0, 191, 165, 0.5) !important;
     box-shadow: 0 0 12px rgba(0, 191, 165, 0.4);
   }
-  #aiAssistantFloat:active {
+  #aiAssistantFloat:active,
+  button[onclick="toggleAIChat()"]:active {
     transform: scale(0.92);
+    background: rgba(102, 126, 234, 0.5) !important;
+    box-shadow: 0 0 12px rgba(102, 126, 234, 0.4);
   }
 }
 </style>
@@ -1264,17 +1267,77 @@ let _aiVoiceOn = false;
 let _aiVoiceRec = null;
 
 // 蘇董簡化品名：只取型號（901B），不讀產品線代號
-// qty 為數字時自動轉換：≥1000公斤→X公噸，否則「X公斤」
+// qty 為數字時自動轉換：≥1000公斤→X公噸，否則「X公斤」，整數不顯示小數點
 function fmtProd(name, qty, unit) {
   var base = (name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
   if (qty === undefined || qty === null) return base;
   var n = parseFloat(qty);
   if (isNaN(n)) return base + ' ' + qty + (unit||'');
-  if (unit && unit.toUpperCase().includes('KG') || (unit||'').toUpperCase() === 'KG') {
+  var numStr = (n % 1 === 0) ? String(n) : String(n.toFixed(1));
+  if (unit && (unit.toUpperCase().includes('KG') || unit.toUpperCase() === 'KG')) {
     if (Math.abs(n) >= 1000) return base + ' ' + (n/1000) + '公噸';
-    return base + ' ' + n + '公斤';
+    return base + ' ' + numStr + '公斤';
   }
-  return base + ' ' + n + (unit||'');
+  return base + ' ' + numStr + (unit||'');
+}
+
+// ====== 蘇董語音簡化工具（全域） ======
+// 數字 → 中文大寫（500→五百、1200→一千二、10→十）
+function numToZh(n) {
+  var digits = '零一二三四五六七八九';
+  n = parseFloat(n);
+  if (isNaN(n)) return String(n);
+  if (n === 0) return '零';
+  var sign = n < 0 ? '負' : '';
+  n = Math.abs(n);
+  var integer = Math.floor(n);
+  var decimal = Math.round((n - integer) * 10);
+  var result = sign;
+  var s = String(integer);
+  // 两位數特殊處理（十、十五、二十）
+  if (s.length === 2 && s[0] !== '0') {
+    var tens = digits[parseInt(s[0])];
+    var ones = digits[parseInt(s[1])];
+    if (s[1] === '0') result += tens + '十';
+    else result += tens + '十' + ones;
+  } else {
+    for (var i = 0; i < s.length; i++) result += digits[parseInt(s[i])];
+  }
+  if (decimal > 0) result += '點' + digits[decimal];
+  return result;
+}
+
+// 公斤 → 公噸中文（1000→一公噸、1200→一點二公噸）
+function c2t(kg) {
+  var t = parseFloat(kg) / 1000;
+  var integer = Math.floor(t);
+  var decimal = Math.round((t - integer) * 10);
+  var zh;
+  if (decimal === 0) {
+    zh = numToZh(integer);
+  } else {
+    zh = numToZh(t.toFixed(1));
+  }
+  return zh + '公噸';
+}
+
+// 蘇董 alert 語音轉換：去除代號、KG→公斤、≥1000→公噸（數字轉中文）
+function fmtAlertSpeech(msg) {
+  // 1. 去除代號前綴
+  msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
+  // 2. 數字+KG → 中文公斤或公噸
+  msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
+    var v = parseFloat(n);
+    if (v >= 1000) return c2t(v);
+    return numToZh(v) + '公斤';
+  });
+  // 3. 數字+公斤（劑量純數字）→ 中文
+  msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
+    var v = parseFloat(n);
+    if (v >= 1000) return c2t(v);
+    return numToZh(v) + '公斤';
+  });
+  return msg.trim();
 }
 
 function speakText(text, callback) {
@@ -1714,7 +1777,8 @@ function stopVoiceInput() {
   <div class="func-header">
     <button class="back-btn" onclick="showPage('menuPage')">←</button>
     <span class="page-title">👁️ 蘇董視圖</span>
-    <button id="suVoiceBtn" onclick="window.startVoiceInput();" style="margin-left:auto;background:rgba(0,191,165,0.2);border:2px solid #00bfa5;color:#00bfa5;border-radius:50px;padding:10px 18px;font-size:0.9rem;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,191,165,0.3);min-width:90px;user-select:none">🎤 語音查詢</button>
+    <button id="suVoiceBtn" onclick="window.startVoiceInput();" style="background:rgba(0,191,165,0.2);border:2px solid #00bfa5;color:#00bfa5;border-radius:50px;padding:8px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,191,165,0.3);min-width:80px;user-select:none;white-space:nowrap">🎤 語音</button>
+    <button id="suAIBtn" ontouchend="window.toggleAIChat();return false" onclick="window.toggleAIChat();" style="background:rgba(102,126,234,0.2);border:2px solid #667eea;color:#667eea;border-radius:50px;padding:8px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(102,126,234,0.3);min-width:80px;user-select:none;white-space:nowrap">🤖 AI</button>
   </div>
   <div id="suVoiceAnswer" style="display:none;margin:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,191,165,0.3);border-radius:12px;padding:12px;font-size:0.9rem;color:var(--text-primary);white-space:pre-wrap;line-height:1.6"></div>
 
@@ -3385,11 +3449,11 @@ window.stopVoiceInput = function() {
 };
 
 // ====== AI Chat 功能 ======
-function toggleAIChat() {
+window.toggleAIChat = function() {
   _aiChatOpen = !_aiChatOpen;
   var panel = document.getElementById('aiChatPanel');
-  panel.style.display = _aiChatOpen ? 'flex' : 'none';
-}
+  if (panel) panel.style.display = _aiChatOpen ? 'flex' : 'none';
+};
 
 function toggleAIVoice() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3448,19 +3512,12 @@ function sendAIMessage() {
   }, 500);
 }
 
-// 覆蓋 alert 朗讀（視覺保持原樣，語音自動轉換：KG→公斤，≥1000公斤→公噸）
+// 覆蓋 alert 朗讀（視覺保持原樣，語音自動轉換：去除代號、KG→公斤、≥1000公斤→公噸）
 var _origAlert = window.alert;
 window.alert = function(msg) {
   _origAlert(msg);
   if('speechSynthesis' in window) {
-    var spoken = msg
-      .replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
-        var v = parseFloat(n);
-        if (v >= 1000) return (v/1000) + '公噸';
-        return v + '公斤';
-      })
-      .replace(/\bKG\b/gi, '公斤');
-    var u = new SpeechSynthesisUtterance(spoken);
+    var u = new SpeechSynthesisUtterance(fmtAlertSpeech(msg));
     u.lang = 'zh-TW';
     speechSynthesis.speak(u);
   }
@@ -3469,8 +3526,8 @@ window.alert = function(msg) {
 
 </script>
 
-<!-- AI 浮動按鈕 -->
-<div id="aiAssistantFloat" onclick="toggleAIChat()" style="position:fixed;bottom:24px;right:24px;width:60px;height:60px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(102,126,234,0.5);z-index:9999;transition:all 0.3s">
+<!-- AI 浮動按鈕（已廢除，功能整合到頂部按鈕） -->
+<div id="aiAssistantFloat" onclick="toggleAIChat()" style="display:none">
   <span style="font-size:28px">🤖</span>
   <div id="aiNotifyBadge" style="position:absolute;top:-4px;right:-4px;width:20px;height:20px;background:#ef4444;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">!</div>
 </div>
