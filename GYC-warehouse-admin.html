@@ -755,10 +755,13 @@ html, body {
 .func-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   padding-bottom: 16px;
   border-bottom: 1.5px solid rgba(59, 130, 246, 0.15);
   margin-bottom: 8px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .back-btn {
@@ -779,9 +782,15 @@ html, body {
 }
 
 .page-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  flex-shrink: 1;
+  min-width: 0;
   letter-spacing: 2px;
 }
 
