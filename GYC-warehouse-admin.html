@@ -1339,17 +1339,22 @@ function c2t(kg) {
 }
 window.c2t = c2t;
 
-// 蘇董 alert 語音轉換：去除代號、數量全部用 numToZh 轉中文（≥1000KG 也用公斤朗讀）
+// 蘇董 alert 語音轉換：去除代號、數量用 numToZh、產品代號數字逐字讀
 window.fmtAlertSpeech = function(msg) {
+  var digitWords = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
-  // 2. 數字+KG → 中文公斤（全部用 numToZh）
+  // 2. 數字+KG → 中文公斤（numToZh）
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
   });
-  // 3. 數字+公斤（劑量純數字）→ 中文
+  // 3. 數字+公斤 → 中文
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
+  });
+  // 4. 產品代號數字（純數字群）→ 逐字讀：773→七七三，901B→901B（B非數字不動）
+  msg = msg.replace(/\b(\d+)\b/g, function(m) {
+    return m.split('').map(function(d) { return digitWords[parseInt(d)] || d; }).join('');
   });
   return msg.trim();
 }
