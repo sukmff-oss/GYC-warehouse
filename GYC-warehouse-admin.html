@@ -1258,7 +1258,8 @@ input[type="date"] {
   }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
 // ==================== 蘇董語音功能 ====================
 let _recognition = null;
 let _isListening = false;
@@ -1629,8 +1630,7 @@ function startVoiceInput() {
     let answer = parseAICommand(transcript);
     // Show text result
     let ansEl = document.getElementById('suVoiceAnswer');
-    if (ansEl) { ansEl.textContent = '❓ ' + transcript + '
-💬 ' + answer; ansEl.style.display = 'block'; }
+    if (ansEl) { ansEl.textContent = '❓ ' + transcript + '\n💬 ' + answer; ansEl.style.display = 'block'; }
     // Speak answer
     speakText(answer);
   };
