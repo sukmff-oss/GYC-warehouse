@@ -1481,14 +1481,14 @@ function parseAICommand(query) {
     var totIn = mi.reduce(function(s,h){return s+(h.qty||0);},0);
     var totOut = mo.reduce(function(s,h){return s+(h.qty||0);},0);
     if(totIn===0 && totOut===0) return '本月還沒有出入庫記錄';
-    return '本月做了 ' + totIn + '公斤，出去 ' + totOut + '公斤';
+    return '本月做了 ' + numToZh(totIn) + '公斤，出去 ' + numToZh(totOut) + '公斤';
   }
   // 淨變化
   if (/淨|變化|增減/.test(query)) {
     var ti = d.history.filter(function(h){return !h.deleted && h.type==='in' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
     var to = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;}).reduce(function(s,h){return s+(h.qty||0);},0);
     var n = ti - to;
-    return (n>=0?'多了 ':'少了 ') + Math.abs(n) + '公斤';
+    return (n>=0?'多了 ':'少了 ') + numToZh(Math.abs(n)) + '公斤';
   }
   // 低庫存
   if (/低.*庫|警示|庫存不夠|要補貨/.test(query)) {
@@ -1496,14 +1496,14 @@ function parseAICommand(query) {
     if(low.length===0) return '庫存都充足，不用擔心';
     var r = low.slice(0,3).map(function(p){
       var m = (p.name||'').replace(/^(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/i,'').trim();
-      return m + ' ' + calcProdStock(p.name,p.color||p.model||'') + '公斤';
+      return m + ' ' + numToZh(calcProdStock(p.name,p.color||p.model||'')) + '公斤';
     }).join('、');
     return '低庫存：' + r;
   }
   // 總庫存
   if (/總.*庫|目前庫存|現在庫存|庫存多少/.test(query)) {
     var tot = d.products.reduce(function(s,p){return s+calcProdStock(p.name,p.color||p.model||'');},0);
-    return '目前庫存約 ' + tot + '公斤';
+    return '目前庫存約 ' + numToZh(tot) + '公斤';
   }
   // 待簽收
   if (/待.*簽|待處理|還沒簽|未簽收/.test(query)) {
@@ -1659,7 +1659,7 @@ function stopVoiceInput() {
 <div class="page active" id="loginPage">
   <div class="login-container">
     <h1 class="system-title">國研化工管理系統</h1>
-    <p class="system-subtitle">RBAC FOR GYC V5.4</p>
+    <p class="system-subtitle">RBAC FOR GYC V5.5</p>
     <div class="qr-section">
       <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
     </div>
@@ -3397,13 +3397,13 @@ window.parseAndAnswer = function(query) {
     var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var n = i - o;
-    answer = '本月入庫' + i + '公斤，出庫' + o + '公斤，' + (n>=0?'淨增加':'淨減少') + Math.abs(n) + '公斤';
+    answer = '本月入庫' + numToZh(i) + '公斤，出庫' + numToZh(o) + '公斤，' + (n>=0?'淨增加':'淨減少') + numToZh(Math.abs(n)) + '公斤';
   }
   else if (/上月|上個月/.test(query)) {
     var lm = new Date(now - 30*86400000).toISOString().slice(0, 7);
     var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
-    answer = '上個月入庫' + i + '公斤，出庫' + o + '公斤';
+    answer = '上個月入庫' + numToZh(i) + '公斤，出庫' + numToZh(o) + '公斤';
   }
   else if (/低.*庫|庫存.*低|哪.*低|最低.*庫/.test(query)) {
     var low = d.products.filter(function(p) {
@@ -3413,12 +3413,12 @@ window.parseAndAnswer = function(query) {
     });
     answer = low.length === 0 ? '目前沒有低庫存警示，所有產品都安全' : '最低庫存：' + low.slice(0,3).map(function(p) {
       var s = calcProdStock(p.name, p.color||p.model||'');
-      return p.name + ' ' + (p.color||'') + ' ' + s + '公斤';
+      return p.name + ' ' + (p.color||'') + ' ' + numToZh(s) + '公斤';
     }).join('、');
   }
   else if (/總庫存|目前.*庫存|現在.*庫存/.test(query)) {
     var tot = d.products.reduce(function(s,p){return s+calcProdStock(p.name,p.color||p.model||'');},0);
-    answer = '目前總庫存約' + tot + '公斤';
+    answer = '目前總庫存約' + numToZh(tot) + '公斤';
   }
   else if (/誰/.test(query)) {
     var recs = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date===today;});
