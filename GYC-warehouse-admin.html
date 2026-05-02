@@ -1391,8 +1391,8 @@ window.c2t = c2t;
 window.fmtAlertSpeech = function(msg) {
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
-  // 2. 朗讀時不讀這行（畫面顯示給你看，但不朗讀）
-  msg = msg.replace(/已寫入正式歷史[，>].*$/gm, '');
+  // 2. 朗讀時不讀「已寫入正式歷史」（畫面顯示，不朗讀）
+  msg = msg.replace(/已寫入正式歷史[^\n]*\n?/g, '');
   // 3. 數字+KG → 中文公斤（numToZh）
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
@@ -3001,7 +3001,7 @@ async function factoryConfirm(id) {
   renderPendingConfirmAlert();
   renderPendingConfirm();
   updateBadges();
-  alert('✅ 回報確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史，完成入庫修正');
+  alert('✅ 回報確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史\n已完成入庫');
 }
 
 // ==================== 生產作業藍燈警示系統 ====================
