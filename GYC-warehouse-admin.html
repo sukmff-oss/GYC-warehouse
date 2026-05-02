@@ -650,35 +650,26 @@ html, body {
 }
 
 /* 各選單按鈕專屬漸層背景 */
-.menu-btn .role-icon-wrap.stock {
-  background: linear-gradient(135deg, #78909c 0%, #546e7a 100%);
-  box-shadow: 0 4px 20px rgba(120, 144, 156, 0.4), 0 0 30px rgba(84, 110, 122, 0.2);
+/* 選單按鈕圖示包（統一暗底襯托 SVG stroke 色彩）*/
+.menu-btn .role-icon-wrap {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(100, 100, 150, 0.1);
 }
-.menu-btn .role-icon-wrap.prod {
-  background: linear-gradient(135deg, #66bb6a 0%, #388e3c 100%);
-  box-shadow: 0 4px 20px rgba(102, 187, 106, 0.4), 0 0 30px rgba(56, 142, 60, 0.2);
-}
-.menu-btn .role-icon-wrap.out {
-  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
-  box-shadow: 0 4px 20px rgba(66, 165, 245, 0.4), 0 0 30px rgba(25, 118, 210, 0.2);
-}
-.menu-btn .role-icon-wrap.in {
-  background: linear-gradient(135deg, #ab47bc 0%, #7b1fa2 100%);
-  box-shadow: 0 4px 20px rgba(171, 71, 188, 0.4), 0 0 30px rgba(123, 31, 162, 0.2);
-}
-.menu-btn .role-icon-wrap.sign {
-  background: linear-gradient(135deg, #26c6da 0%, #00838f 100%);
-  box-shadow: 0 4px 20px rgba(38, 198, 218, 0.4), 0 0 30px rgba(0, 131, 143, 0.2);
-}
-.menu-btn .role-icon-wrap.cat {
-  background: linear-gradient(135deg, #ffa726 0%, #f57c00 100%);
-  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.4), 0 0 30px rgba(245, 124, 0, 0.2);
-}
+.menu-btn .role-icon-wrap.stock { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.prod  { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.out   { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.in    { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.sign  { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.cat   { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
 
-/* 選單按鈕圖示字體 */
+/* 選單按鈕 SVG 圖示字體 */
 .menu-btn .role-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-btn .role-icon svg {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
 }
 
 /* 選單按鈕名稱文字 */
@@ -1733,7 +1724,7 @@ function stopVoiceInput() {
 
         <!-- 2. 廠長登入 -->
         <button class="role-login-btn" id="btnFactory">
-          <span class="role-icon-wrap factory"><span class="role-icon">🏭</span></span>
+          <span class="role-icon-wrap factory"><span class="role-icon icon-prod"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"/><path d="M19.4 15L21.7 13.7C22.1 13.5 22.2 13 22 12.6L21 10.9C20.8 10.5 20.3 10.4 19.9 10.6L17.6 11.9M4.6 9L2.3 10.3C1.9 10.5 1.8 11 2 11.4L3 13.1C3.2 13.5 3.7 13.6 4.1 13.4L6.4 12.1M15 4.6L13.7 2.3C13.5 1.9 13 1.8 12.6 2L10.9 3C10.5 3.2 10.4 3.7 10.6 4.1L11.9 6.4M9 19.4L10.3 21.7C10.5 22.1 11 22.2 11.4 22L13.1 21C13.5 20.8 13.6 20.3 13.4 19.9L12.1 17.6"/></svg></span></span>
           <div class="role-login-info">
             <div class="role-login-name">廠長</div>
             <div class="role-login-desc">生產作業、庫存查詢</div>
@@ -1745,7 +1736,7 @@ function stopVoiceInput() {
       <div class="role-login-grid-wrapper">
         <!-- 3. 倉儲登入 -->
         <button class="role-login-btn" id="btnWarehouse">
-          <span class="role-icon-wrap warehouse"><span class="role-icon">📥</span></span>
+          <span class="role-icon-wrap warehouse"><span class="role-icon icon-in"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10V19C22 20.1046 21.1046 21 20 21H4C2.89543 21 2 20.1046 2 19V10"/><path d="M2 10L12 4L22 10"/><path d="M12 11V17M12 17L9 14M12 17L15 14"/></svg></span></span>
           <div class="role-login-info">
             <div class="role-login-name">倉儲</div>
             <div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div>
@@ -1793,33 +1784,33 @@ function stopVoiceInput() {
 
   <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
-      <span class="role-icon-wrap stock"><span class="role-icon">📦</span></span>
+      <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"/><path d="M9 8H13M9 11H13M9 14H11"/></svg></span></span>
       <span class="menu-btn-name">庫存查詢</span>
       <span id="badgeStock" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('prodPage')">
-      <span class="role-icon-wrap prod"><span class="role-icon">🏭</span></span>
+      <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z"/><path d="M19.4 15L21.7 13.7C22.1 13.5 22.2 13 22 12.6L21 10.9C20.8 10.5 20.3 10.4 19.9 10.6L17.6 11.9M4.6 9L2.3 10.3C1.9 10.5 1.8 11 2 11.4L3 13.1C3.2 13.5 3.7 13.6 4.1 13.4L6.4 12.1M15 4.6L13.7 2.3C13.5 1.9 13 1.8 12.6 2L10.9 3C10.5 3.2 10.4 3.7 10.6 4.1L11.9 6.4M9 19.4L10.3 21.7C10.5 22.1 11 22.2 11.4 22L13.1 21C13.5 20.8 13.6 20.3 13.4 19.9L12.1 17.6"/></svg></span></span>
       <span class="menu-btn-name">生產作業</span>
       <span id="badgeProd" class="menu-badge" style="display:none">0</span>
       <span id="badgeProdBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('outPage')">
-      <span class="role-icon-wrap out"><span class="role-icon">📤</span></span>
+      <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3C2.44772 18 2 17.5523 2 17V7C2 6.44772 2.44772 6 3 6H14V17C14 17.5523 13.5523 18 13 18H11"/><path d="M14 9H17.5L22 13V17C22 17.5523 21.5523 18 21 18H19"/><circle cx="8" cy="18" r="3"/><circle cx="18" cy="18" r="3"/></svg></span></span>
       <span class="menu-btn-name">出貨作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('inPage')">
-      <span class="role-icon-wrap in"><span class="role-icon">📥</span></span>
+      <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10V19C22 20.1046 21.1046 21 20 21H4C2.89543 21 2 20.1046 2 19V10"/><path d="M2 10L12 4L22 10"/><path d="M12 11V17M12 17L9 14M12 17L15 14"/></svg></span></span>
       <span class="menu-btn-name">入庫作業</span>
       <span id="badgeIn" class="menu-badge" style="display:none">0</span>
       <span id="badgeInBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('historyPage')">
-      <span class="role-icon-wrap sign"><span class="role-icon">📋</span></span>
+      <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2H18V9"/><path d="M6 18H4C2.89543 18 2 17.1046 2 16V11C2 9.89543 2.89543 9 4 9H20C21.1046 9 22 9.89543 22 11V16C22 17.1046 21.1046 18 20 18H18"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg></span></span>
       <span class="menu-btn-name">簽收列印</span>
       <span id="badgeHist" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('catPage')">
-      <span class="role-icon-wrap cat"><span class="role-icon">⚙️</span></span>
+      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><path d="M17 13V21M13 17H21"/></svg></span></span>
       <span class="menu-btn-name">類別管理</span>
     </button>
 <button class="menu-btn" id="menuSuBtn" onclick="showPage('stockPageSu')">
@@ -2370,6 +2361,7 @@ function performLogin(role) {
     saveData(d);
   }
   updateBadges();
+  updateMenuIconColors();
   applyRolePermissions();
 
   document.getElementById('loginPage').classList.remove('active');
@@ -2407,6 +2399,7 @@ function showPage(id) {
  target.classList.add('active');
 
  updateBadges();
+  updateMenuIconColors();
  try {
   if (id === 'stockPage') {switchReport('daily', document.querySelector('.r-tab')); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
@@ -2417,6 +2410,30 @@ function showPage(id) {
   if (id === 'catPage') renderCat();
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
+}
+
+// ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
+const YELLOW = "#FFD700";
+const RED = "#ff4444";
+const BLUE = "#3b82f6";
+
+function setSvgStroke(selector, color) {
+  document.querySelectorAll(selector).forEach(function(el) {
+    el.querySelectorAll('svg').forEach(function(svg) {
+      svg.setAttribute('stroke', color);
+    });
+  });
+}
+
+function updateMenuIconColors() {
+  let d = getData();
+  // 出貨作業 🔴 紅色 = 有待採購簽收（pendingOut）
+  let hasRed = (d.pendingOut || []).some(h => h.status === 'pendingOut');
+  setSvgStroke('.icon-out', hasRed ? RED : YELLOW);
+
+  // 生產作業 🔵 藍色 = 有待確認（pendingConfirm）
+  let hasBlue = (d.pendingIn || []).some(h => h.status === 'pendingConfirm');
+  setSvgStroke('.icon-prod', hasBlue ? BLUE : YELLOW);
 }
 
 // ==================== 徽章更新 ====================
@@ -3024,6 +3041,7 @@ async function signIn(id) {
   renderPendingInAlert();
   renderPendingIn();
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 簽收成功！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n🔵 已通知生產作業，等待廠長回報確認');
 }
 
@@ -3047,6 +3065,7 @@ async function factoryConfirm(id) {
   renderPendingConfirmAlert();
   renderPendingConfirm();
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 回報確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史\n已完成入庫');
   // 朗讀最後一行（避開 skip pattern）
   try { window.speakText && window.speakText('已完成入庫'); } catch(e) {}
@@ -3129,6 +3148,7 @@ function promptDelPendingConfirm(id) {
   renderPendingConfirmAlert();
   renderPendingConfirm();
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 已刪除該筆待確認記錄');
 }
 
@@ -3147,6 +3167,7 @@ async function doIn() {
   _selectedProd = null;
   renderInGrid();
   updateBadges();
+  updateMenuIconColors();
 }
 
 // ==================== 生產作業 ====================
@@ -3174,6 +3195,7 @@ async function doProd() {
   d.pendingIn.unshift(pending);
   saveData(d);
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 生產完成！待倉管簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
   document.getElementById('prodQtySection').style.display = 'none';
   document.querySelectorAll('#prodGrid .prod-btn').forEach(b => b.classList.remove('selected'));
@@ -3262,6 +3284,7 @@ async function doOut() {
   d.pendingOut.unshift(pending);
   saveData(d);
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 出貨完成！等待採購簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('outQtySection').style.display = 'none';
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
@@ -3283,6 +3306,7 @@ async function signOut(id) {
   item.status = 'pending';
   saveData(d);
   updateBadges();
+  updateMenuIconColors();
 
   // dialog 結束後第一幀 paint，確保藍燈立即出現
   requestAnimationFrame(function() {
@@ -3327,6 +3351,7 @@ async function confirmOut(id) {
   renderPendingOutReport();
   renderOutBlueAlert();
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出貨');
   try { window.speakText && window.speakText('發票送貨單確認完成，已完成出貨'); } catch(e) {}
 }
@@ -3342,6 +3367,7 @@ function promptDelPendingOut(id) {
   saveData(d);
   renderPendingOutReport();
   updateBadges();
+  updateMenuIconColors();
   alert('✅ 已刪除該筆待簽收記錄');
 }
 
@@ -3383,6 +3409,7 @@ function promptDelHistory(id, source) {
   }
   saveData(d);
   updateBadges();
+  updateMenuIconColors();
   renderHistory();
 }
 
@@ -3540,6 +3567,7 @@ function initApp() {
    document.getElementById('welcomeName').textContent = ROLES[savedRole].name;
    applyRolePermissions();
    updateBadges();
+  updateMenuIconColors();
    return;
   } else {
    localStorage.removeItem('_savedRole'); // 無效角色，清除乾淨
@@ -3556,6 +3584,7 @@ function initApp() {
     let prodDateEl = document.getElementById('prodDate');
     if (prodDateEl) {prodDateEl.value = today; prodDateEl.max = today;}
     updateBadges();
+  updateMenuIconColors();
   } catch (e) {console.error('[初始化錯誤]', e);}
 }
 
