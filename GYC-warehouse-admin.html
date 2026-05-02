@@ -3002,6 +3002,8 @@ async function factoryConfirm(id) {
   renderPendingConfirm();
   updateBadges();
   alert('✅ 回報確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史\n已完成入庫');
+  // 朗讀最後一行（避開 skip pattern）
+  try { window.speakText && window.speakText('已完成入庫'); } catch(e) {}
 }
 
 // ==================== 生產作業藍燈警示系統 ====================
