@@ -3196,13 +3196,9 @@ function renderOutGrid() {
 }
 
 // 出庫作業藍燈警示（pendingOut 等待倉儲確認發票/送貨單）
-function renderOutBlueAlert() {
-  let d = getData();
-  let blue = (d.pendingOut || []).filter(h => h.status === 'pending');
-  let el = document.getElementById('outBlueAlertSection');
-  if (!el) return;
-  if (blue.length === 0) { el.innerHTML = ''; return; }
-
+// 建立出庫藍燈 Alert HTML（供 outPage / stockPage 共用）
+function buildOutBlueHtml(blue) {
+  if (!blue || blue.length === 0) return '';
   let html = '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
   html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
@@ -3227,7 +3223,33 @@ function renderOutBlueAlert() {
     html += '</div>';
   });
   html += '</div></div>';
-  el.innerHTML = html;
+  return html;
+}
+
+function renderOutBlueAlert() {
+  let d = getData();
+  let blue = (d.pendingOut || []).filter(h => h.status === 'pending');
+  let el = document.getElementById('outBlueAlertSection');
+  let stockEl = document.getElementById('pendingOutAlertSection');
+  let html = buildOutBlueHtml(blue);
+  if (blue.length === 0) {
+    if (el) el.innerHTML = '';
+    if (stockEl) {
+      let existing = stockEl.querySelector('[data-blue="1"]');
+      if (existing) existing.remove();
+    }
+    return;
+  }
+  if (el) el.innerHTML = html;
+  // 同步寫入 stockPage（採購簽完馬上可見，不覆蓋原本的紅燈 alert）
+  if (stockEl) {
+    let existing = stockEl.querySelector('[data-blue="1"]');
+    if (existing) existing.remove();
+    let w = document.createElement('div');
+    w.setAttribute('data-blue', '1');
+    w.innerHTML = html;
+    stockEl.appendChild(w);
+  }
 }
 
 async function doOut() {
@@ -3262,7 +3284,21 @@ async function signOut(id) {
   saveData(d);
   renderPendingOutAlert();
   renderPendingOutReport();
-  renderOutBlueAlert();
+  // 藍燈寫入 outPage + stockPage（signOut 完成後立即可見）
+  let d2 = getData();
+  let blue2 = (d2.pendingOut || []).filter(h => h.status === 'pending');
+  let stockEl = document.getElementById('pendingOutAlertSection');
+  let outEl = document.getElementById('outBlueAlertSection');
+  let blueHtml = buildOutBlueHtml(blue2);
+  if (outEl) outEl.innerHTML = blueHtml;
+  if (stockEl) {
+    let existing = stockEl.querySelector('[data-blue="1"]');
+    if (existing) existing.remove();
+    let w = document.createElement('div');
+    w.setAttribute('data-blue', '1');
+    w.innerHTML = blueHtml;
+    stockEl.appendChild(w);
+  }
   updateBadges();
   alert('✅ 採購已簽收！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n等待倉儲確認發票送貨單');
   try { window.speakText && window.speakText('採購已簽收，等待倉儲確認發票送貨單'); } catch(e) {}
