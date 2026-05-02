@@ -2472,8 +2472,11 @@ function updateMenuIconColors() {
   // 生產作業 🔵 藍色 = 有待確認（pendingConfirm）
   setSvgStroke('.icon-prod', countConfirm > 0 ? BLUE : YELLOW);
 
-  // 出貨作業 🔴 紅色 = 有待採購簽收（pendingOut）
-  setSvgStroke('.icon-out', countOutRed > 0 ? RED : YELLOW);
+  // 出貨作業 🔴 紅 = 待採購簽收 / 🔵 藍 = 待發票/送貨單
+  let countOutBlue = (d.pendingOut || []).filter(h => h.status === 'pending').length;
+  if (countOutRed > 0) setSvgStroke('.icon-out', RED);
+  else if (countOutBlue > 0) setSvgStroke('.icon-out', BLUE);
+  else setSvgStroke('.icon-out', YELLOW);
 
   // 入庫作業 🔴 紅 = 待入庫 / 🔵 藍 = 待確認
   if (countPending > 0) setSvgStroke('.icon-in', RED);
