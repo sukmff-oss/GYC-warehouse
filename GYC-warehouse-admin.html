@@ -2463,8 +2463,16 @@ function setSvgStroke(selector, color) {
 function updateMenuIconColors() {
   let d = getData();
   // 出貨作業 🔴 紅色 = 有待採購簽收（pendingOut）
-  let hasRed = (d.pendingOut || []).some(h => h.status === 'pendingOut');
-  setSvgStroke('.icon-out', hasRed ? RED : YELLOW);
+  let hasRedOut = (d.pendingOut || []).some(h => h.status === 'pendingOut');
+  setSvgStroke('.icon-out', hasRedOut ? RED : YELLOW);
+
+  // 入庫作業 🔴 紅色 = 有待入庫（pendingIn status=pending）
+  let hasRedIn = (d.pendingIn || []).some(h => h.status === 'pending');
+  setSvgStroke('.icon-in', hasRedIn ? RED : YELLOW);
+
+  // 簽收列印 🔵 藍色 = 有待確認（pendingIn status=pendingConfirm）
+  let hasBlueSign = (d.pendingIn || []).some(h => h.status === 'pendingConfirm');
+  setSvgStroke('.icon-sign', hasBlueSign ? BLUE : YELLOW);
 
   // 生產作業 🔵 藍色 = 有待確認（pendingConfirm）
   let hasBlue = (d.pendingIn || []).some(h => h.status === 'pendingConfirm');
