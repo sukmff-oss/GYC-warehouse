@@ -1754,20 +1754,24 @@ function stopVoiceInput() {
   <path d="M36 12L42 12" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
         <div class="role-login-info"><div class="role-login-name">管理員</div><div class="role-login-desc">最高權限無限制</div></div>
-      </button>
+</button>
     </div>
-
-    <!-- 密碼輸入區塊（showPwdInput 切換顯示）-->
+    <!-- 密碼輸入 -->
     <div id="pwdSection" style="display:none">
       <p id="pwdHint" style="text-align:center;color:var(--text-secondary);margin:16px 0;font-size:0.95rem">請輸入密碼</p>
       <input type="password" id="loginPwd" placeholder="輸入密碼" style="width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--bg-secondary);color:var(--text-primary);font-size:1.1rem;text-align:center;box-sizing:border-box" onkeydown="if(event.key==='Enter')tryLogin()">
       <div id="loginErr" style="display:none;color:var(--danger);text-align:center;margin-top:10px;font-size:0.9rem">⚠️ 密碼錯誤</div>
       <button onclick="backToRoles()" style="margin-top:12px;width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;color:var(--text-secondary);cursor:pointer;font-size:0.9rem">← 返回</button>
     </div>
+  </div>
+</div>
 
-    <!-- ═══ 主選單頁面 ═══ -->
+<!-- ═══ 主選單頁面 ═══ -->
 <div class="page" id="menuPage">
-<div class="menu-grid">
+  <div class="func-header">
+    <span class="page-title">📋 主選單</span>
+  </div>
+  <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
       <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="21" cy="21" r="13" stroke="#FFC107" stroke-width="4"/>
@@ -1823,7 +1827,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-btn-name">類別管理</span>
     </button>
-    <button class="menu-btn wide" onclick="showPage('menuPageSu')">
+    <button class="menu-btn wide" onclick="showPage('stockPageSu')">
       <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M8 14H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M8 24H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1838,8 +1842,6 @@ function stopVoiceInput() {
   </div>
   <div class="version-info">GYC Warehouse v5.6</div>
 </div>
-
-
 
 <!-- ═══ 蘇董專用 ═══ -->
 <div class="page" id="stockPageSu">
