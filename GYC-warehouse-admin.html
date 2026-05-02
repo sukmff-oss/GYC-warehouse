@@ -1391,15 +1391,17 @@ window.c2t = c2t;
 window.fmtAlertSpeech = function(msg) {
   // 1. 去除代號前綴
   msg = msg.replace(/\b(TU|TW|CO|WO|WP|特殊|溶劑|助劑|色粉|樹酯|其他)[-_]/gi, '');
-  // 2. 數字+KG → 中文公斤（numToZh）
+  // 2. 朗讀時不讀這行（畫面顯示給你看，但不朗讀）
+  msg = msg.replace(/已寫入正式歷史[，>].*$/gm, '');
+  // 3. 數字+KG → 中文公斤（numToZh）
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*KG\b/gi, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
   });
-  // 3. 數字+公斤 → 中文
+  // 4. 數字+公斤 → 中文
   msg = msg.replace(/\b(\d+(?:\.\d+)?)\s*公斤\b/g, function(m, n) {
     return numToZh(parseFloat(n)) + '公斤';
   });
-  // 4. 產品名稱數字（純數字群，不在KG/公斤後面）→ 保持原樣不轉換
+  // 5. 產品名稱數字（純數字群，不在KG/公斤後面）→ 保持原樣不轉換
   return msg.trim();
 }
 
