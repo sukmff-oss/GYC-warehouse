@@ -1489,7 +1489,7 @@ function parseAICommand(query) {
   // 今日出貨 — "今日出去 901B 500公斤"
   if (/今日.*出|今天.*出|今天出去|今天出庫|今天出|現在出庫|今天出貨|現在出貨/.test(query)) {
     var tOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;});
-    if(tOut.length===0) return '今日沒有出庫';
+    if(tOut.length===0) return '今日沒有出貨記錄';
     var r = fmtSum(tOut);
     return '今日出去 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
@@ -1505,7 +1505,7 @@ function parseAICommand(query) {
   if (/昨天.*出|昨日.*出|昨天出去|昨日出庫|昨天出貨|昨日出貨/.test(query)) {
     var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
     var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
-    if(yesOut.length===0) return '昨天沒有出庫';
+    if(yesOut.length===0) return '昨天沒有出貨記錄';
     var r = fmtSum(yesOut);
     return '昨天出去 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
@@ -3262,7 +3262,7 @@ async function doOut() {
   d.pendingOut.unshift(pending);
   saveData(d);
   updateBadges();
-  alert('✅ 出庫完成！等待採購簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
+  alert('✅ 出貨完成！等待採購簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('outQtySection').style.display = 'none';
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -3277,31 +3277,34 @@ async function signOut(id) {
   if (!isPurchase) {alert('僅限採購或管理員簽收'); return;}
 
   // 第一階段：採購「簽收」→ 待倉儲確認發票/送貨單 → status 改為 pending（藍燈）
-  let confirmSign = confirm('🔐 確認簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
+  let confirmSign = confirm('🔐 確認出貨簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
   if (!confirmSign) return;
 
   item.status = 'pending';
   saveData(d);
-  renderPendingOutAlert();
-  renderPendingOutReport();
-  // 藍燈寫入 outPage + stockPage（signOut 完成後立即可見）
-  let d2 = getData();
-  let blue2 = (d2.pendingOut || []).filter(h => h.status === 'pending');
-  let stockEl = document.getElementById('pendingOutAlertSection');
-  let outEl = document.getElementById('outBlueAlertSection');
-  let blueHtml = buildOutBlueHtml(blue2);
-  if (outEl) outEl.innerHTML = blueHtml;
-  if (stockEl) {
-    let existing = stockEl.querySelector('[data-blue="1"]');
-    if (existing) existing.remove();
-    let w = document.createElement('div');
-    w.setAttribute('data-blue', '1');
-    w.innerHTML = blueHtml;
-    stockEl.appendChild(w);
-  }
   updateBadges();
-  alert('✅ 採購已簽收！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n等待倉儲確認發票送貨單');
-  try { window.speakText && window.speakText('採購已簽收，等待倉儲確認發票送貨單'); } catch(e) {}
+
+  // dialog 結束後第一幀 paint，確保藍燈立即出現
+  requestAnimationFrame(function() {
+    renderPendingOutAlert();
+    renderPendingOutReport();
+    let d2 = getData();
+    let blue2 = (d2.pendingOut || []).filter(h => h.status === 'pending');
+    let stockEl = document.getElementById('pendingOutAlertSection');
+    let outEl = document.getElementById('outBlueAlertSection');
+    let blueHtml = buildOutBlueHtml(blue2);
+    if (outEl) outEl.innerHTML = blueHtml;
+    if (stockEl) {
+      let existing = stockEl.querySelector('[data-blue="1"]');
+      if (existing) existing.remove();
+      let w = document.createElement('div');
+      w.setAttribute('data-blue', '1');
+      w.innerHTML = blueHtml;
+      stockEl.appendChild(w);
+    }
+    alert('✅ 採購已簽收！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n等待倉儲確認發票送貨單');
+    try { window.speakText && window.speakText('採購已簽收，等待倉儲確認發票送貨單'); } catch(e) {}
+  });
 }
 
 // 倉儲確認發票/送貨單 → 移入正式歷史
@@ -3324,8 +3327,8 @@ async function confirmOut(id) {
   renderPendingOutReport();
   renderOutBlueAlert();
   updateBadges();
-  alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出庫');
-  try { window.speakText && window.speakText('發票送貨單確認完成，已完成出庫'); } catch(e) {}
+  alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出貨');
+  try { window.speakText && window.speakText('發票送貨單確認完成，已完成出貨'); } catch(e) {}
 }
 
 function promptDelPendingOut(id) {
@@ -3638,7 +3641,7 @@ window.parseAndAnswer = function(query) {
     else {
       var total = recs.reduce(function(s, h) { return s + (h.qty||0); }, 0);
       var det = recs.map(function(h) { return h.name + ' ' + h.model + ' ' + h.qty + h.unit; }).join('、');
-      answer = '今日出庫共' + total + '公斤，' + recs.length + '筆。' + det;
+      answer = '今日出貨共' + total + '公斤，' + recs.length + '筆。' + det;
     }
   }
   else if (/昨天/.test(query) && /入/.test(query)) {
@@ -3649,20 +3652,20 @@ window.parseAndAnswer = function(query) {
   else if (/昨天/.test(query) && /出/.test(query)) {
     var yd = new Date(now - 86400000).toISOString().slice(0, 10);
     var recs = d.history.filter(function(h) { return !h.deleted && h.type === 'out' && h.date === yd; });
-    answer = recs.length === 0 ? '昨日沒有出庫記錄' : '昨日出庫共' + recs.reduce(function(s,h){return s+(h.qty||0);},0) + '公斤，' + recs.length + '筆';
+    answer = recs.length === 0 ? '昨日沒有出貨記錄' : '昨日出貨共' + recs.reduce(function(s,h){return s+(h.qty||0);},0) + '公斤，' + recs.length + '筆';
   }
   else if (/本月|這個月|淨.*(本月|現在)/.test(query)) {
     var m = today.slice(0, 7);
     var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(m);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var n = i - o;
-    answer = '本月入庫' + numToZh(i) + '公斤，出庫' + numToZh(o) + '公斤，' + (n>=0?'淨增加':'淨減少') + numToZh(Math.abs(n)) + '公斤';
+    answer = '本月入庫' + numToZh(i) + '公斤，出貨' + numToZh(o) + '公斤，' + (n>=0?'淨增加':'淨減少') + numToZh(Math.abs(n)) + '公斤';
   }
   else if (/上月|上個月/.test(query)) {
     var lm = new Date(now - 30*86400000).toISOString().slice(0, 7);
     var i = d.history.filter(function(h){return !h.deleted&&h.type==='in'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
     var o = d.history.filter(function(h){return !h.deleted&&h.type==='out'&&h.date.startsWith(lm);}).reduce(function(s,h){return s+(h.qty||0);},0);
-    answer = '上個月入庫' + numToZh(i) + '公斤，出庫' + numToZh(o) + '公斤';
+    answer = '上個月入庫' + numToZh(i) + '公斤，出貨' + numToZh(o) + '公斤';
   }
   else if (/低.*庫|庫存.*低|哪.*低|最低.*庫/.test(query)) {
     var low = d.products.filter(function(p) {
