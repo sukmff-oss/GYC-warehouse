@@ -1757,7 +1757,9 @@ function stopVoiceInput() {
       </button>
     </div>
 
-    <div class="menu-grid">
+    <!-- ═══ 主選單頁面 ═══ -->
+<div class="page" id="menuPage">
+<div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
       <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="21" cy="21" r="13" stroke="#FFC107" stroke-width="4"/>
@@ -1791,7 +1793,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-btn-name">入庫作業</span>
     </button>
-    <button class="menu-btn" onclick="showPage('signPage')">
+    <button class="menu-btn" onclick="showPage('historyPage')">
       <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="10" y="6" width="28" height="36" rx="2" stroke="#FFC107" stroke-width="4"/>
   <path d="M17 16H31" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1826,10 +1828,9 @@ function stopVoiceInput() {
       登出系統
     </button>
   </div>
-
-
   <div class="version-info">GYC Warehouse v5.6</div>
 </div>
+
 
 
 <!-- ═══ 蘇董專用 ═══ -->
