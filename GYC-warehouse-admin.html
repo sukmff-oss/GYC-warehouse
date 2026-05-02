@@ -2050,6 +2050,8 @@ function stopVoiceInput() {
     <span class="page-title">📤 出庫作業</span>
   </div>
   <div class="line-filter" id="outLineFilter"></div>
+  <!-- 🔵 藍燈警示 - 待倉儲確認發票/送貨單 -->
+  <div id="outBlueAlertSection" style="margin-bottom:12px"></div>
   <div class="prod-grid" id="outGrid"></div>
   <div class="qty-section" id="outQtySection" style="display:none">
     <label id="outProdLabel">選擇品名</label>
@@ -2409,7 +2411,7 @@ function showPage(id) {
   if (id === 'stockPage') {switchReport('daily', document.querySelector('.r-tab')); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
   if (id === 'inPage') {renderLineFilter('inLineFilter'); renderInGrid(); renderPendingInAlert(); renderPendingIn();}
-  if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid();}
+  if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid(); renderOutBlueAlert();}
   if (id === 'historyPage') renderHistory();
    if (id === 'stockPageSu') { renderSuDashboard(); }
   if (id === 'catPage') renderCat();
@@ -2421,13 +2423,13 @@ function showPage(id) {
 function updateBadges() {
   let d = getData();
 
-  // 待簽收（紅燈）- 庫存查詢
-  let countOut = d.pendingOut ? d.pendingOut.length : 0;
+  // 待簽收（紅燈）- 庫存查詢（pendingOut = 等待採購簽收）
+  let countOutRed = (d.pendingOut || []).filter(h => h.status === 'pendingOut').length;
   let badgeStock = document.getElementById('badgeStock');
   if (badgeStock) {
-    badgeStock.style.display = countOut > 0 ? 'inline-flex' : 'none';
-    badgeStock.textContent = countOut;
-    badgeStock.style.animation = countOut > 0 ? 'pulse 1.5s ease-in-out infinite' : 'none';
+    badgeStock.style.display = countOutRed > 0 ? 'inline-flex' : 'none';
+    badgeStock.textContent = countOutRed;
+    badgeStock.style.animation = countOutRed > 0 ? 'pulse 1.5s ease-in-out infinite' : 'none';
   }
 
   // 待入庫（紅燈）- 入庫作業
@@ -2663,42 +2665,70 @@ function renderReportTable(containerId, rows) {
   el.prepend(wrap);
 }
 
-// ==================== 待簽收警示系統 ====================
+// ==================== 待簽收警示系統（出庫）====================
 function renderPendingOutAlert() {
   let d = getData();
   let list = d.pendingOut || [];
+  let red = list.filter(h => h.status === 'pendingOut');    // 🔴 等待採購簽收
+  let blue = list.filter(h => h.status === 'pending');      // 🔵 等待倉儲確認發票/送貨單
   let alertEl = document.getElementById('pendingOutAlertSection');
   if (!alertEl) return;
 
-  if (list.length === 0) {
-    alertEl.innerHTML = '';
-    return;
+  let html = '';
+
+  // 🔴 紅燈警示 - 等待採購簽收（pendingOut）
+  if (red.length > 0) {
+    html += '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(239,68,68,.15) 0%, rgba(220,38,38,.15) 100%);border:2px solid rgba(239,68,68,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden;margin-bottom:10px">';
+    html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--danger);animation:pulse 1.5s ease-in-out infinite"></div>';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+    html += '<span style="font-size:1.8rem;animation:shake 0.8s ease-in-out infinite">🔔</span>';
+    html += '<div><p style="font-size:1rem;font-weight:800;color:var(--danger);margin:0">待採購簽收</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + red.length + ' 筆出庫等待採購簽收</p></div>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+    red.forEach(h => {
+      html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid var(--danger)">';
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
+      html += '<span style="color:var(--danger)">🔒</span>';
+      html += '<strong style="color:var(--text-primary);font-size:0.9rem">' + h.name + '</strong>';
+      html += '</div>';
+      html += '<div style="font-size:0.85rem;color:var(--text-secondary)">' + h.qty + ' ' + h.unit + '</div>';
+      html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">' + h.date + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(239,68,68,.2);display:flex;align-items:center;gap:8px">';
+    html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
+    html += '<span style="font-size:0.85rem;color:var(--danger);font-weight:600">請由「🔒 待簽收」分頁進行簽收確認</span>';
+    html += '</div>';
+    html += '</div>';
   }
 
-  // 紅色醒目警示區塊
-  let html = '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(239,68,68,.15) 0%, rgba(220,38,38,.15) 100%);border:2px solid rgba(239,68,68,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
-  html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--danger);animation:pulse 1.5s ease-in-out infinite"></div>';
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-  html += '<span style="font-size:1.8rem;animation:shake 0.8s ease-in-out infinite">🔔</span>';
-  html += '<div><p style="font-size:1rem;font-weight:800;color:var(--danger);margin:0">待簽收警示</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + list.length + ' 筆出庫記錄等待採購簽收</p></div>';
-  html += '</div>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  list.forEach(h => {
-    html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid var(--danger)">';
-    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
-    html += '<span style="color:var(--danger)">🔒</span>';
-    html += '<strong style="color:var(--text-primary);font-size:0.9rem">' + h.name + '</strong>';
+  // 🔵 藍燈警示 - 等待倉儲確認發票/送貨單（pending）
+  if (blue.length > 0) {
+    html += '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden;margin-bottom:10px">';
+    html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+    html += '<span style="font-size:1.8rem">⏳</span>';
+    html += '<div><p style="font-size:1rem;font-weight:800;color:var(--accent-primary);margin:0">待倉儲確認發票/送貨單</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待倉儲確認發票送貨單</p></div>';
     html += '</div>';
-    html += '<div style="font-size:0.85rem;color:var(--text-secondary)">' + h.qty + ' ' + h.unit + '</div>';
-    html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">' + h.date + '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+    blue.forEach(h => {
+      html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid var(--accent-primary)">';
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
+      html += '<span style="color:var(--accent-primary)">✓</span>';
+      html += '<strong style="color:var(--text-primary);font-size:0.9rem">' + h.name + '</strong>';
+      html += '</div>';
+      html += '<div style="font-size:0.85rem;color:var(--text-secondary)">' + h.qty + ' ' + h.unit + '</div>';
+      html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">' + h.date + '</div>';
+      html += '</div>';
+    });
     html += '</div>';
-  });
-  html += '</div>';
-  html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(239,68,68,.2);display:flex;align-items:center;gap:8px">';
-  html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
-  html += '<span style="font-size:0.85rem;color:var(--danger);font-weight:600">請由「🔒 待簽收」分頁進行簽收確認</span>';
-  html += '</div>';
-  html += '</div>';
+    html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:8px">';
+    html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
+    html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由「📤 出庫作業」確認發票/送貨單</span>';
+    html += '</div>';
+    html += '</div>';
+  }
 
   alertEl.innerHTML = html;
 }
@@ -2706,37 +2736,53 @@ function renderPendingOutAlert() {
 function renderPendingOutReport() {
   let d = getData();
   let list = d.pendingOut || [];
+  let red = list.filter(h => h.status === 'pendingOut');    // 🔴 等待採購簽收
+  let blue = list.filter(h => h.status === 'pending');      // 🔵 等待倉儲確認
   let tabBadge = document.getElementById('tabPendingOutBadge');
   let rTab = document.getElementById('rTabPendingOut');
-  if (list.length > 0) {
-    if (tabBadge) {tabBadge.textContent = list.length; tabBadge.style.display = 'inline-flex'; tabBadge.style.animation = 'pulse 1.5s ease-in-out infinite';}
+  let totalCount = red.length;
+
+  if (totalCount > 0) {
+    if (tabBadge) {tabBadge.style.display = 'inline-flex'; tabBadge.textContent = totalCount; tabBadge.style.animation = 'pulse 1.5s ease-in-out infinite';}
     if (rTab) rTab.style.display = 'inline-flex';
-    // 自動切換到待簽收頁面
-    if (_currentReport === 'daily' || _currentReport === 'total') {
-      setTimeout(() => {
-        let rTabEl = document.getElementById('rTabPendingOut');
-        if (rTabEl) {
-          switchReport('pendingOut', rTabEl);
-        }
-      }, 100);
-    }
   } else {
     if (tabBadge) {tabBadge.style.display = 'none'; tabBadge.style.animation = 'none';}
     if (rTab) rTab.style.display = 'none';
   }
-  renderPendingOutAlert();
+
   let el = document.getElementById('pendingOutContent');
   if (!el) return;
-  if (list.length === 0) {el.innerHTML = '<div class="empty">✅ 暫無待簽收記錄</div>'; return;}
-  let html = '<table class="report-table"><thead><tr><th>🔒</th><th>日期</th><th>品名</th><th>數量</th><th>備註</th><th>簽收</th><th>刪除</th></tr></thead><tbody>';
-  list.forEach(h => {
-    let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
-    let signBtn = isPurchase ? '<button onclick="signOut(' + h.id + ')" style="padding:8px 16px;background:var(--success);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(16,185,129,.3)">✅ 簽收</button>' : '<span style="color:var(--text-muted);font-size:0.8rem">🔒 需採購</span>';
-    let delBtn = isPurchase ? '<button onclick="promptDelPendingOut(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button>' : '<span style="color:var(--text-muted)">—</span>';
-    html += '<tr style="background:rgba(239,68,68,.08);border-left:3px solid var(--danger)"><td><span style="font-size:1.2rem">🔒</span></td><td>' + h.date + '</td><td><strong>' + h.name + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + h.model + '</span></td><td><strong style="color:var(--danger)">' + h.qty.toLocaleString() + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + h.unit + '</span></td><td style="color:var(--text-secondary);font-size:0.85rem">' + (h.customer === '-' ? '—' : h.customer) + '</td><td>' + signBtn + '</td><td>' + delBtn + '</td></tr>';
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
+
+  let html = '';
+
+  // 🔴 待採購簽收（pendingOut）- purchase 可簽收
+  if (red.length > 0) {
+    html += '<p style="font-size:0.9rem;color:var(--danger);font-weight:700;margin-bottom:10px">🔴 待採購簽收（' + red.length + '筆）</p>';
+    html += '<table class="report-table"><thead><tr><th></th><th>日期</th><th>品名</th><th>數量</th><th>備註</th><th>簽收</th><th>刪除</th></tr></thead><tbody>';
+    red.forEach(h => {
+      let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
+      let signBtn = isPurchase ? '<button onclick="signOut(' + h.id + ')" style="padding:8px 16px;background:var(--danger);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">🔒 簽收</button>' : '<span style="color:var(--text-muted);font-size:0.8rem">🔒 需採購</span>';
+      let delBtn = isPurchase ? '<button onclick="promptDelPendingOut(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button>' : '<span style="color:var(--text-muted)">—</span>';
+      html += '<tr style="background:rgba(239,68,68,.08);border-left:3px solid var(--danger)"><td><span style="font-size:1.2rem">🔒</span></td><td>' + h.date + '</td><td><strong>' + h.name + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.model||'') + '</span></td><td><strong style="color:var(--danger)">' + h.qty.toLocaleString() + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.unit||'KG') + '</span></td><td style="color:var(--text-secondary);font-size:0.85rem">' + (h.customer === '-' ? '—' : h.customer) + '</td><td>' + signBtn + '</td><td>' + delBtn + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    if (blue.length === 0) html += '<div style="text-align:center;padding:20px;color:var(--text-muted)">✅ 暫無待簽收記錄</div>';
+  }
+
+  // 🔵 待倉儲確認（pending）- warehouse 可確認
+  if (blue.length > 0) {
+    html += '<p style="font-size:0.9rem;color:var(--accent-primary);font-weight:700;margin:16px 0 10px">🔵 待倉儲確認發票/送貨單（' + blue.length + '筆）</p>';
+    html += '<table class="report-table"><thead><tr><th></th><th>日期</th><th>品名</th><th>數量</th><th>備註</th><th>確認</th><th>刪除</th></tr></thead><tbody>';
+    blue.forEach(h => {
+      let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
+      let confirmBtn = isWarehouse ? '<button onclick="confirmOut(' + h.id + ')" style="padding:8px 16px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(59,130,246,.3)">📋 確認</button>' : '<span style="color:var(--text-muted);font-size:0.8rem">🔒 需倉儲</span>';
+      let delBtn = isWarehouse ? '<button onclick="promptDelPendingOut(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button>' : '<span style="color:var(--text-muted)">—</span>';
+      html += '<tr style="background:rgba(59,130,246,.08);border-left:3px solid var(--accent-primary)"><td><span style="font-size:1.2rem">✓</span></td><td>' + h.date + '</td><td><strong>' + h.name + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.model||'') + '</span></td><td><strong style="color:var(--accent-primary)">' + h.qty.toLocaleString() + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.unit||'KG') + '</span></td><td style="color:var(--text-secondary);font-size:0.85rem">' + (h.customer === '-' ? '—' : h.customer) + '</td><td>' + confirmBtn + '</td><td>' + delBtn + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+
+  el.innerHTML = html || '<div class="empty">✅ 暫無待簽收記錄</div>';
 }
 
 // ==================== 產品網格 ====================
@@ -3149,6 +3195,41 @@ function renderOutGrid() {
  buildProdGrid('outGrid', renderOutGrid.__onSelect);
 }
 
+// 出庫作業藍燈警示（pendingOut 等待倉儲確認發票/送貨單）
+function renderOutBlueAlert() {
+  let d = getData();
+  let blue = (d.pendingOut || []).filter(h => h.status === 'pending');
+  let el = document.getElementById('outBlueAlertSection');
+  if (!el) return;
+  if (blue.length === 0) { el.innerHTML = ''; return; }
+
+  let html = '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
+  html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
+  html += '<span style="font-size:1.8rem">⏳</span>';
+  html += '<div><p style="font-size:1rem;font-weight:800;color:var(--accent-primary);margin:0">待確認發票/送貨單</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待倉儲確認發票送貨單</p></div>';
+  html += '</div>';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  blue.forEach(h => {
+    let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
+    html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid var(--accent-primary)">';
+    html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
+    html += '<span style="color:var(--accent-primary)">✓</span>';
+    html += '<strong style="color:var(--text-primary);font-size:0.9rem">' + h.name + '</strong>';
+    html += '</div>';
+    html += '<div style="font-size:0.85rem;color:var(--text-secondary)">' + h.qty + ' ' + (h.unit||'KG') + '</div>';
+    html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">' + h.date + '</div>';
+    if (isWarehouse) {
+      html += '<button onclick="confirmOut(' + h.id + ')" style="margin-top:8px;width:100%;padding:8px 12px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.8rem;font-weight:700;cursor:pointer">📋 確認</button>';
+    } else {
+      html += '<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted)">🔒 需倉儲確認</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
 async function doOut() {
   if (!_selectedProd) return alert('請選擇品名');
   let qty = parseFloat(document.getElementById('outQty').value);
@@ -3173,9 +3254,30 @@ async function signOut(id) {
   let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
   if (!isPurchase) {alert('僅限採購或管理員簽收'); return;}
 
-  // 簽收確認對話框
+  // 第一階段：採購「簽收」→ 待倉儲確認發票/送貨單 → status 改為 pending（藍燈）
   let confirmSign = confirm('🔐 確認簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
   if (!confirmSign) return;
+
+  item.status = 'pending';
+  saveData(d);
+  renderPendingOutAlert();
+  renderPendingOutReport();
+  renderOutBlueAlert();
+  updateBadges();
+  alert('✅ 採購已簽收！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n等待倉儲確認發票送貨單');
+  try { window.speakText && window.speakText('採購已簽收，等待倉儲確認發票送貨單'); } catch(e) {}
+}
+
+// 倉儲確認發票/送貨單 → 移入正式歷史
+async function confirmOut(id) {
+  let d = getData();
+  let item = d.pendingOut.find(h => h.id === id);
+  if (!item) {alert('找不到該筆資料'); return;}
+  let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
+  if (!isWarehouse) {alert('僅限倉儲或管理員確認'); return;}
+
+  let ok = confirm('📋 確認發票送貨單\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n是否確認完成？');
+  if (!ok) return;
 
   let rec = {id: item.id, type: 'out', name: item.name, model: item.model, qty: item.qty, unit: item.unit, customer: item.customer || '-', date: item.date || today, operator: ROLES[_currentRole]?.name || _currentRole};
   d.history.unshift(rec);
@@ -3184,11 +3286,10 @@ async function signOut(id) {
   saveData(d);
   renderPendingOutAlert();
   renderPendingOutReport();
+  renderOutBlueAlert();
   updateBadges();
-
-  // 發票/送貨單提示
-  let choice = confirm('✅ 簽收成功！\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n要現在列印發票/送貨單嗎？\n\n「確定」→ 列印\n「取消」→ 稍後處理');
-  if (choice) window.print();
+  alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出庫');
+  try { window.speakText && window.speakText('發票送貨單確認完成，已完成出庫'); } catch(e) {}
 }
 
 function promptDelPendingOut(id) {
