@@ -1458,7 +1458,7 @@ function parseAICommand(query) {
     if (/庫存|stock/i.test(query) && !/生產/.test(query)) { showPage('stockPage'); return '已打開庫存查詢'; }
     if (/生產|prod/i.test(query)) { showPage('prodPage'); return '已打開生產作業'; }
     if (/入庫/i.test(query)) { showPage('inPage'); return '已打開入庫作業'; }
-    if (/出庫/i.test(query)) { showPage('outPage'); return '已打開出庫作業'; }
+    if (/出庫|出貨/i.test(query)) { showPage('outPage'); return '已打開出貨作業'; }
     if (/簽收|歷史/i.test(query)) { showPage('historyPage'); return '已打開簽收列印'; }
     if (/類別|cat/i.test(query)) { showPage('catPage'); return '已打開類別管理'; }
     if (/蘇董/i.test(query)) { showPage('stockPageSu'); return '已打開蘇董視圖'; }
@@ -1486,8 +1486,8 @@ function parseAICommand(query) {
     var r = fmtSum(tIn);
     return '今天做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
-  // 今日出庫 — "今日出去 901B 500公斤"
-  if (/今日.*出|今天.*出|今天出去|今天出庫|今天出|現在出庫/.test(query)) {
+  // 今日出貨 — "今日出去 901B 500公斤"
+  if (/今日.*出|今天.*出|今天出去|今天出庫|今天出|現在出庫|今天出貨|現在出貨/.test(query)) {
     var tOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===today;});
     if(tOut.length===0) return '今日沒有出庫';
     var r = fmtSum(tOut);
@@ -1501,8 +1501,8 @@ function parseAICommand(query) {
     var r = fmtSum(yesIn);
     return '昨天做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
-  // 昨日出庫 — "昨天出去 901B 500公斤"
-  if (/昨天.*出|昨日.*出|昨天出去|昨日出庫/.test(query)) {
+  // 昨日出貨 — "昨天出去 901B 500公斤"
+  if (/昨天.*出|昨日.*出|昨天出去|昨日出庫|昨天出貨|昨日出貨/.test(query)) {
     var yesterday = new Date(now - 86400000).toISOString().slice(0, 10);
     var yesOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date===yesterday;});
     if(yesOut.length===0) return '昨天沒有出庫';
@@ -1517,8 +1517,8 @@ function parseAICommand(query) {
     var r = fmtSum(lmIn);
     return '上個月做了 ' + r.parts.join('、') + '（共' + numToZh(r.total) + '公斤）';
   }
-  // 上月出庫 — "上個月出去 901B 500公斤（共5筆）"
-  if (/上月.*出|上個月.*出|上月出去了|上個月出去了/.test(query)) {
+  // 上月出貨 — "上個月出去 901B 500公斤（共5筆）"
+  if (/上月.*出|上個月.*出|上月出去了|上個月出去了|上月出貨|上個月出貨/.test(query)) {
     var lm = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().slice(0,7);
     var lmOut = d.history.filter(function(h){return !h.deleted && h.type==='out' && h.date.startsWith(lm);});
     if(lmOut.length===0) return '上個月沒有出庫';
@@ -1748,7 +1748,7 @@ function stopVoiceInput() {
           <span class="role-icon-wrap warehouse"><span class="role-icon">📥</span></span>
           <div class="role-login-info">
             <div class="role-login-name">倉儲</div>
-            <div class="role-login-desc">入庫作業、出庫作業、庫存查詢</div>
+            <div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div>
           </div>
         </button>
 
@@ -1757,7 +1757,7 @@ function stopVoiceInput() {
           <span class="role-icon-wrap purchase"><span class="role-icon">🛒</span></span>
           <div class="role-login-info">
             <div class="role-login-name">採購</div>
-            <div class="role-login-desc">出庫作業、庫存查詢</div>
+            <div class="role-login-desc">出貨作業、庫存查詢</div>
           </div>
         </button>
       </div>
@@ -1805,7 +1805,7 @@ function stopVoiceInput() {
     </button>
     <button class="menu-btn" onclick="showPage('outPage')">
       <span class="role-icon-wrap out"><span class="role-icon">📤</span></span>
-      <span class="menu-btn-name">出庫作業</span>
+      <span class="menu-btn-name">出貨作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('inPage')">
       <span class="role-icon-wrap in"><span class="role-icon">📥</span></span>
@@ -2043,11 +2043,11 @@ function stopVoiceInput() {
   </div>
 </div>
 
-<!-- ═══ 出庫作業 ═══ -->
+<!-- ═══ 出貨作業 ═══ -->
 <div class="page" id="outPage">
   <div class="func-header">
     <button class="back-btn" onclick="showPage('menuPage')">←</button>
-    <span class="page-title">📤 出庫作業</span>
+    <span class="page-title">📤 出貨作業</span>
   </div>
   <div class="line-filter" id="outLineFilter"></div>
   <!-- 🔵 藍燈警示 - 待倉儲確認發票/送貨單 -->
@@ -2725,7 +2725,7 @@ function renderPendingOutAlert() {
     html += '</div>';
     html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:8px">';
     html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
-    html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由「📤 出庫作業」確認發票/送貨單</span>';
+    html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由「📤 出貨作業」確認發票/送貨單</span>';
     html += '</div>';
     html += '</div>';
   }
@@ -3182,7 +3182,7 @@ async function doProd() {
   renderPendingIn();
 }
 
-// ==================== 出庫作業 ====================
+// ==================== 出貨作業 ====================
 function renderOutGrid() {
  renderOutGrid.__onSelect = (p) => {
   _selectedProd = p;
@@ -3195,7 +3195,7 @@ function renderOutGrid() {
  buildProdGrid('outGrid', renderOutGrid.__onSelect);
 }
 
-// 出庫作業藍燈警示（pendingOut 等待倉儲確認發票/送貨單）
+// 出貨作業藍燈警示（pendingOut 等待倉儲確認發票/送貨單）
 // 建立出庫藍燈 Alert HTML（供 outPage / stockPage 共用）
 function buildOutBlueHtml(blue) {
   if (!blue || blue.length === 0) return '';
