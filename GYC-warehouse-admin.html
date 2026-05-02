@@ -2462,21 +2462,34 @@ function setSvgStroke(selector, color) {
 
 function updateMenuIconColors() {
   let d = getData();
-  // 出貨作業 🔴 紅色 = 有待採購簽收（pendingOut）
-  let hasRedOut = (d.pendingOut || []).some(h => h.status === 'pendingOut');
-  setSvgStroke('.icon-out', hasRedOut ? RED : YELLOW);
+  let countOutRed = (d.pendingOut || []).filter(h => h.status === 'pendingOut').length;
+  let countPending = (d.pendingIn || []).filter(h => h.status === 'pending').length;
+  let countConfirm = (d.pendingIn || []).filter(h => h.status === 'pendingConfirm').length;
 
-  // 入庫作業 🔴 紅色 = 有待入庫（pendingIn status=pending）
-  let hasRedIn = (d.pendingIn || []).some(h => h.status === 'pending');
-  setSvgStroke('.icon-in', hasRedIn ? RED : YELLOW);
-
-  // 簽收列印 🔵 藍色 = 有待確認（pendingIn status=pendingConfirm）
-  let hasBlueSign = (d.pendingIn || []).some(h => h.status === 'pendingConfirm');
-  setSvgStroke('.icon-sign', hasBlueSign ? BLUE : YELLOW);
+  // 庫存查詢 🔴 紅色 = 有待採購簽收（pendingOut）
+  setSvgStroke('.icon-stock', countOutRed > 0 ? RED : YELLOW);
 
   // 生產作業 🔵 藍色 = 有待確認（pendingConfirm）
-  let hasBlue = (d.pendingIn || []).some(h => h.status === 'pendingConfirm');
-  setSvgStroke('.icon-prod', hasBlue ? BLUE : YELLOW);
+  setSvgStroke('.icon-prod', countConfirm > 0 ? BLUE : YELLOW);
+
+  // 出貨作業 🔴 紅色 = 有待採購簽收（pendingOut）
+  setSvgStroke('.icon-out', countOutRed > 0 ? RED : YELLOW);
+
+  // 入庫作業 🔴 紅 = 待入庫 / 🔵 藍 = 待確認
+  if (countPending > 0) setSvgStroke('.icon-in', RED);
+  else if (countConfirm > 0) setSvgStroke('.icon-in', BLUE);
+  else setSvgStroke('.icon-in', YELLOW);
+
+  // 簽收列印 🔴 紅 = 待入庫 / 🔵 藍 = 待確認
+  if (countPending > 0) setSvgStroke('.icon-sign', RED);
+  else if (countConfirm > 0) setSvgStroke('.icon-sign', BLUE);
+  else setSvgStroke('.icon-sign', YELLOW);
+
+  // 類別管理：無警示，永遠黃色
+  setSvgStroke('.icon-cat', YELLOW);
+
+  // 蘇董專用：無警示，永遠黃色
+  setSvgStroke('.icon-menu', YELLOW);
 }
 
 // ==================== 徽章更新 ====================
