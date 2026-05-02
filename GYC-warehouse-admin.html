@@ -1302,7 +1302,7 @@ function fmtProd(name, qty, unit) {
   }
   return base + ' ' + n + (unit||'');
 }
-// 掛全域（蘇董視圖+alert override共用）
+// 掛全域（蘇董專用+alert override共用）
 window.fmtProd = fmtProd;
 
 // ====== 蘇董語音簡化工具（全域） ======
@@ -1433,7 +1433,7 @@ function parseAICommand(query) {
     if (/出庫|出貨/i.test(query)) { showPage('outPage'); return '已打開出貨作業'; }
     if (/簽收|歷史/i.test(query)) { showPage('historyPage'); return '已打開簽收列印'; }
     if (/類別|cat/i.test(query)) { showPage('catPage'); return '已打開類別管理'; }
-    if (/蘇董/i.test(query)) { showPage('stockPageSu'); return '已打開蘇董視圖'; }
+    if (/蘇董/i.test(query)) { showPage('stockPageSu'); return '已打開蘇董專用'; }
     if (/主選單|首頁/i.test(query)) { showPage('menuPage'); return '已返回主選單'; }
   }
   if (/登出|logout/i.test(query)) { doLogout(); return '已執行登出'; }
@@ -1696,11 +1696,10 @@ function stopVoiceInput() {
       <div class="role-login-grid-wrapper">
         <!-- 1. 蘇董登入 -->
         <button class="role-login-btn" id="btnSu">
-          <span class="role-icon-wrap su"><span class="role-icon icon-chairman"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <circle cx="24" cy="12" r="8"/>
-  <path d="M8 40C8 30 14 24 24 24C34 24 40 30 40 40V44H8V40Z"/>
-  <rect x="20" y="24" width="8" height="12" fill="white" opacity="0.3"/>
-</svg></span></span>
+          <span class="role-icon-wrap su"><span class="role-icon icon-chairman"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <circle cx="24" cy="14" r="8" fill="#3B82F6"/>
+  <path d="M8 40C8 30 14 24 24 24C34 24 40 30 40 40" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+</svg></span>
           <div class="role-login-info">
             <div class="role-login-name">蘇董</div>
             <div class="role-login-desc">庫存查詢</div>
@@ -1709,11 +1708,10 @@ function stopVoiceInput() {
 
         <!-- 2. 廠長登入 -->
         <button class="role-login-btn" id="btnFactory">
-          <span class="role-icon-wrap factory"><span class="role-icon icon-factory-mgr"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <path d="M12 4L8 12V44H40V12L36 4H12Z" fill="#FFD700"/>
-  <path d="M16 12H32M24 12V44M16 20H32" stroke="white" stroke-width="2"/>
-  <path d="M10 12L14 4H34L38 12H10Z" fill="#FFD700"/>
-</svg></span></span>
+          <span class="role-icon-wrap factory"><span class="role-icon icon-factory-mgr"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M12 10L24 18L36 10V44H12V10Z" fill="#3B82F6" fill-opacity="0.8"/>
+  <path d="M20 28H28M24 24V32" stroke="white" stroke-width="2"/>
+</svg></span>
           <div class="role-login-info">
             <div class="role-login-name">廠長</div>
             <div class="role-login-desc">生產作業、庫存查詢</div>
@@ -1725,11 +1723,11 @@ function stopVoiceInput() {
       <div class="role-login-grid-wrapper">
         <!-- 3. 倉儲登入 -->
         <button class="role-login-btn" id="btnWarehouse">
-          <span class="role-icon-wrap warehouse"><span class="role-icon icon-warehouse"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M10 8V36H4V40H14V8H10ZM16 28H32V36H16V28ZM32 36H44V40H32V36Z"/>
-  <circle cx="20" cy="40" r="4"/>
-  <circle cx="36" cy="40" r="4"/>
-</svg></span></span>
+          <span class="role-icon-wrap warehouse"><span class="role-icon icon-warehouse"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M10 10V38H30" stroke="#3B82F6" stroke-width="3"/>
+  <rect x="12" y="24" width="14" height="14" fill="#3B82F6" fill-opacity="0.5"/>
+  <circle cx="34" cy="38" r="4" fill="#3B82F6"/>
+</svg></span>
           <div class="role-login-info">
             <div class="role-login-name">倉儲</div>
             <div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div>
@@ -1738,11 +1736,11 @@ function stopVoiceInput() {
 
         <!-- 4. 採購登入 -->
         <button class="role-login-btn" id="btnPurchase">
-          <span class="role-icon-wrap purchase"><span class="role-icon icon-purchase"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <path d="M4 6H10L14 30H38L42 12H12" stroke="#FFD700" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="16" cy="40" r="4" fill="#FFD700"/>
-  <circle cx="36" cy="40" r="4" fill="#FFD700"/>
-</svg></span></span>
+          <span class="role-icon-wrap purchase"><span class="role-icon icon-purchase"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M6 8H12L18 30H38L42 14H14" stroke="#3B82F6" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="20" cy="40" r="3" fill="#3B82F6"/>
+  <circle cx="36" cy="40" r="3" fill="#3B82F6"/>
+</svg></span>
           <div class="role-login-info">
             <div class="role-login-name">採購</div>
             <div class="role-login-desc">出貨作業、庫存查詢</div>
@@ -1752,10 +1750,11 @@ function stopVoiceInput() {
 
       <!-- 第三排：管理員登入（全寬） -->
       <button class="role-login-btn admin" id="btnAdmin">
-        <span class="role-icon-wrap admin"><span class="role-icon icon-admin"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M40 14H32V8C32 5.8 30.2 4 28 4H20C17.8 4 16 5.8 16 8V14H8C5.8 14 4 15.8 4 18V40C4 42.2 5.8 44 8 44H40C42.2 44 44 42.2 44 40V18C44 15.8 42.2 14 40 14ZM20 8H28V14H20V8Z"/>
-  <rect x="20" y="24" width="8" height="4" fill="white"/>
-</svg></span></span>
+        <span class="role-icon-wrap admin"><span class="role-icon icon-admin"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <rect x="8" y="14" width="32" height="24" rx="2" fill="#3B82F6"/>
+  <path d="M18 14V10C18 8 20 6 22 6H26C28 6 30 8 30 10V14" stroke="#3B82F6" stroke-width="2"/>
+  <rect x="20" y="22" width="8" height="4" fill="white" fill-opacity="0.5"/>
+</svg></span>
         <div class="role-login-info">
           <div class="role-login-name">管理員</div>
           <div class="role-login-desc">最高權限無限制</div>
@@ -1784,55 +1783,60 @@ function stopVoiceInput() {
 
   <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
-      <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <path d="M21 38C30.3888 38 38 30.3888 38 21C38 11.6112 30.3888 4 21 4C11.6112 4 4 11.6112 4 21C4 30.3888 11.6112 38 21 38Z" stroke="#FFD700" stroke-width="4"/>
-  <path d="M33 33L44 44" stroke="#FFD700" stroke-width="4" stroke-linecap="round"/>
-</svg></span></span>
+      <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <circle cx="20" cy="20" r="12" fill="#3B82F6" fill-opacity="0.2"/>
+  <circle cx="20" cy="20" r="10" stroke="#3B82F6" stroke-width="3"/>
+  <path d="M28 28L40 40" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+</svg></span>
       <span class="menu-btn-name">庫存查詢</span>
       <span id="badgeStock" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('prodPage')">
-      <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M4 44V14L14 20V14L24 20V14L44 10V44H4ZM30 24H34V28H30V24ZM30 32H34V36H30V32Z"/>
-</svg></span></span>
+      <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M4 40V14L14 20V14L24 20V10L40 10V40H4Z" fill="#3B82F6" fill-opacity="0.8"/>
+  <rect x="30" y="4" width="6" height="6" fill="#3B82F6"/>
+</svg></span>
       <span class="menu-btn-name">生產作業</span>
       <span id="badgeProd" class="menu-badge" style="display:none">0</span>
       <span id="badgeProdBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('outPage')">
-      <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M4 10H32V34H4V10ZM32 18H44L44 34H40C40 37.3 37.3 40 34 40C30.7 40 28 37.3 28 34H16C16 37.3 13.3 40 10 40C6.7 40 4 37.3 4 34H2V10"/>
-  <circle cx="10" cy="34" r="4" fill="#FFD700"/>
-  <circle cx="34" cy="34" r="4" fill="#FFD700"/>
-</svg></span></span>
+      <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M4 12H32V34H4V12Z" fill="#3B82F6" fill-opacity="0.3"/>
+  <path d="M32 18H44L44 34H32V18Z" fill="#3B82F6"/>
+  <circle cx="12" cy="38" r="4" fill="#1E40AF"/>
+  <circle cx="36" cy="38" r="4" fill="#1E40AF"/>
+</svg></span>
       <span class="menu-btn-name">出貨作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('inPage')">
-      <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
-  <rect x="6" y="20" width="36" height="22" stroke="#FFD700" stroke-width="4"/>
-  <path d="M24 4V24M24 24L16 16M24 24L32 16" stroke="#FFD700" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-</svg></span></span>
+      <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M8 20L24 12L40 20V36L24 44L8 36V20Z" stroke="#3B82F6" stroke-width="2"/>
+  <path d="M24 4V16M24 16L18 10M24 16L30 10" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+</svg></span>
       <span class="menu-btn-name">入庫作業</span>
       <span id="badgeIn" class="menu-badge" style="display:none">0</span>
       <span id="badgeInBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('historyPage')">
-      <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M38 14H10V4H38V14ZM44 18V34H38V44H10V34H4V18H44ZM32 38V30H16V38H32Z"/>
-</svg></span></span>
+      <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <rect x="10" y="10" width="28" height="10" fill="#3B82F6" fill-opacity="0.2"/>
+  <path d="M6 20H42V34H6V20Z" fill="#3B82F6"/>
+  <rect x="12" y="30" width="24" height="12" fill="white"/>
+</svg></span>
       <span class="menu-btn-name">簽收列印</span>
       <span id="badgeHist" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('catPage')">
-      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="#FFD700">
-  <path d="M6 6H20L42 28L28 42L6 20V6Z"/>
-  <circle cx="14" cy="14" r="3" fill="white"/>
-</svg></span></span>
+      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
+  <path d="M8 8H24L42 26L26 42L8 24V8Z" fill="#3B82F6" stroke="#3B82F6" stroke-width="2"/>
+  <circle cx="16" cy="16" r="3" fill="white"/>
+</svg></span>
       <span class="menu-btn-name">類別管理</span>
     </button>
 <button class="menu-btn" id="menuSuBtn" onclick="showPage('stockPageSu')">
       <span class="role-icon-wrap" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"><span class="role-icon">👁️</span></span>
-      <span class="menu-btn-name">蘇董視圖</span>
+      <span class="menu-btn-name">蘇董專用</span>
     </button>
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
@@ -1844,11 +1848,11 @@ function stopVoiceInput() {
 </div>
 
 
-<!-- ═══ 蘇董視圖 ═══ -->
+<!-- ═══ 蘇董專用 ═══ -->
 <div class="page" id="stockPageSu">
   <div class="func-header">
     <button class="back-btn" onclick="showPage('menuPage')">←</button>
-    <span class="page-title">👁️ 蘇董視圖</span>
+    <span class="page-title">👁️ 蘇董專用</span>
     <button id="suVoiceBtn" onclick="startVoiceInput();" style="background:rgba(0,191,165,0.2);border:2px solid #00bfa5;color:#00bfa5;border-radius:50px;padding:10px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,191,165,0.3);min-width:110px;user-select:none;white-space:nowrap">🎤 語音</button>
     <button id="suAIBtn" onclick="toggleAIChat();" style="background:rgba(102,126,234,0.2);border:2px solid #667eea;color:#667eea;border-radius:50px;padding:10px 24px;font-size:0.9rem;font-weight:700;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(102,126,234,0.3);min-width:110px;user-select:none;white-space:nowrap">🤖 AI</button>
   </div>
@@ -2437,7 +2441,26 @@ const BLUE = "#3b82f6";
 function setSvgStroke(selector, color) {
   document.querySelectorAll(selector).forEach(function(el) {
     el.querySelectorAll('svg').forEach(function(svg) {
-      svg.setAttribute('stroke', color);
+      // fill-based icons (新3D風格)
+      svg.querySelectorAll('[fill]:not([fill="none"])').forEach(function(node) {
+        let current = node.getAttribute('fill');
+        // 避免覆蓋 white/none/semi-transparent
+        if (current && current.startsWith('#') && current.length === 7) {
+          node.setAttribute('fill', color);
+        }
+      });
+      svg.querySelectorAll('path, circle, rect').forEach(function(node) {
+        let fill = node.getAttribute('fill');
+        let stroke = node.getAttribute('stroke');
+        // 如果fill是實色且不是white，換色
+        if (fill && fill.startsWith('#') && fill.length === 7) {
+          node.setAttribute('fill', color);
+        }
+        // 如果是stroke-based的路徑，換stroke
+        if (stroke && stroke.startsWith('#') && stroke.length === 7) {
+          node.setAttribute('stroke', color);
+        }
+      });
     });
   });
 }
@@ -2501,7 +2524,7 @@ function updateBadges() {
 
 // ==================== 報告系統 ====================
 
-// ==================== 蘇董視圖 Dashboard ====================
+// ==================== 蘇董專用 Dashboard ====================
 let _suChart = null;
 function renderSuDashboard() {
   let d = getData();
