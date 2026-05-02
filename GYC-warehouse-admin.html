@@ -632,14 +632,14 @@ html, body {
 /* 各選單按鈕專屬漸層背景 */
 /* 選單按鈕圖示包（統一暗底襯托 SVG stroke 色彩）*/
 .menu-btn .role-icon-wrap {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background: transparent;
   }
-.menu-btn .role-icon-wrap.stock { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
-.menu-btn .role-icon-wrap.prod  { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
-.menu-btn .role-icon-wrap.out   { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
-.menu-btn .role-icon-wrap.in    { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
-.menu-btn .role-icon-wrap.sign  { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
-.menu-btn .role-icon-wrap.cat   { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+.menu-btn .role-icon-wrap.stock { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.prod  { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.out   { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.in    { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.sign  { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.cat   { background: transparent; box-shadow: none; }
 
 /* 選單按鈕 SVG 圖示字體 */
 .menu-btn .role-icon {
@@ -1769,7 +1769,7 @@ function stopVoiceInput() {
 <!-- ═══ 主選單頁面 ═══ -->
 <div class="page" id="menuPage">
   <div class="func-header">
-    <span class="page-title">📋 主選單</span>
+    <span class="page-title">📋 主選單 <span id="welcomeName" style="font-size:0.8em;opacity:0.7"></span></span>
   </div>
   <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
