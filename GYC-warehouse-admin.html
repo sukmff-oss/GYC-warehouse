@@ -1757,6 +1757,14 @@ function stopVoiceInput() {
       </button>
     </div>
 
+    <!-- 密碼輸入區塊（showPwdInput 切換顯示）-->
+    <div id="pwdSection" style="display:none">
+      <p id="pwdHint" style="text-align:center;color:var(--text-secondary);margin:16px 0;font-size:0.95rem">請輸入密碼</p>
+      <input type="password" id="loginPwd" placeholder="輸入密碼" style="width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--bg-secondary);color:var(--text-primary);font-size:1.1rem;text-align:center;box-sizing:border-box" onkeydown="if(event.key==='Enter')tryLogin()">
+      <div id="loginErr" style="display:none;color:var(--danger);text-align:center;margin-top:10px;font-size:0.9rem">⚠️ 密碼錯誤</div>
+      <button onclick="backToRoles()" style="margin-top:12px;width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;color:var(--text-secondary);cursor:pointer;font-size:0.9rem">← 返回</button>
+    </div>
+
     <!-- ═══ 主選單頁面 ═══ -->
 <div class="page" id="menuPage">
 <div class="menu-grid">
