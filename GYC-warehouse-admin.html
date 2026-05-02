@@ -1697,9 +1697,12 @@ function stopVoiceInput() {
         <!-- 1. 蘇董登入 -->
         <button class="role-login-btn" id="btnSu">
           <span class="role-icon-wrap su"><span class="role-icon icon-chairman"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <circle cx="24" cy="14" r="8" fill="#3B82F6"/>
-  <path d="M8 40C8 30 14 24 24 24C34 24 40 30 40 40" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
-</svg></span>
+  <defs>
+    <filter id="shadow7" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <circle cx="24" cy="14" r="8" fill="#1890FF" filter="url(#shadow7)"/>
+  <path d="M8 42C8 32 16 26 24 26C32 26 40 32 40 42V44H8V42Z" fill="#1890FF"/>
+</svg>
           <div class="role-login-info">
             <div class="role-login-name">蘇董</div>
             <div class="role-login-desc">庫存查詢</div>
@@ -1709,9 +1712,12 @@ function stopVoiceInput() {
         <!-- 2. 廠長登入 -->
         <button class="role-login-btn" id="btnFactory">
           <span class="role-icon-wrap factory"><span class="role-icon icon-factory-mgr"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M12 10L24 18L36 10V44H12V10Z" fill="#3B82F6" fill-opacity="0.8"/>
-  <path d="M20 28H28M24 24V32" stroke="white" stroke-width="2"/>
-</svg></span>
+  <defs>
+    <filter id="shadow8" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M12 8L24 16L36 8V44H12V8Z" fill="#1890FF" fill-opacity="0.85" filter="url(#shadow8)"/>
+  <path d="M24 16V44M16 22H32" stroke="white" stroke-width="2"/>
+</svg>
           <div class="role-login-info">
             <div class="role-login-name">廠長</div>
             <div class="role-login-desc">生產作業、庫存查詢</div>
@@ -1724,10 +1730,11 @@ function stopVoiceInput() {
         <!-- 3. 倉儲登入 -->
         <button class="role-login-btn" id="btnWarehouse">
           <span class="role-icon-wrap warehouse"><span class="role-icon icon-warehouse"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M10 10V38H30" stroke="#3B82F6" stroke-width="3"/>
-  <rect x="12" y="24" width="14" height="14" fill="#3B82F6" fill-opacity="0.5"/>
-  <circle cx="34" cy="38" r="4" fill="#3B82F6"/>
-</svg></span>
+  <defs>
+    <filter id="shadow9" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M6 34H26V40H6V34ZM26 14H32V40M32 24H44M32 32H44" stroke="#1890FF" stroke-width="3" filter="url(#shadow9)"/>
+</svg>
           <div class="role-login-info">
             <div class="role-login-name">倉儲</div>
             <div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div>
@@ -1737,10 +1744,13 @@ function stopVoiceInput() {
         <!-- 4. 採購登入 -->
         <button class="role-login-btn" id="btnPurchase">
           <span class="role-icon-wrap purchase"><span class="role-icon icon-purchase"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M6 8H12L18 30H38L42 14H14" stroke="#3B82F6" stroke-width="3" stroke-linejoin="round"/>
-  <circle cx="20" cy="40" r="3" fill="#3B82F6"/>
-  <circle cx="36" cy="40" r="3" fill="#3B82F6"/>
-</svg></span>
+  <defs>
+    <filter id="shadow10" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M8 8H14L20 32H40L44 14H16" stroke="#1890FF" stroke-width="3" fill="none" filter="url(#shadow10)"/>
+  <circle cx="22" cy="40" r="3" fill="#1890FF"/>
+  <circle cx="38" cy="40" r="3" fill="#1890FF"/>
+</svg>
           <div class="role-login-info">
             <div class="role-login-name">採購</div>
             <div class="role-login-desc">出貨作業、庫存查詢</div>
@@ -1751,10 +1761,12 @@ function stopVoiceInput() {
       <!-- 第三排：管理員登入（全寬） -->
       <button class="role-login-btn admin" id="btnAdmin">
         <span class="role-icon-wrap admin"><span class="role-icon icon-admin"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <rect x="8" y="14" width="32" height="24" rx="2" fill="#3B82F6"/>
-  <path d="M18 14V10C18 8 20 6 22 6H26C28 6 30 8 30 10V14" stroke="#3B82F6" stroke-width="2"/>
-  <rect x="20" y="22" width="8" height="4" fill="white" fill-opacity="0.5"/>
-</svg></span>
+  <defs>
+    <filter id="shadow11" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <rect x="6" y="14" width="36" height="26" rx="2" fill="#1890FF" filter="url(#shadow11)"/>
+  <path d="M18 14V8H30V14" stroke="#1890FF" stroke-width="3"/>
+</svg>
         <div class="role-login-info">
           <div class="role-login-name">管理員</div>
           <div class="role-login-desc">最高權限無限制</div>
@@ -1784,54 +1796,69 @@ function stopVoiceInput() {
   <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
       <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <circle cx="20" cy="20" r="12" fill="#3B82F6" fill-opacity="0.2"/>
-  <circle cx="20" cy="20" r="10" stroke="#3B82F6" stroke-width="3"/>
-  <path d="M28 28L40 40" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
-</svg></span>
+  <defs>
+    <filter id="shadow1" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <circle cx="20" cy="20" r="12" fill="#1890FF" fill-opacity="0.15" stroke="#1890FF" stroke-width="3.5" filter="url(#shadow1)"/>
+  <path d="M28 28L38 38" stroke="#1890FF" stroke-width="4.5" stroke-linecap="round" filter="url(#shadow1)"/>
+</svg>
       <span class="menu-btn-name">庫存查詢</span>
       <span id="badgeStock" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('prodPage')">
       <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M4 40V14L14 20V14L24 20V10L40 10V40H4Z" fill="#3B82F6" fill-opacity="0.8"/>
-  <rect x="30" y="4" width="6" height="6" fill="#3B82F6"/>
-</svg></span>
+  <defs>
+    <filter id="shadow2" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M4 40V16L14 24V16L24 24V16L34 24V40H4Z" fill="#1890FF" fill-opacity="0.85" filter="url(#shadow2)"/>
+  <rect x="36" y="10" width="6" height="30" fill="#1890FF"/>
+</svg>
       <span class="menu-btn-name">生產作業</span>
       <span id="badgeProd" class="menu-badge" style="display:none">0</span>
       <span id="badgeProdBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('outPage')">
       <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M4 12H32V34H4V12Z" fill="#3B82F6" fill-opacity="0.3"/>
-  <path d="M32 18H44L44 34H32V18Z" fill="#3B82F6"/>
-  <circle cx="12" cy="38" r="4" fill="#1E40AF"/>
-  <circle cx="36" cy="38" r="4" fill="#1E40AF"/>
-</svg></span>
+  <defs>
+    <filter id="shadow3" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M2 12H32V36H2V12ZM32 20L44 20V36H32V20Z" fill="#1890FF" fill-opacity="0.85" filter="url(#shadow3)"/>
+  <circle cx="10" cy="40" r="4" fill="#096DD9"/>
+  <circle cx="36" cy="40" r="4" fill="#096DD9"/>
+</svg>
       <span class="menu-btn-name">出貨作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('inPage')">
       <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M8 20L24 12L40 20V36L24 44L8 36V20Z" stroke="#3B82F6" stroke-width="2"/>
-  <path d="M24 4V16M24 16L18 10M24 16L30 10" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
-</svg></span>
+  <defs>
+    <filter id="shadow4" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M8 18L24 10L40 18V38L24 46L8 38V18Z" fill="#1890FF" fill-opacity="0.75" filter="url(#shadow4)"/>
+  <path d="M24 15V30M18 24L24 30L30 24" stroke="white" stroke-width="3" stroke-linecap="round"/>
+</svg>
       <span class="menu-btn-name">入庫作業</span>
       <span id="badgeIn" class="menu-badge" style="display:none">0</span>
       <span id="badgeInBlue" class="menu-badge-blue" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('historyPage')">
       <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <rect x="10" y="10" width="28" height="10" fill="#3B82F6" fill-opacity="0.2"/>
-  <path d="M6 20H42V34H6V20Z" fill="#3B82F6"/>
-  <rect x="12" y="30" width="24" height="12" fill="white"/>
-</svg></span>
+  <defs>
+    <filter id="shadow5" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <rect x="8" y="16" width="32" height="18" rx="2" fill="#1890FF" filter="url(#shadow5)"/>
+  <path d="M14 16V6H34V16M12 34V44H36V34" stroke="#1890FF" stroke-width="2"/>
+</svg>
       <span class="menu-btn-name">簽收列印</span>
       <span id="badgeHist" class="menu-badge" style="display:none">0</span>
     </button>
     <button class="menu-btn" onclick="showPage('catPage')">
       <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org">
-  <path d="M8 8H24L42 26L26 42L8 24V8Z" fill="#3B82F6" stroke="#3B82F6" stroke-width="2"/>
-  <circle cx="16" cy="16" r="3" fill="white"/>
-</svg></span>
+  <defs>
+    <filter id="shadow6" x="0" y="0" width="50" height="50"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/></filter>
+  </defs>
+  <path d="M6 24L24 6H42V24L24 42L6 24Z" fill="#1890FF" filter="url(#shadow6)"/>
+  <circle cx="34" cy="14" r="3" fill="white"/>
+</svg>
       <span class="menu-btn-name">類別管理</span>
     </button>
 <button class="menu-btn" id="menuSuBtn" onclick="showPage('stockPageSu')">
