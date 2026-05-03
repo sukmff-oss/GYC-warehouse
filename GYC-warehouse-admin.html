@@ -1717,7 +1717,7 @@ function stopVoiceInput() {
   <circle cx="26" cy="20" r="1.5" fill="#FFC107"/>
   <path d="M22 24H30" stroke="#FFC107" stroke-width="2.5" stroke-linecap="round"/>
 </svg></span></span>
-          <div class="role-login-info"><div class="role-login-name">蕭志成</div><div class="role-login-desc">生產作業、庫存查詢</div></div>
+          <div class="role-login-info"><div class="role-login-name">廠長蕭志成</div><div class="role-login-desc">生產作業、庫存查詢</div></div>
         </button>
       </div>
 
@@ -1731,7 +1731,7 @@ function stopVoiceInput() {
   <rect x="18" y="28" width="12" height="12" stroke="#FFC107" stroke-width="4"/>
   <path d="M21 34H27" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-          <div class="role-login-info"><div class="role-login-name">莊俊</div><div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div></div>
+          <div class="role-login-info"><div class="role-login-name">倉管莊俊</div><div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div></div>
         </button>
 
         <!-- 4. 採購登入 -->
@@ -1742,7 +1742,7 @@ function stopVoiceInput() {
   <circle cx="34" cy="34" r="4" stroke="#FFC107" stroke-width="4"/>
   <path d="M12 12L14 8H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg></span></span>
-          <div class="role-login-info"><div class="role-login-name">李瑞珠</div><div class="role-login-desc">出貨作業、庫存查詢</div></div>
+          <div class="role-login-info"><div class="role-login-name">採購李瑞珠</div><div class="role-login-desc">出貨作業、庫存查詢</div></div>
         </button>
       </div>
 
@@ -2224,9 +2224,9 @@ let _currentReport = 'daily';
 
 const ROLES = {
   su: {name: '蘇董', pwd: '9999', pages: ['stockPage', 'stockPageSu']},
-  factory: {name: '蕭志成', pwd: '8888', pages: ['prodPage', 'stockPage']},
-  warehouse: {name: '莊俊', pwd: '7777', pages: ['inPage', 'outPage', 'stockPage']},
-  purchase: {name: '李瑞珠', pwd: '6666', pages: ['outPage', 'stockPage']},
+  factory: {name: '廠長蕭志成', pwd: '8888', pages: ['prodPage', 'stockPage']},
+  warehouse: {name: '倉管莊俊', pwd: '7777', pages: ['inPage', 'outPage', 'stockPage']},
+  purchase: {name: '採購李瑞珠', pwd: '6666', pages: ['outPage', 'stockPage']},
   admin: {name: '管理員', pwd: 'root', pages: ['stockPage', 'stockPageSu', 'prodPage', 'inPage', 'outPage', 'historyPage', 'catPage']}
 };
 
@@ -2337,7 +2337,7 @@ function showPwdInput(role) {
   document.getElementById('pwdSection').style.display = 'block';
 
   // 更新密碼提示
-  let roleNames = {su: '蘇董', factory: '蕭志成', warehouse: '莊俊', purchase: '李瑞珠', admin: '管理員'};
+  let roleNames = {su: '蘇董', factory: '廠長蕭志成', warehouse: '倉管莊俊', purchase: '採購李瑞珠', admin: '管理員'};
   document.getElementById('pwdHint').textContent = roleNames[role] + '，請輸入密碼';
 
   document.getElementById('loginPwd').value = '';
