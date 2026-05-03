@@ -2003,7 +2003,7 @@ function stopVoiceInput() {
   <button class="back-btn" style="background:rgba(59,130,246,.2);color:var(--accent-primary)" onclick="freshGrids()">🔄</button>
  </div>
 
-  <!-- 生產確認警示區塊 - 藍燈（待廠長回報） -->
+  <!-- 生產確認警示區塊 - 藍燈（待廠長蕭志成回報） -->
   <div id="pendingConfirmAlertSection" style="margin-bottom:16px"></div>
 
   <div class="line-filter" id="prodLineFilter"></div>
@@ -2850,7 +2850,7 @@ function renderPendingOutReport() {
     html += '<table class="report-table"><thead><tr><th></th><th>日期</th><th>品名</th><th>數量</th><th>備註</th><th>簽收</th><th>刪除</th></tr></thead><tbody>';
     red.forEach(h => {
       let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
-      let signBtn = isPurchase ? '<button onclick="signOut(' + h.id + ')" style="padding:8px 16px;background:var(--danger);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">🔒 簽收</button>' : '<span style="color:var(--text-muted);font-size:0.8rem">🔒 需採購</span>';
+      let signBtn = isPurchase ? '<button onclick="signOut(' + h.id + ')" style="padding:8px 16px;background:var(--danger);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">🔒 簽收</button>' : '<span style="color:var(--text-muted);font-size:0.8rem">🔒 需採購李瑞珠</span>';
       let delBtn = isPurchase ? '<button onclick="promptDelPendingOut(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button>' : '<span style="color:var(--text-muted)">—</span>';
       html += '<tr style="background:rgba(239,68,68,.08);border-left:3px solid var(--danger)"><td><span style="font-size:1.2rem">🔒</span></td><td>' + h.date + '</td><td><strong>' + h.name + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.model||'') + '</span></td><td><strong style="color:var(--danger)">' + h.qty.toLocaleString() + '</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.unit||'KG') + '</span></td><td style="color:var(--text-secondary);font-size:0.85rem">' + (h.customer === '-' ? '—' : h.customer) + '</td><td>' + signBtn + '</td><td>' + delBtn + '</td></tr>';
     });
@@ -3027,13 +3027,13 @@ function renderPendingInAlert() {
     html += '</div>';
   }
 
-  // 🔵 藍燈警示 - 待廠長確認（倉儲已簽收，等待廠長回報）
+  // 🔵 藍燈警示 - 待廠長確認（倉儲已簽收，等待廠長蕭志成回報）
   if (blue.length > 0) {
     html += '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
     html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
     html += '<span style="font-size:1.6rem">⏳</span>';
-    html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待確認 - 等待廠長回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待廠長回報確認</p></div>';
+    html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待確認 - 等待廠長蕭志成回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待廠長蕭志成回報確認</p></div>';
     html += '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
     blue.forEach(h => {
@@ -3079,14 +3079,14 @@ function renderPendingIn() {
     html += '</div>';
   }
 
-  // 🔵 待確認列表（等待廠長回報）
+  // 🔵 待確認列表（等待廠長蕭志成回報）
   if (blue.length > 0) {
     html += '<div style="padding:12px 14px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.35);border-radius:var(--radius-md);margin-bottom:12px">';
-    html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待廠長回報確認（' + blue.length + '筆）</p>';
+    html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待廠長蕭志成回報確認（' + blue.length + '筆）</p>';
     blue.forEach(h => {
       html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(59,130,246,.15)">';
       html += '<div><span style="color:var(--accent-primary);margin-right:6px">✓</span><strong>' + h.name + '</strong> <span style="color:var(--text-muted)">' + h.qty + ' ' + h.unit + '</span></div>';
-      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">待廠長回報</span>';
+      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">待廠長蕭志成回報</span>';
       html += '</div>';
     });
     html += '</div>';
@@ -3100,9 +3100,9 @@ async function signIn(id) {
   let item = d.pendingIn.find(h => h.id === id);
   if (!item) {alert('找不到該筆資料'); return;}
 
-  // 僅限倉儲或管理員簽收
+  // 僅限倉管莊俊或管理員簽收
   let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
-  if (!isWarehouse) {alert('僅限倉儲或管理員簽收'); return;}
+  if (!isWarehouse) {alert('僅限倉管莊俊或管理員簽收'); return;}
 
   // 簽收確認
   let confirmSign = confirm('🔒 確認入庫簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
@@ -3114,14 +3114,14 @@ async function signIn(id) {
   renderPendingIn();
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 簽收成功！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n🔵 已通知生產作業，等待廠長回報確認');
+  alert('✅ 簽收成功！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n🔵 已通知生產作業，等待廠長蕭志成回報確認');
 }
 
 async function factoryConfirm(id) {
   let d = getData();
   let item = d.pendingIn.find(h => h.id === id && h.status === 'pendingConfirm');
   if (!item) {alert('找不到該筆資料'); return;}
-  if (_currentRole !== 'factory' && _currentRole !== 'admin') {alert('僅廠長可回報確認'); return;}
+  if (_currentRole !== 'factory' && _currentRole !== 'admin') {alert('僅廠長蕭志成可回報確認'); return;}
 
   // 廠長回報確認對話框
   let confirmSign = confirm('🏭 確認回報入庫\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成回報？');
@@ -3156,12 +3156,12 @@ function renderPendingConfirmAlert() {
     return;
   }
 
-  // 🔵 藍燈警示 - 待廠長回報確認
+  // 🔵 藍燈警示 - 待廠長蕭志成回報確認
   let html = '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
   html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
   html += '<span style="font-size:1.6rem">⏳</span>';
-  html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待廠長回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + list.length + ' 筆已入庫，等待廠長回報確認</p></div>';
+  html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待廠長蕭志成回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + list.length + ' 筆已入庫，等待廠長蕭志成回報確認</p></div>';
   html += '</div>';
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   list.forEach(h => {
@@ -3176,7 +3176,7 @@ function renderPendingConfirmAlert() {
   html += '</div>';
   html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:8px">';
   html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
-  html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由廠長登入進行回報確認</span>';
+  html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由廠長蕭志成登入進行回報確認</span>';
   html += '</div>';
   html += '</div>';
 
@@ -3192,13 +3192,13 @@ function renderPendingConfirm() {
 
   let canAct = (_currentRole === 'factory' || _currentRole === 'admin');
   let html = '<div style="padding:12px 14px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.35);border-radius:var(--radius-md);margin-bottom:12px">';
-  html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待回報確認（' + list.length + '筆）' + (canAct ? '' : ' - 需廠長權限') + '</p>';
+  html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待回報確認（' + list.length + '筆）' + (canAct ? '' : ' - 需廠長蕭志成權限') + '</p>';
   list.forEach(h => {
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(59,130,246,.15)"><span><strong>' + h.name + '</strong> <span style="color:var(--text-muted)">' + h.qty + ' ' + h.unit + '</span></span>';
     if (canAct) {
       html += '<div style="display:flex;gap:8px"><button onclick="factoryConfirm(' + h.id + ')" style="padding:8px 16px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">✅ 回報確認</button><button onclick="promptDelPendingConfirm(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button></div>';
     } else {
-      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:700">待廠長回報</span>';
+      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:700">待廠長蕭志成回報</span>';
     }
     html += '</div>';
   });
@@ -3208,7 +3208,7 @@ function renderPendingConfirm() {
 
 function promptDelPendingConfirm(id) {
   // 僅限廠長或管理員刪除
-  if (_currentRole !== 'factory' && _currentRole !== 'admin') {alert('僅廠長可刪除'); return;}
+  if (_currentRole !== 'factory' && _currentRole !== 'admin') {alert('僅廠長蕭志成可刪除'); return;}
   let pwd = prompt('請輸入刪除密碼（000）：');
   if (pwd === null) return;
   if (pwd !== DEL_PWD) {alert('密碼錯誤'); return;}
@@ -3312,7 +3312,7 @@ function buildOutBlueHtml(blue) {
     if (isWarehouse) {
       html += '<button onclick="confirmOut(' + h.id + ')" style="margin-top:8px;width:100%;padding:8px 12px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.8rem;font-weight:700;cursor:pointer">📋 確認</button>';
     } else {
-      html += '<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted)">🔒 需倉儲確認</div>';
+      html += '<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted)">🔒 需倉管莊俊確認</div>';
     }
     html += '</div>';
   });
@@ -3357,7 +3357,7 @@ async function doOut() {
   saveData(d);
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 出貨完成！等待採購簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
+  alert('✅ 出貨完成！等待採購李瑞珠簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + ' ' + _selectedProd.unit);
   document.getElementById('outQtySection').style.display = 'none';
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
@@ -3369,7 +3369,7 @@ async function signOut(id) {
   let item = d.pendingOut.find(h => h.id === id);
   if (!item) {alert('找不到該筆資料'); return;}
   let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
-  if (!isPurchase) {alert('僅限採購或管理員簽收'); return;}
+  if (!isPurchase) {alert('僅限採購李瑞珠或管理員簽收'); return;}
 
   // 第一階段：採購「簽收」→ 待倉儲確認發票/送貨單 → status 改為 pending（藍燈）
   let confirmSign = confirm('🔐 確認出貨簽收\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n備註：' + (item.customer === '-' ? '—' : item.customer) + '\n\n是否確認完成簽收？');
@@ -3399,7 +3399,7 @@ async function signOut(id) {
       stockEl.appendChild(w);
     }
     alert('✅ 採購已簽收！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n等待倉儲確認發票送貨單');
-    try { window.speakText && window.speakText('採購已簽收，等待倉儲確認發票送貨單'); } catch(e) {}
+    try { window.speakText && window.speakText('採購李瑞珠已簽收，等待倉管莊俊確認發票送貨單'); } catch(e) {}
   });
 }
 
@@ -3409,7 +3409,7 @@ async function confirmOut(id) {
   let item = d.pendingOut.find(h => h.id === id);
   if (!item) {alert('找不到該筆資料'); return;}
   let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
-  if (!isWarehouse) {alert('僅限倉儲或管理員確認'); return;}
+  if (!isWarehouse) {alert('僅限倉管莊俊或管理員確認'); return;}
 
   let ok = confirm('📋 確認發票送貨單\n\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n是否確認完成？');
   if (!ok) return;
@@ -3430,7 +3430,7 @@ async function confirmOut(id) {
 
 function promptDelPendingOut(id) {
   let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
-  if (!isPurchase) {alert('僅限採購或管理員刪除'); return;}
+  if (!isPurchase) {alert('僅限採購李瑞珠或管理員刪除'); return;}
   let p = prompt('請輸入刪除密碼（000）：');
   if (p === null) return;
   if (p !== DEL_PWD) {alert('密碼錯誤'); return;}
