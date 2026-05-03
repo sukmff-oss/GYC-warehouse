@@ -2421,6 +2421,12 @@ let _isNavigating = false;
   if (id === 'catPage') renderCat();
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
+ // 登入頁 repaint 確保 flex 居中正確
+ if (id === 'loginPage') {
+   var el = document.getElementById('loginPage');
+   el.style.transform = 'translateY(1px)';
+   requestAnimationFrame(function() { el.style.transform = ''; });
+ }
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
