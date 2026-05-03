@@ -2345,7 +2345,11 @@ function showPwdInput(role) {
 }
 
 function backToRoles() {
-  location.reload();
+  document.getElementById('pwdSection').style.display = 'none';
+  document.getElementById('roleLoginGrid').style.display = 'grid';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('loginPwd').value = '';
+  _currentRole = null;
 }
 
 function tryLogin() {
