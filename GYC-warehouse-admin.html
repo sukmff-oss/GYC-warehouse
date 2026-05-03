@@ -1774,6 +1774,15 @@ function stopVoiceInput() {
     <span class="page-title">📋 主選單 <span id="welcomeName" style="font-size:0.8em;opacity:0.7"></span></span>
   </div>
   <div class="menu-grid">
+    <!-- 第1排：蘇董專用 + 庫存查詢 -->
+    <button class="menu-btn" onclick="showPage('stockPageSu')">
+      <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8 14H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
+  <path d="M8 24H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
+  <path d="M8 34H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
+</svg></span></span>
+      <span class="menu-label">蘇董專用</span>
+    </button>
     <button class="menu-btn" onclick="showPage('stockPage')">
       <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="21" cy="21" r="13" stroke="#FFC107" stroke-width="4"/>
@@ -1781,6 +1790,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">庫存查詢</span>
     </button>
+    <!-- 第2排：生產作業 + 出貨作業 -->
     <button class="menu-btn" onclick="showPage('prodPage')">
       <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M10 38L14 14H34L38 38" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
@@ -1799,6 +1809,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">出貨作業</span>
     </button>
+    <!-- 第3排：入庫作業 + 分類管理 -->
     <button class="menu-btn" onclick="showPage('inPage')">
       <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="14" width="32" height="26" rx="3" stroke="#FFC107" stroke-width="4"/>
@@ -1807,7 +1818,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">入庫作業</span>
     </button>
-    <button class="menu-btn" onclick="showPage('historyPage')">
+    <button class="menu-btn" onclick="showPage('catPage')">
       <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="10" y="6" width="28" height="36" rx="2" stroke="#FFC107" stroke-width="4"/>
   <path d="M17 16H31" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1818,14 +1829,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">分類管理</span>
     </button>
-    <button class="menu-btn wide" onclick="showPage('stockPageSu')">
-      <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8 14H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M8 24H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M8 34H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-</svg></span></span>
-      <span class="menu-label">蘇董專用</span>
-    </button>
+    <!-- 登出系統（独立一列） -->
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
       登出系統
