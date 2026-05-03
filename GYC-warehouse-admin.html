@@ -2345,16 +2345,7 @@ function showPwdInput(role) {
 }
 
 function backToRoles() {
-  _currentRole = null;
-  var el = document.getElementById('loginPage');
-  el.style.transform = 'translateY(1px)';
-  requestAnimationFrame(function(){
-    el.style.transform = '';
-    document.getElementById('pwdSection').style.display = 'none';
-    document.getElementById('roleLoginGrid').style.display = 'flex';
-    document.getElementById('loginErr').style.display = 'none';
-    document.getElementById('loginPwd').value = '';
-  });
+  location.reload();
 }
 
 function tryLogin() {
