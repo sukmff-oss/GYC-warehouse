@@ -2393,6 +2393,16 @@ function applyRolePermissions() {
     btn.style.opacity = allowed ? '1' : '0.35';
     btn.style.pointerEvents = allowed ? 'auto' : 'none';
   });
+  // 採購：禁用出貨作業的數量編輯（只能看網格提示）
+  if (_currentRole === 'purchase') {
+    let sec = document.getElementById('outQtySection');
+    if (sec) { sec.style.display = 'none'; }
+    let grid = document.getElementById('outGrid');
+    if (grid) {
+      grid.style.pointerEvents = 'none';
+      grid.style.opacity = '0.5';
+    }
+  }
 }
 
 function doLogout() {
@@ -2417,7 +2427,7 @@ let _isNavigating = false;
   if (id === 'stockPage') {switchReport('total', document.querySelectorAll('.r-tab')[2]); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
   if (id === 'inPage') {renderLineFilter('inLineFilter'); renderInGrid(); renderPendingInAlert(); renderPendingIn();}
-  if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid(); renderOutBlueAlert();}
+  if (id === 'outPage') {renderLineFilter('outLineFilter'); if (_currentRole !== 'purchase') renderOutGrid(); renderOutBlueAlert();}
   if (id === 'historyPage') renderHistory();
    if (id === 'stockPageSu') { renderSuDashboard(); }
   if (id === 'catPage') renderCat();
