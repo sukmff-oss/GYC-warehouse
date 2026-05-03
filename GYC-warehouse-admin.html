@@ -2793,13 +2793,13 @@ function renderPendingOutAlert() {
     html += '</div>';
   }
 
-  // 🔵 藍燈警示 - 等待倉儲確認發票/送貨單（pending）
+  // 🔵 藍燈警示 - 等待倉管莊俊確認發票/送貨單（pending）
   if (blue.length > 0) {
     html += '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden;margin-bottom:10px">';
     html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
     html += '<span style="font-size:1.8rem">⏳</span>';
-    html += '<div><p style="font-size:1rem;font-weight:800;color:var(--accent-primary);margin:0">待倉儲確認發票/送貨單</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待倉儲確認發票送貨單</p></div>';
+    html += '<div><p style="font-size:1rem;font-weight:800;color:var(--accent-primary);margin:0">待倉儲確認發票/送貨單</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待倉管莊俊確認發票送貨單</p></div>';
     html += '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
     blue.forEach(h => {
@@ -2861,7 +2861,7 @@ function renderPendingOutReport() {
 
   // 🔵 待倉儲確認（pending）- warehouse 可確認
   if (blue.length > 0) {
-    html += '<p style="font-size:0.9rem;color:var(--accent-primary);font-weight:700;margin:16px 0 10px">🔵 待倉儲確認發票/送貨單（' + blue.length + '筆）</p>';
+    html += '<p style="font-size:0.9rem;color:var(--accent-primary);font-weight:700;margin:16px 0 10px">🔵 待倉管莊俊確認發票/送貨單（' + blue.length + '筆）</p>';
     html += '<table class="report-table"><thead><tr><th></th><th>日期</th><th>品名</th><th>數量</th><th>備註</th><th>確認</th><th>刪除</th></tr></thead><tbody>';
     blue.forEach(h => {
       let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
@@ -3288,29 +3288,38 @@ function renderOutGrid() {
  buildProdGrid('outGrid', renderOutGrid.__onSelect);
 }
 
-// 出貨作業藍燈警示（pendingOut 等待倉儲確認發票/送貨單）
-// 建立出庫藍燈 Alert HTML（供 outPage / stockPage 共用）
-function buildOutBlueHtml(blue) {
-  if (!blue || blue.length === 0) return '';
-  let html = '<div style="padding:16px 18px;background:linear-gradient(135deg, rgba(59,130,246,.15) 0%, rgba(30,64,175,.15) 100%);border:2px solid rgba(59,130,246,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden">';
-  html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
+// 出貨作業警示（🔴紅=待採購簽收 / 🔵藍=待倉管確認發票）
+function buildOutAlertHtml(list, type) {
+  if (!list || list.length === 0) return '';
+  var isRed = type === 'red';
+  var color = isRed ? 'var(--danger)' : 'var(--accent-primary)';
+  var anim = isRed ? 'pulse 1.5s ease-in-out infinite' : 'pulseBlue 1.5s ease-in-out infinite';
+  var icon = isRed ? '🔔' : '⏳';
+  var title = isRed ? '待採購簽收' : '待確認發票/送貨單';
+  var sub = isRed ? '有 ' + list.length + ' 筆等待採購李瑞珠簽收' : '有 ' + list.length + ' 筆等待倉管莊俊確認發票送貨單';
+  var borderC = isRed ? 'rgba(239,68,68,.5)' : 'rgba(59,130,246,.5)';
+  var bg1 = isRed ? 'rgba(239,68,68,.15)' : 'rgba(59,130,246,.15)';
+  var bg2 = isRed ? 'rgba(220,38,38,.15)' : 'rgba(30,64,175,.15)';
+  var shake = isRed ? 'animation:shake 0.8s ease-in-out infinite;' : '';
+  var html = '<div style="padding:16px 18px;background:linear-gradient(135deg, ' + bg1 + ' 0%, ' + bg2 + ' 100%);border:2px solid ' + borderC + ';border-radius:var(--radius-lg);position:relative;overflow:hidden;margin-bottom:10px">';
+  html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:' + color + ';animation:' + anim + '"></div>';
   html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
-  html += '<span style="font-size:1.8rem">⏳</span>';
-  html += '<div><p style="font-size:1rem;font-weight:800;color:var(--accent-primary);margin:0">待確認發票/送貨單</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待倉儲確認發票送貨單</p></div>';
+  html += '<span style="font-size:1.8rem;' + shake + '">' + icon + '</span>';
+  html += '<div><p style="font-size:1rem;font-weight:800;color:' + color + ';margin:0">' + title + '</p><p style="font-size:0.8rem;color:var(--text-secondary);margin:4px 0 0">' + sub + '</p></div>';
   html += '</div>';
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  blue.forEach(h => {
-    let isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
-    html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid var(--accent-primary)">';
+  list.forEach(function(h) {
+    var isWarehouse = (_currentRole === 'warehouse' || _currentRole === 'admin');
+    html += '<div style="flex:1;min-width:140px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:var(--radius-md);border-left:3px solid ' + color + '">';
     html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
-    html += '<span style="color:var(--accent-primary)">✓</span>';
+    html += '<span style="color:' + color + '">' + (isRed ? '🔒' : '✓') + '</span>';
     html += '<strong style="color:var(--text-primary);font-size:0.9rem">' + h.name + '</strong>';
     html += '</div>';
     html += '<div style="font-size:0.85rem;color:var(--text-secondary)">' + h.qty + ' ' + (h.unit||'KG') + '</div>';
     html += '<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">' + h.date + '</div>';
-    if (isWarehouse) {
+    if (!isRed && isWarehouse) {
       html += '<button onclick="confirmOut(' + h.id + ')" style="margin-top:8px;width:100%;padding:8px 12px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.8rem;font-weight:700;cursor:pointer">📋 確認</button>';
-    } else {
+    } else if (!isRed) {
       html += '<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted)">🔒 需倉管莊俊確認</div>';
     }
     html += '</div>';
@@ -3319,30 +3328,18 @@ function buildOutBlueHtml(blue) {
   return html;
 }
 
+// 舊藍燈函數（向後相容）
+function buildOutBlueHtml(blue) { return buildOutAlertHtml(blue, 'blue'); }
+
+// 出貨作業頂部警示（🔴紅=待採購簽收 / 🔵藍=待倉管確認發票）
 function renderOutBlueAlert() {
   let d = getData();
-  let blue = (d.pendingOut || []).filter(h => h.status === 'pending');
+  let red = (d.pendingOut || []).filter(h => h.status === 'pendingOut');   // 🔴 待採購簽收
+  let blue = (d.pendingOut || []).filter(h => h.status === 'pending');     // 🔵 待倉管確認發票
   let el = document.getElementById('outBlueAlertSection');
-  let stockEl = document.getElementById('pendingOutAlertSection');
-  let html = buildOutBlueHtml(blue);
-  if (blue.length === 0) {
-    if (el) el.innerHTML = '';
-    if (stockEl) {
-      let existing = stockEl.querySelector('[data-blue="1"]');
-      if (existing) existing.remove();
-    }
-    return;
-  }
-  if (el) el.innerHTML = html;
-  // 同步寫入 stockPage（採購簽完馬上可見，不覆蓋原本的紅燈 alert）
-  if (stockEl) {
-    let existing = stockEl.querySelector('[data-blue="1"]');
-    if (existing) existing.remove();
-    let w = document.createElement('div');
-    w.setAttribute('data-blue', '1');
-    w.innerHTML = html;
-    stockEl.appendChild(w);
-  }
+  if (!el) return;
+  let html = buildOutAlertHtml(red, 'red') + buildOutAlertHtml(blue, 'blue');
+  el.innerHTML = html;
 }
 
 async function doOut() {
