@@ -3124,7 +3124,7 @@ async function signIn(id) {
   renderPendingIn();
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 簽收成功！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n\n🔵 已通知生產作業，等待廠長蕭志成回報確認');
+  alert('✅ 簽收成功！\n已通知生產作業，等待廠長蕭志成回報確認\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit);
 }
 
 async function factoryConfirm(id) {
@@ -3148,9 +3148,7 @@ async function factoryConfirm(id) {
   renderPendingConfirm();
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 回報確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史\n已完成入庫');
-  // 朗讀最後一行（避開 skip pattern）
-  try { window.speakText && window.speakText('已完成入庫'); } catch(e) {}
+  alert('✅ 入庫完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史');
 }
 
 // ==================== 生產作業藍燈警示系統 ====================
@@ -3278,7 +3276,7 @@ async function doProd() {
   saveData(d);
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 生產完成！待倉管簽收：\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
+  alert('✅ 生產完成！\n等待倉管莊俊簽收並回報\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
   document.getElementById('prodQtySection').style.display = 'none';
   document.querySelectorAll('#prodGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
