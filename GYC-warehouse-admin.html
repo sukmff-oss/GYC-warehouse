@@ -90,6 +90,7 @@ html, body {
   z-index: 10;
   overflow-y: auto;
   height: 100vh;
+  isolation: isolate;
 }
 
 /* ==================== 登入頁面 ==================== */
@@ -97,6 +98,7 @@ html, body {
   justify-content: center;
   align-items: center;
   gap: 24px;
+  will-change: transform;
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
