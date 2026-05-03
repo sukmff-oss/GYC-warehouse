@@ -2493,7 +2493,6 @@ function updateMenuIconColors() {
   setSvgStroke('.icon-prod', countConfirm > 0 ? BLUE : YELLOW);
 
   // 出貨作業 🔴 紅 = 待採購簽收 / 🔵 藍 = 待發票/送貨單
-  let countOutBlue = (d.pendingOut || []).filter(h => h.status === 'pending').length;
   if (countOutRed > 0) setSvgStroke('.icon-out', RED);
   else if (countOutBlue > 0) setSvgStroke('.icon-out', BLUE);
   else setSvgStroke('.icon-out', YELLOW);
