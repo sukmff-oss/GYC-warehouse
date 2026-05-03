@@ -2392,15 +2392,7 @@ function applyRolePermissions() {
 
 function doLogout() {
  if (!confirm('確定要登出？')) return;
- _currentRole = null;
- localStorage.removeItem('_savedRole');
- // 強迫paint：先短暫隱藏所有.page，讓瀏覽器放棄舊圖層，再顯示loginPage
- document.querySelectorAll('.page').forEach(function(p){ p.style.visibility='hidden'; });
- setTimeout(function(){
-   document.querySelectorAll('.page').forEach(function(p){ p.style.visibility=''; });
-   showPage('loginPage');
-   backToRoles();
- }, 50);
+ location.reload();
 }
 
 // ==================== 頁面切換 ====================
