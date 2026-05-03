@@ -2480,8 +2480,10 @@ function updateMenuIconColors() {
   let countPending = (d.pendingIn || []).filter(h => h.status === 'pending').length;
   let countConfirm = (d.pendingIn || []).filter(h => h.status === 'pendingConfirm').length;
 
-  // 庫存查詢 🔴 紅色 = 有待採購簽收（pendingOut）
-  setSvgStroke('.icon-stock', countOutRed > 0 ? RED : YELLOW);
+  // 庫存查詢 🔵 藍色 = 有待確認發票/送貨單（pending）
+  // 🔴 紅色待採購簽收已移至出貨作業顯示
+  let countOutBlue = (d.pendingOut || []).filter(h => h.status === 'pending').length;
+  setSvgStroke('.icon-stock', countOutBlue > 0 ? BLUE : YELLOW);
 
   // 生產作業 🔵 藍色 = 有待確認（pendingConfirm）
   setSvgStroke('.icon-prod', countConfirm > 0 ? BLUE : YELLOW);
@@ -2513,13 +2515,13 @@ function updateMenuIconColors() {
 function updateBadges() {
   let d = getData();
 
-  // 待簽收（紅燈）- 庫存查詢（pendingOut = 等待採購簽收）
-  let countOutRed = (d.pendingOut || []).filter(h => h.status === 'pendingOut').length;
+  // 待確認發票（藍燈）- 庫存查詢（pending = 等待倉管確認發票/送貨單）
+  let countOutBlue = (d.pendingOut || []).filter(h => h.status === 'pending').length;
   let badgeStock = document.getElementById('badgeStock');
   if (badgeStock) {
-    badgeStock.style.display = countOutRed > 0 ? 'inline-flex' : 'none';
-    badgeStock.textContent = countOutRed;
-    badgeStock.style.animation = countOutRed > 0 ? 'pulse 1.5s ease-in-out infinite' : 'none';
+    badgeStock.style.display = countOutBlue > 0 ? 'inline-flex' : 'none';
+    badgeStock.textContent = countOutBlue;
+    badgeStock.style.animation = countOutBlue > 0 ? 'pulseBlue 1.5s ease-in-out infinite' : 'none';
   }
 
   // 待入庫（紅燈）- 入庫作業
