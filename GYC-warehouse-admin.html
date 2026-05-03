@@ -2426,13 +2426,6 @@ let _isNavigating = false;
   if (id === 'catPage') renderCat();
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
- // 登入頁：滾動到頂 + 強迫 reflow 確保 flex 居中正確
- if (id === 'loginPage') {
-   window.scrollTo(0, 0);
-   document.documentElement.scrollTop = 0;
-   const el = document.getElementById('loginPage');
-   void el.clientWidth; // 讀取 layout property 強迫 reflow
- }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
 const YELLOW = "#FFD700";
