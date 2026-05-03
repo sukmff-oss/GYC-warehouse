@@ -586,11 +586,11 @@ html, body {
   font-family: inherit;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
-  min-height: 120px;
+  min-height: 88px;
   text-align: center;
   position: relative;
   overflow: hidden;
-  gap: 8px;
+  justify-content: center;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -648,8 +648,8 @@ html, body {
   justify-content: center;
 }
 .menu-btn .role-icon svg {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
 }
 
@@ -1773,40 +1773,36 @@ function stopVoiceInput() {
   </div>
   <div class="menu-grid">
     <button class="menu-btn" onclick="showPage('stockPage')">
-      <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="21" cy="21" r="13" stroke="#FFC107" stroke-width="4"/>
   <path d="M31 31L42 42" stroke="#FFC107" stroke-width="5" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">庫存查詢</span>
     </button>
     <button class="menu-btn" onclick="showPage('prodPage')">
-      <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M10 38L14 14H34L38 38" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
   <path d="M14 14L24 6L34 14" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
   <path d="M18 26H30" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M24 26V34" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">生產作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('outPage')">
-      <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="10" width="32" height="28" rx="3" stroke="#FFC107" stroke-width="4"/>
   <path d="M16 19H32" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M16 25H32" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M16 31H26" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">出貨作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('inPage')">
-      <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="14" width="32" height="26" rx="3" stroke="#FFC107" stroke-width="4"/>
   <path d="M24 8V20" stroke="#FFC107" stroke-width="5" stroke-linecap="round"/>
   <path d="M17 13L24 20L31 13" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">入庫作業</span>
     </button>
     <button class="menu-btn" onclick="showPage('historyPage')">
-      <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap sign"><span class="role-icon icon-sign"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="10" y="6" width="28" height="36" rx="2" stroke="#FFC107" stroke-width="4"/>
   <path d="M17 16H31" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M17 23H28" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1814,10 +1810,9 @@ function stopVoiceInput() {
   <circle cx="34" cy="34" r="8" stroke="#FFC107" stroke-width="3"/>
   <path d="M31 34L33 36L37 32" stroke="#FFC107" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">簽收列印</span>
     </button>
     <button class="menu-btn" onclick="showPage('catPage')">
-      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M8 12H18L22 18H40V38C40 40 38 42 36 42H12C10 42 8 40 8 38V12Z" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
   <circle cx="32" cy="28" r="8" stroke="#FFC107" stroke-width="4"/>
   <circle cx="32" cy="28" r="3" stroke="#FFC107" stroke-width="3"/>
@@ -1825,15 +1820,13 @@ function stopVoiceInput() {
   <path d="M38 22L40 20" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M26 24L28 22" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">類別管理</span>
     </button>
     <button class="menu-btn wide" onclick="showPage('stockPageSu')">
-      <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M8 14H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M8 24H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
   <path d="M8 34H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-btn-name">蘇董專用</span>
     </button>
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
