@@ -2426,6 +2426,8 @@ function showPage(id) {
   if (id === 'catPage') renderCat();
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
+ // 強迫瀏覽器重新計算 layout，修復從主選單切回登入頁時按鈕疊加的問題
+ document.getElementById(id).scrollTop; // 觸發 reflow
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
