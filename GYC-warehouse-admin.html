@@ -2417,7 +2417,7 @@ function showPage(id) {
  updateBadges();
   updateMenuIconColors();
  try {
-  if (id === 'stockPage') {switchReport('daily', document.querySelector('.r-tab')); renderPendingOutAlert(); renderPendingOutReport();}
+  if (id === 'stockPage') {switchReport('total', document.querySelectorAll('.r-tab')[2]); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
   if (id === 'inPage') {renderLineFilter('inLineFilter'); renderInGrid(); renderPendingInAlert(); renderPendingIn();}
   if (id === 'outPage') {renderLineFilter('outLineFilter'); renderOutGrid(); renderOutBlueAlert();}
