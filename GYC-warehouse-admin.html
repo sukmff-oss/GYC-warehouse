@@ -2054,6 +2054,8 @@ function stopVoiceInput() {
     <button class="back-btn" onclick="showPage('menuPage')">←</button>
     <span class="page-title">📤 出貨作業</span>
   </div>
+  <!-- 🔴 紅燈警示 - 待採購簽收 -->
+  <div id="outRedAlertSection" style="margin-bottom:12px"></div>
   <div class="line-filter" id="outLineFilter"></div>
   <!-- 🔵 藍燈警示 - 待倉儲確認發票/送貨單 -->
   <div id="outBlueAlertSection" style="margin-bottom:12px"></div>
@@ -2452,7 +2454,7 @@ let _isNavigating = false;
   if (id === 'stockPage') {switchReport('total', document.querySelectorAll('.r-tab')[2]); renderPendingOutAlert(); renderPendingOutReport();}
   if (id === 'prodPage') {renderLineFilter('prodLineFilter'); renderProdGrid(); renderPendingConfirmAlert(); renderPendingConfirm();}
   if (id === 'inPage') {renderLineFilter('inLineFilter'); if (_currentRole !== 'warehouse') renderInGrid(); renderPendingInAlert(); renderPendingIn();}
-  if (id === 'outPage') {renderLineFilter('outLineFilter'); if (_currentRole !== 'purchase') renderOutGrid(); renderOutBlueAlert();}
+  if (id === 'outPage') {renderLineFilter('outLineFilter'); if (_currentRole !== 'purchase') renderOutGrid(); renderOutRedAlert(); renderOutBlueAlert();}
   if (id === 'historyPage') renderHistory();
    if (id === 'stockPageSu') { renderSuDashboard(); }
   if (id === 'catPage') renderCat();
@@ -3373,6 +3375,35 @@ function buildOutAlertHtml(list, type) {
 function buildOutBlueHtml(blue) { return buildOutAlertHtml(blue, 'blue'); }
 
 // 出貨作業頂部警示（🔴紅=待採購簽收 / 🔵藍=待倉管確認發票）
+// 🔴 出貨作業紅燈：待採購簽收（pendingOut）
+function renderOutRedAlert() {
+  let d = getData();
+  let el = document.getElementById('outRedAlertSection');
+  if (!el) return;
+  let list = (d.pendingOut || []).filter(h => h.status === 'pendingOut');
+  if (list.length === 0) {el.innerHTML = ''; return;}
+
+  let isPurchase = (_currentRole === 'purchase' || _currentRole === 'admin');
+  let html = '<div style="padding:14px 16px;background:linear-gradient(135deg, rgba(239,68,68,.15) 0%, rgba(220,38,38,.15) 100%);border:2px solid rgba(239,68,68,.5);border-radius:var(--radius-lg);position:relative;overflow:hidden;margin-bottom:12px">';
+  html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--danger);animation:pulse 1.5s ease-in-out infinite"></div>';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
+  html += '<span style="font-size:1.5rem;animation:shake 0.8s ease-in-out infinite">🔔</span>';
+  html += '<div><p style="font-size:0.9rem;font-weight:800;color:var(--danger);margin:0">🔴 待採購李瑞珠簽收</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:3px 0 0">有 ' + list.length + ' 筆等待採購李瑞珠簽收確認</p></div>';
+  html += '</div>';
+  list.forEach(h => {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(239,68,68,.15)">';
+    html += '<div><strong style="color:var(--text-primary)">' + h.name + '</strong> <span style="color:var(--text-muted);font-size:0.85rem">' + h.qty + ' ' + h.unit + '</span><br><span style="font-size:0.75rem;color:var(--text-muted)">' + (h.customer === '-' ? '—' : h.customer) + ' · ' + h.date + '</span></div>';
+    if (isPurchase) {
+      html += '<button onclick="signOut(' + h.id + ')" style="padding:8px 14px;background:var(--danger);color:#fff;border:none;border-radius:50px;font-size:0.8rem;font-weight:700;cursor:pointer">🔒 簽收</button>';
+    } else {
+      html += '<span style="font-size:0.75rem;color:var(--text-muted)">🔒 待採購</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderOutBlueAlert() {
   let d = getData();
   let red = (d.pendingOut || []).filter(h => h.status === 'pendingOut');   // 🔴 待採購簽收
@@ -3399,6 +3430,7 @@ async function doOut() {
   document.querySelectorAll('#outGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
   renderOutGrid();
+  renderOutRedAlert();
 }
 
 async function signOut(id) {
@@ -3421,6 +3453,7 @@ async function signOut(id) {
   requestAnimationFrame(function() {
     renderPendingOutAlert();
     renderPendingOutReport();
+    renderOutRedAlert();  // 清除紅燈
     let d2 = getData();
     let blue2 = (d2.pendingOut || []).filter(h => h.status === 'pending');
     let stockEl = document.getElementById('pendingOutAlertSection');
