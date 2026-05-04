@@ -3039,7 +3039,7 @@ function renderPendingInAlert() {
     html += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-primary);animation:pulseBlue 1.5s ease-in-out infinite"></div>';
     html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">';
     html += '<span style="font-size:1.6rem">⏳</span>';
-    html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待確認 - 等待廠長蕭志成回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待廠長蕭志成回報確認</p></div>';
+    html += '<div><p style="font-size:0.95rem;font-weight:800;color:var(--accent-primary);margin:0">🔵 待確認 - 請由廠長蕭志成至入庫作業回報確認</p><p style="font-size:0.75rem;color:var(--text-secondary);margin:4px 0 0">有 ' + blue.length + ' 筆等待廠長蕭志成回報確認</p></div>';
     html += '</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
     blue.forEach(h => {
@@ -3087,12 +3087,17 @@ function renderPendingIn() {
 
   // 🔵 待確認列表（等待廠長蕭志成回報）
   if (blue.length > 0) {
+    let canFactory = (_currentRole === 'factory' || _currentRole === 'admin');
     html += '<div style="padding:12px 14px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.35);border-radius:var(--radius-md);margin-bottom:12px">';
-    html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待廠長蕭志成回報確認（' + blue.length + '筆）</p>';
+    html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待廠長蕭志成回報確認（' + blue.length + '筆）' + (canFactory ? '' : ' - 需廠長蕭志成權限') + '</p>';
     blue.forEach(h => {
       html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(59,130,246,.15)">';
       html += '<div><span style="color:var(--accent-primary);margin-right:6px">✓</span><strong>' + h.name + '</strong> <span style="color:var(--text-muted)">' + h.qty + ' ' + h.unit + '</span></div>';
-      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">待廠長蕭志成回報</span>';
+      if (canFactory) {
+        html += '<button onclick="factoryConfirm(' + h.id + ')" style="padding:8px 16px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">✅ 回報確認</button>';
+      } else {
+        html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">待廠長蕭志成回報</span>';
+      }
       html += '</div>';
     });
     html += '</div>';
@@ -3180,7 +3185,7 @@ function renderPendingConfirmAlert() {
   html += '</div>';
   html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(59,130,246,.2);display:flex;align-items:center;gap:8px">';
   html += '<span style="font-size:0.85rem;color:var(--text-secondary)">➡️</span>';
-  html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由廠長蕭志成登入進行回報確認</span>';
+  html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:600">請由廠長蕭志成至入庫作業回報確認</span>';
   html += '</div>';
   html += '</div>';
 
@@ -3194,16 +3199,11 @@ function renderPendingConfirm() {
   let list = (d.pendingIn || []).filter(h => h.status === 'pendingConfirm');
   if (list.length === 0) {el.innerHTML = ''; return;}
 
-  let canAct = (_currentRole === 'factory' || _currentRole === 'admin');
   let html = '<div style="padding:12px 14px;background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.35);border-radius:var(--radius-md);margin-bottom:12px">';
-  html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待回報確認（' + list.length + '筆）' + (canAct ? '' : ' - 需廠長蕭志成權限') + '</p>';
+  html += '<p style="font-size:0.85rem;color:var(--accent-primary);font-weight:700;margin-bottom:10px">🔵 待回報確認（' + list.length + '筆）請至入庫作業由廠長蕭志成回報確認</p>';
   list.forEach(h => {
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(59,130,246,.15)"><span><strong>' + h.name + '</strong> <span style="color:var(--text-muted)">' + h.qty + ' ' + h.unit + '</span></span>';
-    if (canAct) {
-      html += '<div style="display:flex;gap:8px"><button onclick="factoryConfirm(' + h.id + ')" style="padding:8px 16px;background:var(--accent-primary);color:#fff;border:none;border-radius:50px;font-size:0.85rem;font-weight:700;cursor:pointer">✅ 回報確認</button><button onclick="promptDelPendingConfirm(' + h.id + ')" style="padding:8px 14px;background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.4);border-radius:50px;font-size:0.85rem;cursor:pointer">🔓 刪除</button></div>';
-    } else {
-      html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:700">待廠長蕭志成回報</span>';
-    }
+    html += '<span style="font-size:0.85rem;color:var(--accent-primary);font-weight:700">待廠長蕭志成回報</span>';
     html += '</div>';
   });
   html += '</div>';
@@ -3272,7 +3272,7 @@ async function doProd() {
   saveData(d);
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 生產完成！\n等待倉管莊俊簽收並回報\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
+  alert('✅ 生產完成！\n請在入庫作業由倉管莊俊簽收後，\n再由廠長蕭志成回報確認\n品名：' + window.fmtProd(_selectedProd.name) + '\n數量：' + qty + _selectedProd.unit);
   document.getElementById('prodQtySection').style.display = 'none';
   document.querySelectorAll('#prodGrid .prod-btn').forEach(b => b.classList.remove('selected'));
   _selectedProd = null;
