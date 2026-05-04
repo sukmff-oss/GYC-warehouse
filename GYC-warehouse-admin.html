@@ -1687,9 +1687,10 @@ function stopVoiceInput() {
   <div class="login-container">
     <h1 class="system-title">國研化工管理系統</h1>
 
-    <div class="qr-section">
+    <div class="qr-section" style="display:none" id="qrSection">
       <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
     </div>
+    <button class="role-login-btn" onclick="document.getElementById('qrSection').style.display=document.getElementById('qrSection').style.display?'none':'flex'" style="background:transparent;border:2px dashed rgba(255,255,255,.25);color:rgba(255,255,255,.5);font-size:0.75rem;padding:6px 16px;border-radius:8px;cursor:pointer;margin-bottom:4px">📱 顯示 QR Code</button>
 
     <p class="role-prompt">請選擇登入身份</p>
 
