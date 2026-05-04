@@ -2367,8 +2367,25 @@ function tryLogin() {
   performLogin(role);
 }
 
-function performLogin(role) {
+async function performLogin(role) {
  localStorage.setItem('_savedRole', _currentRole); // 刷新不跳回登入
+
+ // 登入時同步雲端（等待完成再顯示頁面），確保不同電腦資料一致
+ try {
+  let cloud = await syncFromCloud();
+  if (cloud) {
+   _cachedData = null;
+   let local = getData();
+   let merged = {
+    products: (cloud.products && cloud.products.length >= local.products.length) ? cloud.products : local.products,
+    history: cloud.history || local.history || [],
+    pendingIn: cloud.pendingIn || local.pendingIn || [],
+    pendingOut: cloud.pendingOut || local.pendingOut || []
+   };
+   localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  }
+ } catch(e) { console.warn('[performLogin] 同步失敗', e); }
+
  let d = getData();
   if (d.products.length === 0) {
     d.products = PRODUCTS.map(p => ({...p, stock: 0, safety: 50}));
@@ -2567,7 +2584,23 @@ function updateBadges() {
 
 // ==================== 蘇董專用 Dashboard ====================
 let _suChart = null;
-function renderSuDashboard() {
+async function renderSuDashboard() {
+  // 登入後強制同步雲端，確保看到最新資料
+  try {
+    let cloud = await syncFromCloud();
+    if (cloud) {
+      _cachedData = null; // 清除快取
+      let local = getData();
+      let merged = {
+        products: (cloud.products && cloud.products.length >= local.products.length) ? cloud.products : local.products,
+        history: cloud.history || local.history || [],
+        pendingIn: cloud.pendingIn || local.pendingIn || [],
+        pendingOut: cloud.pendingOut || local.pendingOut || []
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    }
+  } catch(e) { console.warn('[renderSuDashboard] 同步失敗', e); }
+
   let d = getData();
   let today = new Date().toISOString().slice(0, 10);
   let now = Date.now();
