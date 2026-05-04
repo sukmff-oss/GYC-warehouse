@@ -2299,6 +2299,14 @@ function saveData(d) {
 
 function saveCategories(cats) {
   try {localStorage.setItem(CAT_KEY, JSON.stringify(cats))} catch(e) {}
+  // 分類也要同步到 JSONBin
+  try {
+    let d = {products: [], history: [], pendingIn: [], pendingOut: []};
+    let old = localStorage.getItem(STORAGE_KEY);
+    if (old) try {d = JSON.parse(old)} catch(e) {}
+    d.categories = cats;
+    syncToCloud(d);
+  } catch(e) {}
 }
 
 function getTypes() {
@@ -2401,6 +2409,11 @@ async function performLogin(role) {
     pendingOut: cloud.pendingOut || local.pendingOut || []
    };
    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+   // 分類也要同步：取資料多的那一方的分類
+   let localCats = getTypes();
+   let cloudCats = cloud.categories || [];
+   let mergedCats = (cloudCats.length >= localCats.length) ? cloudCats : localCats;
+   if (mergedCats.length > 0) saveCategories(mergedCats);
   }
  } catch(e) { console.warn('[performLogin] 同步失敗', e); }
 
