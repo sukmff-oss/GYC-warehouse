@@ -111,6 +111,7 @@ html, body {
   width: min(420px, 95vw);
   text-align: center;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* 系統標題 - 大字體 + 發光效果 */
 .system-title {
@@ -1766,6 +1767,15 @@ function stopVoiceInput() {
       <button onclick="backToRoles()" style="margin-top:12px;width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;color:var(--text-secondary);cursor:pointer;font-size:0.9rem">← 返回</button>
     </div>
   </div>
+
+  <!-- 同步載入遮罩 -->
+  <div id="syncOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div>
+      <p style="color:#fff;font-size:1.1rem;font-weight:700;margin:0">🔄 同步資料中...</p>
+      <p style="color:rgba(255,255,255,.6);font-size:0.8rem;margin:0">請稍候</p>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ 主選單頁面 ═══ -->
@@ -2371,6 +2381,12 @@ function tryLogin() {
 
 async function performLogin(role) {
  localStorage.setItem('_savedRole', _currentRole); // 刷新不跳回登入
+ document.getElementById('loginPwd').value = '';
+ document.getElementById('pwdSection').style.display = 'none';
+ document.getElementById('roleLoginGrid').style.display = 'grid';
+ // 顯示同步遮罩
+ var ov = document.getElementById('syncOverlay');
+ ov.style.display = 'flex';
 
  // 登入時同步雲端（等待完成再顯示頁面），確保不同電腦資料一致
  try {
@@ -2397,6 +2413,8 @@ async function performLogin(role) {
   updateMenuIconColors();
   applyRolePermissions();
 
+  // 隱藏同步遮罩，顯示主選單
+  ov.style.display = 'none';
   document.getElementById('loginPage').classList.remove('active');
   showPage('menuPage');
   document.getElementById('welcomeName').textContent = role.name;
