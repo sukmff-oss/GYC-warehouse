@@ -3015,16 +3015,20 @@ function coReset() {
 
 // 開啟相機
 async function coStartCamera() {
+  console.log('[coStartCamera] 啟動');
   coReset();
   let overlay = document.getElementById('coCameraOverlay');
   overlay.style.display = 'flex';
   let video = document.getElementById('coVideo');
   try {
+    console.log('[coStartCamera] 請求相機權限');
     let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    console.log('[coStartCamera] 相機已開啟', stream);
     video.srcObject = stream;
     _coStream = stream;
   } catch(e) {
-    alert('無法開啟相機，請確認已授權相機權限');
+    console.error('[coStartCamera] 相機錯誤:', e);
+    alert('無法開啟相機：' + e.message + '\n請確認已授權相機權限，且使用 HTTPS 或 localhost');
     coStopCamera();
   }
 }
