@@ -3060,6 +3060,7 @@ async function coStartCamera() {
     let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
     console.log('[coStartCamera] 相機已開啟', stream);
     video.srcObject = stream;
+    await video.play(); // 強制播放，確保第一幀就緒
     _coStream = stream;
   } catch(e) {
     console.error('[coStartCamera] 相機錯誤:', e);
@@ -3080,12 +3081,22 @@ function coStopCamera() {
 function coSnapPhoto() {
   let video = document.getElementById('coVideo');
   let canvas = document.getElementById('coCanvas');
-  canvas.width = video.videoWidth || 800;
-  canvas.height = video.videoHeight || 600;
   let ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  coStopCamera();
-  coAnalyzeImage(canvas);
+
+  // 等待 video 尺寸就緒（mobile 需要等 loadedmetadata）
+  let tryCapture = () => {
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      video.addEventListener('loadedmetadata', tryCapture, { once: true });
+      return;
+    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    coStopCamera();
+    coAnalyzeImage(canvas);
+  };
+
+  tryCapture();
 }
 
 // 從相簿選擇圖片
@@ -3125,17 +3136,33 @@ function coDrop(e) {
   e.stopPropagation();
   document.getElementById('coDropZone').classList.remove('drag-over');
   let files = e.dataTransfer.files;
-  if (files.length > 0 && files[0].type.startsWith('image/')) {
-    let input = document.getElementById('coDropInput');
-    let dt = new DataTransfer();
-    dt.items.add(files[0]);
-    input.files = dt.files;
-    coFileSelected(input);
+  if (files.length === 0) return;
+  let file = files[0];
+  if (!file.type.startsWith('image/')) {
+    alert('請拖曳圖片檔案（PNG / JPG / WEBP）');
+    return;
   }
+  coStopCamera();
+  let reader = new FileReader();
+  reader.onload = function(ev) {
+    let img = new Image();
+    img.onload = function() {
+      let canvas = document.getElementById('coCanvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      console.log('[coDrop] 圖片尺寸:', canvas.width, 'x', canvas.height);
+      coAnalyzeImage(canvas);
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 // 分析圖片：base64 → vision API
 async function coAnalyzeImage(canvas) {
+  console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
   document.getElementById('coResultSection').style.display = 'none';
   let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
@@ -3207,22 +3234,27 @@ async function coAnalyzeImage(canvas) {
   coDisplayResults(parsed);
 }
 
-// 取 NVIDIA token（從 auth.json）
+// 取 NVIDIA token（從 auth.json — 在 localhost 或 WSL 環境下可透過 server 讀取）
 async function coGetNvToken() {
   try {
     let txt = await (await fetch('/mnt/c/Users/SUKM/.openclaw/auth.json')).text();
     let j = JSON.parse(txt);
     return j.credential_pool?.nvidia?.[0]?.access_token || '';
-  } catch(e) { return ''; }
+  } catch(e) {
+    console.warn('[coGetNvToken] 無法從 auth.json 讀取，使用測試 key');
+    return ''; // 讓 caller fallback 到 Groq
+  }
 }
 
-// 取 Groq token
+// 嘗試從本機讀取 Groq token
 async function coGetGroqToken() {
   try {
     let txt = await (await fetch('/mnt/c/Users/SUKM/.openclaw/auth.json')).text();
     let j = JSON.parse(txt);
     return j.credential_pool?.groq?.[0]?.api_key || '';
-  } catch(e) { return ''; }
+  } catch(e) {
+    return ''; // 讓 caller fallback
+  }
 }
 
 // 解析 AI 回覆文字 → items[]
