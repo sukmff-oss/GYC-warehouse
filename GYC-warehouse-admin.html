@@ -3160,7 +3160,7 @@ function coDrop(e) {
   reader.readAsDataURL(file);
 }
 
-// 分析圖片：base64 → vision API
+// 分析圖片：base64 → vision API（含超時保護）
 async function coAnalyzeImage(canvas) {
   console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
@@ -3168,68 +3168,106 @@ async function coAnalyzeImage(canvas) {
   let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   let base64 = dataUrl.split(',')[1];
   let answer = null;
+
+  // 設定超時
+  let timeoutId = setTimeout(() => {
+    console.warn('[coAnalyzeImage] API 呼叫超時');
+    answer = '__TIMEOUT__';
+  }, 15000); // 15秒超時
+
   try {
     // 嘗試 NVIDIA Vision（ llama-3.2-11b-vision ）
-    let res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + await coGetNvToken(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'meta/llama-3.2-11b-vision-instruct',
-        messages: [{ role: 'user', content: [
-          { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } },
-          { type: 'text', text: '你是一個工廠庫存管理助手。請仔細看這張訂單圖片，解析出所有產品品名和數量。\n品名格式如：WP-175、WP-270、WP-373、WP-972 等（代號-數字）。\n數量單位是公斤（KG）。\n請用以下 JSON 格式回覆（只回 JSON，別的文字都不要）：\n{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }\n如果無法確認品名，請猜測最可能的品名。' }
-        ]}],
-        max_tokens: 1024,
-        temperature: 0.1
-      })
-    });
-    if (res.ok) {
-      let json = await res.json();
-      answer = json.choices?.[0]?.message?.content || '';
-    }
-  } catch(e) { console.warn('[coAnalyzeImage] NVIDIA 失敗', e); }
-
-  // fallback：嘗試 Groq LLaVA
-  if (!answer) {
-    try {
-      let res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    let nvToken = await coGetNvToken();
+    if (nvToken) {
+      console.log('[coAnalyzeImage] 嘗試 NVIDIA Vision');
+      let res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + (await coGetGroqToken()), 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + nvToken, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llava-1.5-7b-hf',
+          model: 'meta/llama-3.2-11b-vision-instruct',
           messages: [{ role: 'user', content: [
-            { type: 'text', text: '你是一個工廠庫存管理助手。請解析這張訂單圖片中的品名和數量（公斤）。品名格式如 WP-175、WP-373、WP-972 等。請只回覆 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }' },
-            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } }
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } },
+            { type: 'text', text: '你是一個工廠庫存管理助手。請仔細看這張訂單圖片，解析出所有產品品名和數量。\n品名格式如：WP-175、WP-270、WP-373、WP-972 等（代號-數字）。\n數量單位是公斤（KG）。\n請用以下 JSON 格式回覆（只回 JSON，別的文字都不要）：\n{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }\n如果無法確認品名，請猜測最可能的品名。' }
           ]}],
-          max_tokens: 1024
+          max_tokens: 1024,
+          temperature: 0.1
         })
       });
       if (res.ok) {
         let json = await res.json();
         answer = json.choices?.[0]?.message?.content || '';
+        console.log('[coAnalyzeImage] NVIDIA 回應:', answer.slice(0, 200));
       }
-    } catch(e) { console.warn('[coAnalyzeImage] Groq 失敗', e); }
+    }
+  } catch(e) { console.warn('[coAnalyzeImage] NVIDIA 失敗', e); }
+
+  // fallback：Groq LLaVA
+  if (!answer || answer === '__TIMEOUT__') {
+    let groqKey = await coGetGroqToken();
+    if (groqKey) {
+      try {
+        console.log('[coAnalyzeImage] 嘗試 Groq LLaVA');
+        let res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + groqKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'llava-1.5-7b-hf',
+            messages: [{ role: 'user', content: [
+              { type: 'text', text: '你是工廠庫存助手。解析訂單圖片中的品名（如 WP-175）和數量（公斤）。只回 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }' },
+              { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } }
+            ]}],
+            max_tokens: 1024
+          })
+        });
+        if (res.ok) {
+          let json = await res.json();
+          answer = json.choices?.[0]?.message?.content || '';
+          console.log('[coAnalyzeImage] Groq 回應:', answer.slice(0, 200));
+        }
+      } catch(e) { console.warn('[coAnalyzeImage] Groq 失敗', e); }
+    }
   }
 
-  // fallback：嘗試 Ollama Moondream
-  if (!answer) {
+  // fallback：Ollama Moondream
+  if (!answer || answer === '__TIMEOUT__') {
     try {
+      console.log('[coAnalyzeImage] 嘗試 Ollama Moondream');
       let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.8));
       let form = new FormData();
       form.append('image', blob, 'order.jpg');
-      form.append('prompt', '請解析這張訂單圖片中的品名（如 WP-175）和數量（公斤）。只回 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }');
-      let res = await fetch('http://localhost:11434/api/generate', {
-        method: 'POST',
-        body: form
-      });
+      form.append('prompt', '解析這張訂單圖片中的品名（如 WP-175）和數量（公斤）。只回 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }');
+      let res = await fetch('http://localhost:11434/api/generate', { method: 'POST', body: form });
       if (res.ok) {
         let json = await res.json();
         answer = json.response || '';
+        console.log('[coAnalyzeImage] Ollama 回應:', answer.slice(0, 200));
       }
     } catch(e) { console.warn('[coAnalyzeImage] Ollama 失敗', e); }
   }
 
+  clearTimeout(timeoutId);
   document.getElementById('coLoading').style.display = 'none';
+
+  if (!answer || answer === '__TIMEOUT__') {
+    document.getElementById('coLoading').style.display = 'none';
+    let resultSection = document.getElementById('coResultSection');
+    resultSection.style.display = 'block';
+    document.getElementById('coResultItems').innerHTML = `
+      <div style="text-align:center;padding:24px;color:rgba(255,255,255,0.4)">
+        <div style="font-size:2rem;margin-bottom:10px">❌</div>
+        <div style="font-size:0.9rem;font-weight:600;color:#ef4444;margin-bottom:6px">所有 AI API 都無法使用</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6">
+          請透過以下方式繼續：<br>
+          ① 聯絡國研化工協助解析<br>
+          ② 或使用下方手動輸入品項
+        </div>
+      </div>`;
+    document.getElementById('coResultCount').textContent = '';
+    document.getElementById('coNotifyBar').style.display = 'none';
+    document.getElementById('coRoleChips').innerHTML = '';
+    return;
+  }
+
   let parsed = coParseAnswer(answer);
   coDisplayResults(parsed);
 }
