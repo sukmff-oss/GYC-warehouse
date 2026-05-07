@@ -2615,6 +2615,13 @@ function stopVoiceInput() {
     <button class="co-cam-btn" id="coSnapBtn" onclick="coSnapPhoto()">📸 拍攝</button>
     <button class="co-cam-btn" id="coCloseCamBtn" onclick="coStopCamera()">✕ 關閉</button>
   </div>
+  <!-- 備案：圖片選擇（支援無相機的 WebView） -->
+  <div style="margin-top:14px;text-align:center">
+    <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;cursor:pointer">
+      📁 或者選擇相簿圖片
+      <input type="file" accept="image/*" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
+    </label>
+  </div>
 </div>
 
 <script>
@@ -3051,6 +3058,27 @@ function coSnapPhoto() {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   coStopCamera();
   coAnalyzeImage(canvas);
+}
+
+// 從相簿選擇圖片
+function coFileSelected(input) {
+  if (!input.files || !input.files[0]) return;
+  coStopCamera();
+  let file = input.files[0];
+  let reader = new FileReader();
+  reader.onload = function(e) {
+    let img = new Image();
+    img.onload = function() {
+      let canvas = document.getElementById('coCanvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      coAnalyzeImage(canvas);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 // 分析圖片：base64 → vision API
