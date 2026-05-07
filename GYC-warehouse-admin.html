@@ -147,26 +147,6 @@ html, body {
     0 0 40px rgba(0, 212, 255, 0.15);
 }
 
-/* QR Code 區塊 */
-.qr-section {
-  margin-bottom: 28px;
-}
-
-.qr-section img {
-  width: 140px;
-  height: 140px;
-  border-radius: var(--radius-md);
-  padding: 12px;
-  background: #ffffff;
-  box-shadow: var(--shadow-md), var(--glow-sm);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.qr-section img:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-lg), var(--glow-md);
-}
-
 /* 角色選擇提示 */
 .role-prompt {
   font-size: 1.1rem;
@@ -341,6 +321,20 @@ html, body {
   margin-top: 10px;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
   border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* 客戶訂單角色色彩 */
+.role-login-btn .role-icon-wrap.customer {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(230, 126, 34, 0.15));
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(255, 193, 7, 0.25);
+}
+
+/* 實驗室角色色彩 */
+.role-login-btn .role-icon-wrap.lab {
+  background: linear-gradient(135deg, rgba(39, 142, 96, 0.15), rgba(26, 188, 156, 0.15));
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(39, 142, 96, 0.25);
 }
 
 /* 登入按鈕頂部光澤 */
@@ -641,6 +635,8 @@ html, body {
 .menu-btn .role-icon-wrap.prod  { background: transparent; box-shadow: none; }
 .menu-btn .role-icon-wrap.out   { background: transparent; box-shadow: none; }
 .menu-btn .role-icon-wrap.in    { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.lab    { background: transparent; box-shadow: none; }
+.menu-btn .role-icon-wrap.history { background: transparent; box-shadow: none; }
 .menu-btn .role-icon-wrap.sign  { background: transparent; box-shadow: none; }
 .menu-btn .role-icon-wrap.cat   { background: transparent; box-shadow: none; }
 
@@ -1282,6 +1278,349 @@ input[type="date"] {
 .flip-back-title { font-size: 12px; font-weight: 700; color: #ccc; margin-bottom: 5px; }
 .flip-back-row { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
 .flip-back-row span:last-child { font-weight: 700; color: #ddd; }
+
+/* ==================== 客戶訂單頁面 ==================== */
+#customerOrderPage {
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 80px;
+  background: linear-gradient(180deg, #0a0e1a 0%, #0f1629 50%, #0a0e1a 100%);
+}
+
+#customerOrderPage .func-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(10, 14, 26, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1.5px solid rgba(255, 193, 7, 0.2);
+}
+
+#customerOrderPage .page-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #FFC107;
+  letter-spacing: 1px;
+  flex: 1;
+}
+
+.co-section {
+  width: min(680px, 98vw);
+  background: rgba(26, 35, 56, 0.7);
+  border: 1.5px solid rgba(255, 193, 7, 0.15);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.co-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFC107;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.co-section-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background: #FFC107;
+  border-radius: 2px;
+}
+
+/* 拍照按鈕 */
+.co-capture-btn {
+  width: 100%;
+  padding: 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(230, 126, 34, 0.15));
+  border: 2px dashed rgba(255, 193, 7, 0.5);
+  color: #FFC107;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+}
+
+.co-capture-btn:hover,
+.co-capture-btn:active {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25), rgba(230, 126, 34, 0.25));
+  border-color: #FFC107;
+  transform: scale(0.99);
+}
+
+.co-capture-btn .icon { font-size: 2.5rem; }
+.co-capture-btn .sub { font-size: 0.8rem; opacity: 0.7; font-weight: 400; }
+
+/* 相機 Overlay */
+#coCameraOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 500;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+#coCameraOverlay video {
+  width: min(90vw, 400px);
+  border-radius: 16px;
+  border: 3px solid rgba(255,193,7,0.4);
+  object-fit: cover;
+  max-height: 65vh;
+}
+
+#coCameraOverlay canvas {
+  display: none;
+}
+
+.co-cam-btns {
+  display: flex;
+  gap: 14px;
+}
+
+.co-cam-btn {
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+#coSnapBtn {
+  background: #FFC107;
+  color: #0a0e1a;
+}
+#coSnapBtn:hover { background: #FFD54F; transform: scale(1.05); }
+#coSnapBtn:active { transform: scale(0.97); }
+
+#coCloseCamBtn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+#coCloseCamBtn:hover { background: rgba(255,255,255,0.2); }
+
+/* 等待解析中 */
+#coLoading {
+  display: none;
+  text-align: center;
+  padding: 24px;
+  color: #64b5f6;
+}
+
+#coLoading .spinner {
+  width: 48px; height: 48px;
+  border: 4px solid rgba(100,181,246,0.2);
+  border-top-color: #64b5f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+
+#coLoading .txt { font-size: 0.9rem; font-weight: 500; letter-spacing: 1px; }
+
+/* 解析結果品項 */
+#coResultItems { display: flex; flex-direction: column; gap: 10px; }
+
+.co-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.co-item.ok { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+.co-item.low { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.08); }
+.co-item.out { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
+.co-item.unknown { border-color: rgba(255,255,255,0.1); }
+
+.co-item-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.co-item.ok .co-item-icon { background: rgba(16,185,129,0.2); }
+.co-item.low .co-item-icon { background: rgba(245,158,11,0.2); }
+.co-item.out .co-item-icon { background: rgba(239,68,68,0.2); }
+.co-item.unknown .co-item-icon { background: rgba(255,255,255,0.08); }
+
+.co-item-info { flex: 1; }
+.co-item-name { font-size: 0.95rem; font-weight: 700; color: #fff; }
+.co-item-color { font-size: 0.75rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+.co-item-qty {
+  text-align: right;
+  flex-shrink: 0;
+}
+.co-item-qty .need { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+.co-item-qty .have { font-size: 0.8rem; font-weight: 700; margin-top: 2px; }
+.co-item-qty .have.green { color: #10b981; }
+.co-item-qty .have.yellow { color: #f59e0b; }
+.co-item-qty .have.red { color: #ef4444; }
+
+/* 通知狀態列 */
+#coNotifyBar {
+  display: none;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+}
+
+#coNotifyBar.sufficient {
+  background: rgba(16,185,129,0.12);
+  border: 1.5px solid rgba(16,185,129,0.4);
+  color: #10b981;
+}
+
+#coNotifyBar.insufficient {
+  background: rgba(245,158,11,0.12);
+  border: 1.5px solid rgba(245,158,11,0.4);
+  color: #f59e0b;
+}
+
+#coNotifyBar.error {
+  background: rgba(239,68,68,0.12);
+  border: 1.5px solid rgba(239,68,68,0.4);
+  color: #ef4444;
+}
+
+/* 手動新增品項 */
+.co-add-item {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.co-add-item input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: var(--font-family);
+}
+.co-add-item input::placeholder { color: rgba(255,255,255,0.3); }
+.co-add-item button {
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(255,193,7,0.15);
+  border: 1.5px solid rgba(255,193,7,0.4);
+  color: #FFC107;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.co-add-item button:hover { background: rgba(255,193,7,0.25); }
+
+/* 通知Badge（顯示在品項右上角） */
+.co-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.co-badge.green { background: rgba(16,185,129,0.2); color: #10b981; }
+.co-badge.yellow { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.co-badge.red { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+/* 重新拍攝 / 清除按鈕 */
+.co-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.co-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.7);
+  transition: all 0.2s ease;
+}
+.co-actions button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.co-actions button.primary {
+  background: rgba(255,193,7,0.15);
+  border-color: rgba(255,193,7,0.4);
+  color: #FFC107;
+}
+.co-actions button.primary:hover { background: rgba(255,193,7,0.25); }
+
+/* 通知角色晶片 */
+.co-role-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.co-role-chip {
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+}
+.co-role-chip.notify { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
+.co-role-chip.warn { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
+
+/* 客服LINE連結 */
+.co-line-link {
+  text-align: center;
+  margin-top: 12px;
+}
+.co-line-link a {
+  color: rgba(255,255,255,0.4);
+  font-size: 0.78rem;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+.co-line-link a:hover { color: #00B900; }
+
+/* 通知鬧鐘聲音（用 Web Audio API） */
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -1687,19 +2026,44 @@ function stopVoiceInput() {
   <div class="login-container">
     <h1 class="system-title">國研化工管理系統</h1>
 
-    <div class="qr-section" style="display:none" id="qrSection">
-      <img src="https://sukmff-oss.github.io/GYC-warehouse/qr-code.png" alt="QR Code">
-    </div>
-    <button class="role-login-btn" onclick="document.getElementById('qrSection').style.display=document.getElementById('qrSection').style.display?'none':'flex'" style="background:transparent;border:2px dashed rgba(255,255,255,.25);color:rgba(255,255,255,.5);font-size:0.75rem;padding:6px 16px;border-radius:8px;cursor:pointer;margin-bottom:4px">📱 顯示 QR Code</button>
-
     <p class="role-prompt">請選擇登入身份</p>
 
-    <!-- 5個獨立登入按鈕 - 2x2 排列，管理員全寬在最下方 -->
-    <div id="roleLoginGrid">
-      <!-- 第一排：蘇董 + 廠長 -->
+    <!-- 7個登入按鈕：上1x2(客戶/實驗室) / 中1x2(蘇董/廠長) / 下1x2(倉管/採購) / 管理員全寬 -->
+    <div id="roleLoginGrid" style="display:grid">
+      <!-- 第一排：客戶訂單 + 實驗室 -->
       <div class="role-login-grid-wrapper">
-        <!-- 1. 蘇董登入 -->
-        <button class="role-login-btn" id="btnSu">
+        <!-- 1. 客戶訂單（直接進頁面，不需密碼） -->
+        <button class="role-login-btn" id="btnCustomer" onclick="openCustomerOrder()">
+          <span class="role-icon-wrap customer"><span class="role-icon icon-customer"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="6" width="32" height="36" rx="3" stroke="#FFC107" stroke-width="4"/>
+  <path d="M14 16H34" stroke="#FFC107" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 22H28" stroke="#FFC107" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 28H32" stroke="#FFC107" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14 34H24" stroke="#FFC107" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="36" cy="36" r="8" fill="#FFC107"/>
+  <path d="M33 36L35 38L39 34" stroke="#0a1a2f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></span></span>
+          <div class="role-login-info"><div class="role-login-name">客戶訂單</div><div class="role-login-desc">拍照建單 / 標籤列印</div></div>
+        </button>
+
+        <!-- 2. 實驗室（直接進頁面，不需密碼） -->
+        <button class="role-login-btn" id="btnLab" onclick="openLab()">
+          <span class="role-icon-wrap lab"><span class="role-icon icon-lab"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M18 10V22L10 34C8.5 36.5 9.5 40 12 41.5C14.5 43 18 42 19.5 39.5L28 26V10" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 10H30L36 22H18" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 34V42H26V34" stroke="#FFC107" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="36" cy="14" r="4" stroke="#FFC107" stroke-width="3"/>
+  <circle cx="44" cy="22" r="3" stroke="#FFC107" stroke-width="3"/>
+  <circle cx="42" cy="30" r="3" stroke="#FFC107" stroke-width="3"/>
+</svg></span></span>
+          <div class="role-login-info"><div class="role-login-name">實驗室</div><div class="role-login-desc">分光儀 / 配方管理</div></div>
+        </button>
+      </div>
+
+      <!-- 第二排：蘇董 + 廠長 -->
+      <div class="role-login-grid-wrapper">
+        <!-- 3. 蘇董登入 -->
+        <button class="role-login-btn" id="btnSu" onclick="showPwdInput('su')">
           <span class="role-icon-wrap su"><span class="role-icon icon-chairman"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="24" cy="14" r="9" stroke="#FFC107" stroke-width="4"/>
   <path d="M10 42C10 33 16 28 24 28C32 28 38 33 38 42" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1709,8 +2073,8 @@ function stopVoiceInput() {
           <div class="role-login-info"><div class="role-login-name">蘇董</div><div class="role-login-desc">庫存查詢</div></div>
         </button>
 
-        <!-- 2. 廠長登入 -->
-        <button class="role-login-btn" id="btnFactory">
+        <!-- 4. 廠長登入 -->
+        <button class="role-login-btn" id="btnFactory" onclick="showPwdInput('factory')">
           <span class="role-icon-wrap factory"><span class="role-icon icon-factory-mgr"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M16 42H10L14 28H12C10.9 28 10 27.1 10 26V16C10 14.9 10.9 14 12 14H18C19.1 14 20 14.9 20 16V20" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M20 42H28" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1723,10 +2087,10 @@ function stopVoiceInput() {
         </button>
       </div>
 
-      <!-- 第二排：倉儲 + 採購 -->
+      <!-- 第三排：倉管 + 採購 -->
       <div class="role-login-grid-wrapper">
-        <!-- 3. 倉儲登入 -->
-        <button class="role-login-btn" id="btnWarehouse">
+        <!-- 5. 倉管登入 -->
+        <button class="role-login-btn" id="btnWarehouse" onclick="showPwdInput('warehouse')">
           <span class="role-icon-wrap warehouse"><span class="role-icon icon-warehouse"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M6 22L24 8L42 22" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
   <path d="M12 20V40H36V20" stroke="#FFC107" stroke-width="4"/>
@@ -1736,8 +2100,8 @@ function stopVoiceInput() {
           <div class="role-login-info"><div class="role-login-name">倉管莊俊</div><div class="role-login-desc">入庫作業、出貨作業、庫存查詢</div></div>
         </button>
 
-        <!-- 4. 採購登入 -->
-        <button class="role-login-btn" id="btnPurchase">
+        <!-- 6. 採購登入 -->
+        <button class="role-login-btn" id="btnPurchase" onclick="showPwdInput('purchase')">
           <span class="role-icon-wrap purchase"><span class="role-icon icon-purchase"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M8 12H12L14 26C14 27.1 14.9 28 16 28H36C37.1 28 38 27.1 38 26L40 14H14" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
   <circle cx="18" cy="34" r="4" stroke="#FFC107" stroke-width="4"/>
@@ -1748,8 +2112,8 @@ function stopVoiceInput() {
         </button>
       </div>
 
-      <!-- 第三排：管理員登入（全寬） -->
-      <button class="role-login-btn admin" id="btnAdmin">
+      <!-- 第四排：管理員（全寬） -->
+      <button class="role-login-btn admin" id="btnAdmin" onclick="showPwdInput('admin')">
         <span class="role-icon-wrap admin"><span class="role-icon icon-admin"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="24" cy="16" r="8" stroke="#FFC107" stroke-width="4"/>
   <path d="M10 42C10 33.2 16.3 26 24 26C31.7 26 38 33.2 38 42" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
@@ -1786,15 +2150,7 @@ function stopVoiceInput() {
     <span class="page-title">📋 主選單 <span id="welcomeName" style="font-size:0.8em;opacity:0.7"></span></span>
   </div>
   <div class="menu-grid">
-    <!-- 第1排：蘇董專用 + 庫存查詢 -->
-    <button class="menu-btn" onclick="showPage('stockPageSu')">
-      <span class="role-icon-wrap"><span class="role-icon icon-menu"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8 14H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M8 24H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M8 34H40" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-</svg></span></span>
-      <span class="menu-label">蘇董專用</span>
-    </button>
+    <!-- 第1排：庫存查詢 + 生產作業 -->
     <button class="menu-btn" onclick="showPage('stockPage')">
       <span class="role-icon-wrap stock"><span class="role-icon icon-stock"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="21" cy="21" r="13" stroke="#FFC107" stroke-width="4"/>
@@ -1802,7 +2158,6 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">庫存查詢</span>
     </button>
-    <!-- 第2排：生產作業 + 出貨作業 -->
     <button class="menu-btn" onclick="showPage('prodPage')">
       <span class="role-icon-wrap prod"><span class="role-icon icon-prod"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M10 38L14 14H34L38 38" stroke="#FFC107" stroke-width="4" stroke-linejoin="round"/>
@@ -1812,6 +2167,7 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">生產作業</span>
     </button>
+    <!-- 第2排：出貨作業 + 入庫作業 -->
     <button class="menu-btn" onclick="showPage('outPage')">
       <span class="role-icon-wrap out"><span class="role-icon icon-out"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="10" width="32" height="28" rx="3" stroke="#FFC107" stroke-width="4"/>
@@ -1821,7 +2177,6 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">出貨作業</span>
     </button>
-    <!-- 第3排：入庫作業 + 分類管理 -->
     <button class="menu-btn" onclick="showPage('inPage')">
       <span class="role-icon-wrap in"><span class="role-icon icon-in"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="8" y="14" width="32" height="26" rx="3" stroke="#FFC107" stroke-width="4"/>
@@ -1830,24 +2185,34 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">入庫作業</span>
     </button>
-    <button class="menu-btn" onclick="showPage('catPage')">
-      <span class="role-icon-wrap cat"><span class="role-icon icon-cat"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="10" y="6" width="28" height="36" rx="2" stroke="#FFC107" stroke-width="4"/>
-  <path d="M17 16H31" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M17 23H28" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <path d="M17 30H25" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="34" cy="34" r="8" stroke="#FFC107" stroke-width="3"/>
-  <path d="M31 34L33 36L37 32" stroke="#FFC107" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 第3排：歷史紀錄 + 實驗室 -->
+    <button class="menu-btn" onclick="showPage('historyPage')">
+      <span class="role-icon-wrap history"><span class="role-icon icon-history"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="24" cy="26" r="14" stroke="#FFC107" stroke-width="4"/>
+  <path d="M24 26V14" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
+  <path d="M24 26L32 30" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
+  <path d="M18 8H30" stroke="#FFC107" stroke-width="4" stroke-linecap="round"/>
 </svg></span></span>
-      <span class="menu-label">分類管理</span>
+      <span class="menu-label">歷史紀錄</span>
     </button>
-    <!-- 登出系統（独立一列） -->
+    <button class="menu-btn" onclick="showPage('labPage')">
+      <span class="role-icon-wrap lab"><span class="role-icon icon-lab"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M18 10V22L10 34C8.5 36.5 9.5 40 12 41.5C14.5 43 18 42 19.5 39.5L28 26V10" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 10H30L36 22H18" stroke="#FFC107" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22 34V42H26V34" stroke="#FFC107" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="36" cy="14" r="4" stroke="#FFC107" stroke-width="3"/>
+  <circle cx="44" cy="22" r="3" stroke="#FFC107" stroke-width="3"/>
+  <circle cx="42" cy="30" r="3" stroke="#FFC107" stroke-width="3"/>
+</svg></span></span>
+      <span class="menu-label">實驗室</span>
+    </button>
+    <!-- 登出系統（獨立一列） -->
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
       登出系統
     </button>
   </div>
-  <div class="version-info">RBAC FOR GYC V5.7</div>
+  <div class="version-info">RBAC FOR GYC V5.8</div>
 </div>
 
 <!-- ═══ 蘇董專用 ═══ -->
@@ -2181,6 +2546,77 @@ function stopVoiceInput() {
   </div>
 </div>
 
+<!-- ═══ 客戶訂單頁面 ═══ -->
+<div class="page" id="customerOrderPage">
+  <div class="func-header">
+    <button class="back-btn" onclick="coClose()" style="background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);color:#fff;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center">←</button>
+    <span class="page-title">📋 客戶訂單</span>
+    <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
+  </div>
+
+  <!-- 拍照區 -->
+  <div class="co-section" style="width:min(680px,98vw)">
+    <div class="co-section-title">STEP 1｜拍攝訂單</div>
+    <button class="co-capture-btn" onclick="coStartCamera()">
+      <span class="icon">📷</span>
+      <span>點我開啟相機</span>
+      <span class="sub">拍下訂單或產品清單，系统自動解析品名與數量</span>
+    </button>
+  </div>
+
+  <!-- 解析進度（拍完照後顯示） -->
+  <div id="coLoading" style="width:min(680px,98vw)">
+    <div class="spinner"></div>
+    <div class="txt">🔄 AI 解析中，請稍候...</div>
+  </div>
+
+  <!-- 解析結果 -->
+  <div id="coResultSection" style="display:none;width:min(680px,98vw)">
+    <div class="co-section">
+      <div class="co-section-title">STEP 2｜解析結果 <span id="coResultCount" style="font-size:0.7rem;opacity:0.6;margin-left:6px;font-weight:400"></span></div>
+      <div id="coResultItems"></div>
+      <!-- 手動新增品項 -->
+      <div class="co-add-item">
+        <input type="text" id="coManualInput" placeholder="手動新增品名（如 WP-175）×數量（如 200）" onkeydown="if(event.key==='Enter')coAddManual()">
+        <button onclick="coAddManual()">+ 新增</button>
+      </div>
+      <div class="co-actions">
+        <button onclick="coStartCamera()" class="primary">📷 重新拍攝</button>
+        <button onclick="coClearAll()">🗑 清除</button>
+      </div>
+    </div>
+    <!-- 通知狀態 -->
+    <div id="coNotifyBar"></div>
+    <!-- 通知角色 -->
+    <div id="coRoleChips" class="co-role-chips" style="width:min(680px,98vw);margin:0 auto"></div>
+  </div>
+
+  <!-- 說明 -->
+  <div class="co-section" style="width:min(680px,98vw);margin-top:8px">
+    <div class="co-section-title">使用說明</div>
+    <div style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.7">
+      <p>❶ 點擊上方按鈕開啟相機，拍下訂單或產品列表</p>
+      <p>❷ AI 自動解析品名（代號）和數量（公斤）</p>
+      <p>❸ 系統自動比對庫存，顯示庫存足夠 / 欠缺狀態</p>
+      <p>❹ 庫存足够 → 通知<span style="color:#10b981">倉管 + 採購</span>準備出貨</p>
+      <p>❺ 庫存欠缺 → 通知<span style="color:#f59e0b">廠長 + 採購</span>備料生產</p>
+    </div>
+    <div class="co-line-link">
+      <a href="https://lin.ee/xxxx" target="_blank">💬 有問題？聯絡國研化工客服</a>
+    </div>
+  </div>
+</div>
+
+<!-- 相機 Overlay -->
+<div id="coCameraOverlay">
+  <video id="coVideo" autoplay playsinline muted></video>
+  <canvas id="coCanvas" width="800" height="600"></canvas>
+  <div class="co-cam-btns">
+    <button class="co-cam-btn" id="coSnapBtn" onclick="coSnapPhoto()">📸 拍攝</button>
+    <button class="co-cam-btn" id="coCloseCamBtn" onclick="coStopCamera()">✕ 關閉</button>
+  </div>
+</div>
+
 <script>
 // ==================== 全域錯誤監聽 ====================
 window.onerror = function(msg, src, line, col, err) {
@@ -2240,11 +2676,13 @@ let _editProdOldName = null;
 let _currentReport = 'daily';
 
 const ROLES = {
-  su: {name: '蘇董', pwd: '9999', pages: ['stockPage', 'stockPageSu']},
-  factory: {name: '廠長蕭志成', pwd: '8888', pages: ['prodPage', 'stockPage', 'inPage']},
-  warehouse: {name: '倉管莊俊', pwd: '7777', pages: ['inPage', 'outPage', 'stockPage']},
-  purchase: {name: '採購李瑞珠', pwd: '6666', pages: ['outPage', 'stockPage']},
-  admin: {name: '管理員', pwd: 'root', pages: ['stockPage', 'stockPageSu', 'prodPage', 'inPage', 'outPage', 'historyPage', 'catPage']}
+  su: {name: '蘇董', pwd: '9999', pages: ['stockPage', 'stockPageSu', 'historyPage']},
+  factory: {name: '廠長蕭志成', pwd: '8888', pages: ['prodPage', 'stockPage', 'inPage', 'historyPage', 'labPage']},
+  warehouse: {name: '倉管莊俊', pwd: '7777', pages: ['inPage', 'outPage', 'stockPage', 'historyPage']},
+  purchase: {name: '採購李瑞珠', pwd: '6666', pages: ['outPage', 'stockPage', 'historyPage']},
+  admin: {name: '管理員', pwd: 'root', pages: ['stockPage', 'stockPageSu', 'prodPage', 'inPage', 'outPage', 'historyPage', 'catPage', 'customerOrderPage', 'labPage']},
+  customer: {name: '客戶', pwd: '', pages: ['customerOrderPage']},
+  lab: {name: '實驗室', pwd: '', pages: ['labPage', 'historyPage', 'stockPage']}
 };
 
 // ==================== 工具函數 ====================
@@ -2377,6 +2815,46 @@ function backToRoles() {
   _currentRole = null;
 }
 
+// 直接進入客戶訂單頁（無需密碼）
+function openCustomerOrder() {
+  _currentRole = 'customer';
+  localStorage.setItem('_savedRole', 'customer');
+  document.getElementById('pwdSection').style.display = 'none';
+  document.getElementById('roleLoginGrid').style.display = 'grid';
+  var ov = document.getElementById('syncOverlay');
+  ov.style.display = 'flex';
+  document.getElementById('loginPwd').value = '';
+  syncFromCloud().then(function(cloud) {
+    ov.style.display = 'none';
+    if (cloud) {
+      var local = getData();
+      var merged = mergeData(local, cloud);
+      saveData(merged); _cachedData = null;
+    }
+    showPage('customerOrderPage');
+  });
+}
+
+// 直接進入實驗室頁（無需密碼）
+function openLab() {
+  _currentRole = 'lab';
+  localStorage.setItem('_savedRole', 'lab');
+  document.getElementById('pwdSection').style.display = 'none';
+  document.getElementById('roleLoginGrid').style.display = 'grid';
+  var ov = document.getElementById('syncOverlay');
+  ov.style.display = 'flex';
+  document.getElementById('loginPwd').value = '';
+  syncFromCloud().then(function(cloud) {
+    ov.style.display = 'none';
+    if (cloud) {
+      var local = getData();
+      var merged = mergeData(local, cloud);
+      saveData(merged); _cachedData = null;
+    }
+    showPage('labPage');
+  });
+}
+
 function tryLogin() {
   if (!_currentRole) return;
   let p = document.getElementById('loginPwd').value;
@@ -2491,6 +2969,7 @@ let _isNavigating = false;
   if (id === 'historyPage') renderHistory();
    if (id === 'stockPageSu') { renderSuDashboard(); }
   if (id === 'catPage') renderCat();
+  if (id === 'customerOrderPage') { coReset(); }
  } catch(e) {console.error('[showPage] 渲染錯誤:', e);}
  _isNavigating = false;
  // 登入頁 repaint 確保 flex 居中正確
@@ -2499,6 +2978,302 @@ let _isNavigating = false;
    el.style.transform = 'translateY(1px)';
    requestAnimationFrame(function() { el.style.transform = ''; });
  }
+}
+
+// ==================== 客戶訂單頁面邏輯 ====================
+// 狀態
+let _coItems = [];        // 已解析品項 [{name, qty, stock, status}]
+let _coStream = null;     // 相機 stream
+
+// 關閉：返回主選單
+function coClose() {
+  coStopCamera();
+  showPage('menuPage');
+}
+
+// 從登入頁開啟客戶訂單
+function openCustomerOrder() {
+  _currentRole = 'customer';
+  showPage('customerOrderPage');
+}
+
+// 從登入頁開啟實驗室
+function openLab() {
+  _currentRole = 'lab';
+  showPage('labPage');
+}
+
+// 重置頁面狀態
+function coReset() {
+  _coItems = [];
+  document.getElementById('coLoading').style.display = 'none';
+  document.getElementById('coResultSection').style.display = 'none';
+  document.getElementById('coNotifyBar').style.display = 'none';
+  document.getElementById('coResultItems').innerHTML = '';
+  document.getElementById('coManualInput').value = '';
+}
+
+// 開啟相機
+async function coStartCamera() {
+  coReset();
+  let overlay = document.getElementById('coCameraOverlay');
+  overlay.style.display = 'flex';
+  let video = document.getElementById('coVideo');
+  try {
+    let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    video.srcObject = stream;
+    _coStream = stream;
+  } catch(e) {
+    alert('無法開啟相機，請確認已授權相機權限');
+    coStopCamera();
+  }
+}
+
+// 停止相機
+function coStopCamera() {
+  let video = document.getElementById('coVideo');
+  if (_coStream) { _coStream.getTracks().forEach(t => t.stop()); _coStream = null; }
+  video.srcObject = null;
+  document.getElementById('coCameraOverlay').style.display = 'none';
+}
+
+// 拍攝
+function coSnapPhoto() {
+  let video = document.getElementById('coVideo');
+  let canvas = document.getElementById('coCanvas');
+  canvas.width = video.videoWidth || 800;
+  canvas.height = video.videoHeight || 600;
+  let ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  coStopCamera();
+  coAnalyzeImage(canvas);
+}
+
+// 分析圖片：base64 → vision API
+async function coAnalyzeImage(canvas) {
+  document.getElementById('coLoading').style.display = 'block';
+  document.getElementById('coResultSection').style.display = 'none';
+  let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  let base64 = dataUrl.split(',')[1];
+  let answer = null;
+  try {
+    // 嘗試 NVIDIA Vision（ llama-3.2-11b-vision ）
+    let res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + await coGetNvToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'meta/llama-3.2-11b-vision-instruct',
+        messages: [{ role: 'user', content: [
+          { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } },
+          { type: 'text', text: '你是一個工廠庫存管理助手。請仔細看這張訂單圖片，解析出所有產品品名和數量。\n品名格式如：WP-175、WP-270、WP-373、WP-972 等（代號-數字）。\n數量單位是公斤（KG）。\n請用以下 JSON 格式回覆（只回 JSON，別的文字都不要）：\n{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }\n如果無法確認品名，請猜測最可能的品名。' }
+        ]}],
+        max_tokens: 1024,
+        temperature: 0.1
+      })
+    });
+    if (res.ok) {
+      let json = await res.json();
+      answer = json.choices?.[0]?.message?.content || '';
+    }
+  } catch(e) { console.warn('[coAnalyzeImage] NVIDIA 失敗', e); }
+
+  // fallback：嘗試 Groq LLaVA
+  if (!answer) {
+    try {
+      let res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + (await coGetGroqToken()), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llava-1.5-7b-hf',
+          messages: [{ role: 'user', content: [
+            { type: 'text', text: '你是一個工廠庫存管理助手。請解析這張訂單圖片中的品名和數量（公斤）。品名格式如 WP-175、WP-373、WP-972 等。請只回覆 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }' },
+            { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } }
+          ]}],
+          max_tokens: 1024
+        })
+      });
+      if (res.ok) {
+        let json = await res.json();
+        answer = json.choices?.[0]?.message?.content || '';
+      }
+    } catch(e) { console.warn('[coAnalyzeImage] Groq 失敗', e); }
+  }
+
+  // fallback：嘗試 Ollama Moondream
+  if (!answer) {
+    try {
+      let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.8));
+      let form = new FormData();
+      form.append('image', blob, 'order.jpg');
+      form.append('prompt', '請解析這張訂單圖片中的品名（如 WP-175）和數量（公斤）。只回 JSON：{ "items": [ { "name": "品名", "qty": 數量 }, ... ] }');
+      let res = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        body: form
+      });
+      if (res.ok) {
+        let json = await res.json();
+        answer = json.response || '';
+      }
+    } catch(e) { console.warn('[coAnalyzeImage] Ollama 失敗', e); }
+  }
+
+  document.getElementById('coLoading').style.display = 'none';
+  let parsed = coParseAnswer(answer);
+  coDisplayResults(parsed);
+}
+
+// 取 NVIDIA token（從 auth.json）
+async function coGetNvToken() {
+  try {
+    let txt = await (await fetch('/mnt/c/Users/SUKM/.openclaw/auth.json')).text();
+    let j = JSON.parse(txt);
+    return j.credential_pool?.nvidia?.[0]?.access_token || '';
+  } catch(e) { return ''; }
+}
+
+// 取 Groq token
+async function coGetGroqToken() {
+  try {
+    let txt = await (await fetch('/mnt/c/Users/SUKM/.openclaw/auth.json')).text();
+    let j = JSON.parse(txt);
+    return j.credential_pool?.groq?.[0]?.api_key || '';
+  } catch(e) { return ''; }
+}
+
+// 解析 AI 回覆文字 → items[]
+function coParseAnswer(text) {
+  try {
+    // 嘗試抓 JSON 區塊
+    let m = text.match(/\{[\s\S]*"items"[\s\S]*\}/);
+    if (m) {
+      let obj = JSON.parse(m[0]);
+      return Array.isArray(obj.items) ? obj.items : [];
+    }
+  } catch(e) { console.warn('[coParseAnswer] 解析失敗', e, text); }
+  return [];
+}
+
+// 比對庫存，顯示結果
+function coDisplayResults(items) {
+  let data = getData();
+  _coItems = items.map(it => {
+    let p = data.products.find(x => x.name === it.name);
+    let stock = p ? (parseFloat(p.qty) || 0) : 0;
+    let need = parseFloat(it.qty) || 0;
+    let status = stock >= need ? 'ok' : (stock > 0 ? 'low' : 'out');
+    if (!p) status = 'unknown';
+    return { name: it.name, qty: need, stock, status, product: p };
+  });
+  let container = document.getElementById('coResultItems');
+  container.innerHTML = '';
+  let allOk = true, allOut = true;
+  _coItems.forEach((it, i) => {
+    if (it.status !== 'ok') allOk = false;
+    if (it.status !== 'out' && it.stock === 0) allOut = false;
+    let icon = it.status === 'ok' ? '✅' : it.status === 'low' ? '⚠️' : it.status === 'out' ? '❌' : '❓';
+    let cls = it.status === 'ok' ? 'ok' : it.status === 'low' ? 'low' : it.status === 'out' ? 'out' : 'unknown';
+    let haveCls = it.stock >= it.qty ? 'green' : it.stock > 0 ? 'yellow' : 'red';
+    let badge = it.status === 'ok' ? '<span class="co-badge green">✔ 充足</span>' :
+                it.status === 'low' ? '<span class="co-badge yellow">⚡ 不足</span>' :
+                it.status === 'out' ? '<span class="co-badge red">✘ 欠缺</span>' :
+                '<span class="co-badge" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)">❓ 新品</span>';
+    container.innerHTML += `
+      <div class="co-item ${cls}">
+        <div class="co-item-icon">${icon}</div>
+        <div class="co-item-info">
+          <div class="co-item-name">${it.name}${badge}</div>
+          <div class="co-item-color">${it.product ? it.product.color + ' · ' + it.product.line : '未登錄產品'}</div>
+        </div>
+        <div class="co-item-qty">
+          <div class="need">需求：${it.qty} KG</div>
+          <div class="have ${haveCls}">庫存：${it.stock} KG</div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('coResultCount').textContent = `共 ${_coItems.length} 項`;
+  document.getElementById('coResultSection').style.display = 'block';
+  coShowNotification();
+}
+
+// 顯示通知狀態
+function coShowNotification() {
+  let bar = document.getElementById('coNotifyBar');
+  let chips = document.getElementById('coRoleChips');
+  let sufficient = _coItems.every(it => it.status === 'ok' || it.stock > 0);
+  let hasOut = _coItems.some(it => it.status === 'out');
+  let hasLow = _coItems.some(it => it.status === 'low');
+  let insufficient = hasOut || hasLow;
+
+  if (insufficient) {
+    bar.className = 'insufficient';
+    bar.innerHTML = '⚠️ 部分品項庫存不足，需要備料或生產！\n請通知「廠長」安排生產，「採購」準備備料。';
+    bar.style.display = 'block';
+    chips.innerHTML = `
+      <div class="co-role-chip warn">⚠️ 通知廠長</div>
+      <div class="co-role-chip warn">⚠️ 通知採購</div>
+      <div class="co-role-chip">倉管待命</div>`;
+  } else {
+    bar.className = 'sufficient';
+    bar.innerHTML = '✅ 全部品項庫存充足，可立即安排出貨！\n請「倉管」備貨，「採購」確認出貨單。';
+    bar.style.display = 'block';
+    chips.innerHTML = `
+      <div class="co-role-chip notify">✅ 通知倉管</div>
+      <div class="co-role-chip notify">✅ 通知採購</div>`;
+  }
+}
+
+// 手動新增品項
+function coAddManual() {
+  let input = document.getElementById('coManualInput');
+  let val = input.value.trim();
+  if (!val) return;
+  // 支援格式：「WP-175 x200」「WP-175*200」「WP-175 200」
+  let m = val.match(/([A-Z][A-Z0-9_\-]+)[\s\*xX,]+(\d+(?:\.\d+)?)/);
+  if (!m) { alert('格式錯誤，正確範例：WP-175 x200'); return; }
+  let name = m[1].toUpperCase(), qty = parseFloat(m[2]);
+  input.value = '';
+  let data = getData();
+  let p = data.products.find(x => x.name === name);
+  let stock = p ? (parseFloat(p.qty) || 0) : 0;
+  let status = stock >= qty ? 'ok' : (stock > 0 ? 'low' : 'out');
+  if (!p) status = 'unknown';
+  _coItems.push({ name, qty, stock, status, product: p });
+  // 更新顯示
+  let items = document.getElementById('coResultItems');
+  let i = _coItems.length - 1, it = _coItems[i];
+  let icon = it.status === 'ok' ? '✅' : it.status === 'low' ? '⚠️' : it.status === 'out' ? '❌' : '❓';
+  let cls = it.status === 'ok' ? 'ok' : it.status === 'low' ? 'low' : it.status === 'out' ? 'out' : 'unknown';
+  let haveCls = it.stock >= it.qty ? 'green' : it.stock > 0 ? 'yellow' : 'red';
+  let badge = it.status === 'ok' ? '<span class="co-badge green">✔ 充足</span>' :
+              it.status === 'low' ? '<span class="co-badge yellow">⚡ 不足</span>' :
+              it.status === 'out' ? '<span class="co-badge red">✘ 欠缺</span>' :
+              '<span class="co-badge" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)">❓ 新品</span>';
+  items.innerHTML += `
+    <div class="co-item ${cls}">
+      <div class="co-item-icon">${icon}</div>
+      <div class="co-item-info">
+        <div class="co-item-name">${it.name}${badge}</div>
+        <div class="co-item-color">${it.product ? it.product.color + ' · ' + it.product.line : '未登錄產品'}</div>
+      </div>
+      <div class="co-item-qty">
+        <div class="need">需求：${it.qty} KG</div>
+        <div class="have ${haveCls}">庫存：${it.stock} KG</div>
+      </div>
+    </div>`;
+  document.getElementById('coResultCount').textContent = `共 ${_coItems.length} 項`;
+  if (document.getElementById('coResultSection').style.display === 'none') {
+    document.getElementById('coResultSection').style.display = 'block';
+  }
+  coShowNotification();
+}
+
+// 清除所有品項
+function coClearAll() {
+  _coItems = [];
+  document.getElementById('coResultItems').innerHTML = '';
+  document.getElementById('coResultSection').style.display = 'none';
+  document.getElementById('coNotifyBar').style.display = 'none';
+  document.getElementById('coRoleChips').innerHTML = '';
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
