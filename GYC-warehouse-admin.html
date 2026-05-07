@@ -2575,41 +2575,18 @@ function stopVoiceInput() {
     <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
   </div>
 
-  <!-- 拍照區 -->
+  <!-- 客戶查詢區 -->
   <div class="co-section" style="width:min(680px,98vw)">
-    <div class="co-section-title">STEP 1｜上傳訂單圖片</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <button class="co-capture-btn" onclick="coStartCamera()">
-        <span class="icon">📷</span>
-        <span>相機拍攝</span>
-        <span class="sub">手機拍照</span>
-      </button>
-      <!-- 拖曳上傳（電腦專用） -->
-      <div id="coDropZone" onclick="document.getElementById('coDropInput').click()" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)" style="margin:0;border:2px dashed rgba(255,193,7,0.3);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.3s ease">
-        <div style="font-size:1.6rem;margin-bottom:4px">🖱️</div>
-        <div style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-weight:500">拖曳圖片</div>
-        <div style="font-size:0.65rem;color:rgba(255,255,255,0.22);margin-top:2px">電腦拖檔案到此</div>
-        <input type="file" id="coDropInput" accept="image/*" style="display:none" onchange="coFileSelected(this)">
-      </div>
-    </div>
-    <div style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:4px">上傳後由國研化工人員協助解析，或使用下方手動輸入</div>
-  </div>
-
-  <!-- 解析進度（拍完照後顯示） -->
-  <div id="coLoading" style="width:min(680px,98vw)">
-    <div class="spinner"></div>
-    <div class="txt">🔄 AI 解析中，請稍候...</div>
-  </div>
-
-  <!-- 手動輸入區（主要功能） -->
-  <div class="co-section" style="width:min(680px,98vw)">
-    <div class="co-section-title">STEP 2｜手動輸入品項</div>
-    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:12px">直接輸入品名和數量，查詢結果即時更新庫存狀態</div>
+    <div class="co-section-title">查詢庫存可用性</div>
+    <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:14px">輸入您需要的品名和數量，系統立即回報庫存狀態</div>
     <div class="co-add-item">
-      <input type="text" id="coManualInput" placeholder="範例：CO-508 × 185 或 CO-508 185" onkeydown="if(event.key==='Enter')coAddManual()" style="flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(255,193,7,0.25);background:rgba(255,255,255,0.06);color:#fff;font-size:0.95rem;font-family:var(--font-family)">
-      <button onclick="coAddManual()" style="padding:12px 22px;border-radius:12px;background:linear-gradient(135deg,rgba(255,193,7,0.2),rgba(230,126,34,0.2));border:1.5px solid rgba(255,193,7,0.5);color:#FFC107;font-weight:700;cursor:pointer;font-size:0.9rem;letter-spacing:0.5px">＋ 查詢</button>
+      <input type="text" id="coManualInput" placeholder="範例：CO-508 × 185（品名 × 數量）" onkeydown="if(event.key==='Enter')coAddManual()" style="flex:1;padding:14px 18px;border-radius:14px;border:1.5px solid rgba(255,193,7,0.25);background:rgba(255,255,255,0.06);color:#fff;font-size:1rem;font-family:var(--font-family)">
+      <button onclick="coAddManual()" style="padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,rgba(255,193,7,0.25),rgba(230,126,34,0.25));border:2px solid rgba(255,193,7,0.6);color:#FFC107;font-weight:700;cursor:pointer;font-size:1rem;letter-spacing:0.5px">查 詢</button>
     </div>
-    <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:8px">支援格式：品名×數量 / 品名 數量 / 品名,數量</div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:10px;line-height:1.6">
+      支援格式：CO-508 × 185｜CO-508 * 185｜CO-508 185｜CO-508,185<br>
+      可一次查多筆，輸入後再查下一筆
+    </div>
   </div>
 
   <!-- 解析結果 -->
@@ -3322,7 +3299,7 @@ function coParseAnswer(text) {
   return [];
 }
 
-// 比對庫存，顯示結果
+// 比對庫存，顯示結果（客戶端友好版）
 function coDisplayResults(items) {
   let data = getData();
   _coItems = items.map(it => {
@@ -3335,59 +3312,58 @@ function coDisplayResults(items) {
   });
   let container = document.getElementById('coResultItems');
   container.innerHTML = '';
-  let allOk = true, allOut = true;
-  _coItems.forEach((it, i) => {
-    if (it.status !== 'ok') allOk = false;
-    if (it.status !== 'out' && it.stock === 0) allOut = false;
-    let icon = it.status === 'ok' ? '✅' : it.status === 'low' ? '⚠️' : it.status === 'out' ? '❌' : '❓';
+  _coItems.forEach((it) => {
+    let icon = it.status === 'ok' ? '✅' : it.status === 'low' ? '⚡' : it.status === 'out' ? '❌' : '❓';
     let cls = it.status === 'ok' ? 'ok' : it.status === 'low' ? 'low' : it.status === 'out' ? 'out' : 'unknown';
-    let haveCls = it.stock >= it.qty ? 'green' : it.stock > 0 ? 'yellow' : 'red';
-    let badge = it.status === 'ok' ? '<span class="co-badge green">✔ 充足</span>' :
-                it.status === 'low' ? '<span class="co-badge yellow">⚡ 不足</span>' :
-                it.status === 'out' ? '<span class="co-badge red">✘ 欠缺</span>' :
-                '<span class="co-badge" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)">❓ 新品</span>';
+    let verdict = it.status === 'ok' ? '<span class="co-badge green">✅ 可立即出貨</span>' :
+                  it.status === 'low' ? '<span class="co-badge yellow">⚡ 部分備料中</span>' :
+                  it.status === 'out' ? '<span class="co-badge red">❌ 需新生產</span>' :
+                  '<span class="co-badge" style="background:rgba(100,181,246,0.15);color:#64b5f6">🆕 新品項</span>';
+    let stockInfo = it.status === 'unknown' ? '（系統尚無此品項資料）' :
+      `目前庫存：${it.stock} KG　需求：${it.qty} KG`;
     container.innerHTML += `
       <div class="co-item ${cls}">
         <div class="co-item-icon">${icon}</div>
         <div class="co-item-info">
-          <div class="co-item-name">${it.name}${badge}</div>
-          <div class="co-item-color">${it.product ? it.product.color + ' · ' + it.product.line : '未登錄產品'}</div>
+          <div class="co-item-name">${it.name}${verdict}</div>
+          <div class="co-item-color">${stockInfo}</div>
         </div>
+        ${it.status !== 'unknown' ? `
         <div class="co-item-qty">
-          <div class="need">需求：${it.qty} KG</div>
-          <div class="have ${haveCls}">庫存：${it.stock} KG</div>
-        </div>
+          <div class="have ${it.stock >= it.qty ? 'green' : it.stock > 0 ? 'yellow' : 'red'}">${it.stock >= it.qty ? '✅ 充足' : it.stock > 0 ? '⚡ ' + (it.qty - it.stock) + ' KG 不足' : '❌ 無庫存'}</div>
+        </div>` : ''}
       </div>`;
   });
   document.getElementById('coResultCount').textContent = `共 ${_coItems.length} 項`;
   document.getElementById('coResultSection').style.display = 'block';
+
+  // 通知 staff（內部用，客戶看不到）
   coShowNotification();
 }
 
-// 顯示通知狀態
+// 顯示內部通知（給國研員工看）
 function coShowNotification() {
   let bar = document.getElementById('coNotifyBar');
   let chips = document.getElementById('coRoleChips');
-  let sufficient = _coItems.every(it => it.status === 'ok' || it.stock > 0);
   let hasOut = _coItems.some(it => it.status === 'out');
   let hasLow = _coItems.some(it => it.status === 'low');
   let insufficient = hasOut || hasLow;
 
   if (insufficient) {
     bar.className = 'insufficient';
-    bar.innerHTML = '⚠️ 部分品項庫存不足，需要備料或生產！\n請通知「廠長」安排生產，「採購」準備備料。';
+    bar.innerHTML = '⚠️ 部分品項需要備料或新生產';
     bar.style.display = 'block';
     chips.innerHTML = `
-      <div class="co-role-chip warn">⚠️ 通知廠長</div>
-      <div class="co-role-chip warn">⚠️ 通知採購</div>
+      <div class="co-role-chip warn">⚠️ 通知廠長備料</div>
+      <div class="co-role-chip warn">⚠️ 通知採購備料</div>
       <div class="co-role-chip">倉管待命</div>`;
   } else {
     bar.className = 'sufficient';
-    bar.innerHTML = '✅ 全部品項庫存充足，可立即安排出貨！\n請「倉管」備貨，「採購」確認出貨單。';
+    bar.innerHTML = '✅ 可立即安排出貨';
     bar.style.display = 'block';
     chips.innerHTML = `
-      <div class="co-role-chip notify">✅ 通知倉管</div>
-      <div class="co-role-chip notify">✅ 通知採購</div>`;
+      <div class="co-role-chip notify">✅ 通知倉管備貨</div>
+      <div class="co-role-chip notify">✅ 通知採購確認</div>`;
   }
 }
 
