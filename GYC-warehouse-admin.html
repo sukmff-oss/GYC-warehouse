@@ -2577,25 +2577,39 @@ function stopVoiceInput() {
 
   <!-- 拍照區 -->
   <div class="co-section" style="width:min(680px,98vw)">
-    <div class="co-section-title">STEP 1｜拍攝訂單</div>
-    <button class="co-capture-btn" onclick="coStartCamera()">
-      <span class="icon">📷</span>
-      <span>點我開啟相機</span>
-      <span class="sub">拍下訂單或產品清單，系統自動解析品名與數量</span>
-    </button>
-    <!-- 拖曳上傳（電腦專用） -->
-    <div id="coDropZone" onclick="document.getElementById('coDropInput').click()" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
-      <div class="dz-icon">🖱️</div>
-      <div class="dz-text">或拖曳圖片到此處</div>
-      <div class="dz-hint">支援電腦直接拖曳檔案（PNG / JPG / WEBP）</div>
-      <input type="file" id="coDropInput" accept="image/*" style="display:none" onchange="coFileSelected(this)">
+    <div class="co-section-title">STEP 1｜上傳訂單圖片</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <button class="co-capture-btn" onclick="coStartCamera()">
+        <span class="icon">📷</span>
+        <span>相機拍攝</span>
+        <span class="sub">手機拍照</span>
+      </button>
+      <!-- 拖曳上傳（電腦專用） -->
+      <div id="coDropZone" onclick="document.getElementById('coDropInput').click()" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)" style="margin:0;border:2px dashed rgba(255,193,7,0.3);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.3s ease">
+        <div style="font-size:1.6rem;margin-bottom:4px">🖱️</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-weight:500">拖曳圖片</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.22);margin-top:2px">電腦拖檔案到此</div>
+        <input type="file" id="coDropInput" accept="image/*" style="display:none" onchange="coFileSelected(this)">
+      </div>
     </div>
+    <div style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:4px">上傳後由國研化工人員協助解析，或使用下方手動輸入</div>
   </div>
 
   <!-- 解析進度（拍完照後顯示） -->
   <div id="coLoading" style="width:min(680px,98vw)">
     <div class="spinner"></div>
     <div class="txt">🔄 AI 解析中，請稍候...</div>
+  </div>
+
+  <!-- 手動輸入區（主要功能） -->
+  <div class="co-section" style="width:min(680px,98vw)">
+    <div class="co-section-title">STEP 2｜手動輸入品項</div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:12px">直接輸入品名和數量，查詢結果即時更新庫存狀態</div>
+    <div class="co-add-item">
+      <input type="text" id="coManualInput" placeholder="範例：CO-508 × 185 或 CO-508 185" onkeydown="if(event.key==='Enter')coAddManual()" style="flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(255,193,7,0.25);background:rgba(255,255,255,0.06);color:#fff;font-size:0.95rem;font-family:var(--font-family)">
+      <button onclick="coAddManual()" style="padding:12px 22px;border-radius:12px;background:linear-gradient(135deg,rgba(255,193,7,0.2),rgba(230,126,34,0.2));border:1.5px solid rgba(255,193,7,0.5);color:#FFC107;font-weight:700;cursor:pointer;font-size:0.9rem;letter-spacing:0.5px">＋ 查詢</button>
+    </div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:8px">支援格式：品名×數量 / 品名 數量 / 品名,數量</div>
   </div>
 
   <!-- 解析結果 -->
