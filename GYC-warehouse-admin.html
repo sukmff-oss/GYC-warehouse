@@ -2577,15 +2577,14 @@ function stopVoiceInput() {
 
   <!-- 客戶查詢區 -->
   <div class="co-section" style="width:min(680px,98vw)">
-    <div class="co-section-title">查詢庫存可用性</div>
-    <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:14px">輸入您需要的品名和數量，系統立即回報庫存狀態</div>
+    <div class="co-section-title">📦 庫存即時查詢</div>
+    <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:14px">輸入品名和需求數量，立即得知是否可以出貨</div>
     <div class="co-add-item">
-      <input type="text" id="coManualInput" placeholder="範例：CO-508 × 185（品名 × 數量）" onkeydown="if(event.key==='Enter')coAddManual()" style="flex:1;padding:14px 18px;border-radius:14px;border:1.5px solid rgba(255,193,7,0.25);background:rgba(255,255,255,0.06);color:#fff;font-size:1rem;font-family:var(--font-family)">
-      <button onclick="coAddManual()" style="padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,rgba(255,193,7,0.25),rgba(230,126,34,0.25));border:2px solid rgba(255,193,7,0.6);color:#FFC107;font-weight:700;cursor:pointer;font-size:1rem;letter-spacing:0.5px">查 詢</button>
+      <input type="text" id="coManualInput" placeholder="品名　×　數量（KG）　例如：CO-508 × 185" onkeydown="if(event.key==='Enter')coAddManual()" style="flex:1;padding:16px 20px;border-radius:16px;border:2px solid rgba(255,193,7,0.25);background:rgba(255,255,255,0.06);color:#fff;font-size:1.1rem;font-family:var(--font-family)">
+      <button onclick="coAddManual()" style="padding:16px 32px;border-radius:16px;background:linear-gradient(135deg,rgba(255,193,7,0.3),rgba(230,126,34,0.3));border:2px solid rgba(255,193,7,0.7);color:#FFC107;font-weight:700;cursor:pointer;font-size:1.1rem;letter-spacing:1px">查 詢</button>
     </div>
-    <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:10px;line-height:1.6">
-      支援格式：CO-508 × 185｜CO-508 * 185｜CO-508 185｜CO-508,185<br>
-      可一次查多筆，輸入後再查下一筆
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:10px;line-height:1.7">
+      支援格式：CO-508 × 185　｜　CO-508 * 185　｜　CO-508 185　｜　CO-508,185
     </div>
   </div>
 
@@ -2606,8 +2605,6 @@ function stopVoiceInput() {
     </div>
     <!-- 通知狀態 -->
     <div id="coNotifyBar"></div>
-    <!-- 通知角色 -->
-    <div id="coRoleChips" class="co-role-chips" style="width:min(680px,98vw);margin:0 auto"></div>
   </div>
 
   <!-- 說明 -->
@@ -3299,7 +3296,7 @@ function coParseAnswer(text) {
   return [];
 }
 
-// 比對庫存，顯示結果（客戶端友好版）
+// 比對庫存，顯示結果（業務友善版）
 function coDisplayResults(items) {
   let data = getData();
   _coItems = items.map(it => {
@@ -3313,57 +3310,67 @@ function coDisplayResults(items) {
   let container = document.getElementById('coResultItems');
   container.innerHTML = '';
   _coItems.forEach((it) => {
-    let icon = it.status === 'ok' ? '✅' : it.status === 'low' ? '⚡' : it.status === 'out' ? '❌' : '❓';
-    let cls = it.status === 'ok' ? 'ok' : it.status === 'low' ? 'low' : it.status === 'out' ? 'out' : 'unknown';
-    let verdict = it.status === 'ok' ? '<span class="co-badge green">✅ 可立即出貨</span>' :
-                  it.status === 'low' ? '<span class="co-badge yellow">⚡ 部分備料中</span>' :
-                  it.status === 'out' ? '<span class="co-badge red">❌ 需新生產</span>' :
-                  '<span class="co-badge" style="background:rgba(100,181,246,0.15);color:#64b5f6">🆕 新品項</span>';
-    let stockInfo = it.status === 'unknown' ? '（系統尚無此品項資料）' :
-      `目前庫存：${it.stock} KG　需求：${it.qty} KG`;
+    let verdict, verdictClass, detail;
+    if (it.status === 'ok') {
+      verdict = '✅ 可立即出貨';
+      verdictClass = 'green';
+      detail = `需求 ${it.qty} KG｜庫存充足 ${it.stock} KG`;
+    } else if (it.status === 'low') {
+      verdict = '⚡ 需追加備料';
+      verdictClass = 'yellow';
+      detail = `需求 ${it.qty} KG｜目前庫存 ${it.stock} KG（缺 ${it.qty - it.stock} KG）`;
+    } else if (it.status === 'out') {
+      verdict = '❌ 需新生產';
+      verdictClass = 'red';
+      detail = `需求 ${it.qty} KG｜目前庫存 0 KG`;
+    } else {
+      verdict = '🆕 新品項';
+      verdictClass = 'blue';
+      detail = '此品項系統尚無資料，請聯絡國研化工確認';
+    }
     container.innerHTML += `
-      <div class="co-item ${cls}">
-        <div class="co-item-icon">${icon}</div>
+      <div class="co-item ${it.status === 'ok' ? 'ok' : it.status === 'low' ? 'low' : it.status === 'out' ? 'out' : 'unknown'}">
+        <div class="co-item-icon" style="font-size:1.4rem">${it.status === 'ok' ? '✅' : it.status === 'low' ? '⚡' : it.status === 'out' ? '❌' : '🆕'}</div>
         <div class="co-item-info">
-          <div class="co-item-name">${it.name}${verdict}</div>
-          <div class="co-item-color">${stockInfo}</div>
+          <div class="co-item-name" style="font-size:1.1rem">${it.name}</div>
+          <div class="co-item-color">${detail}</div>
         </div>
-        ${it.status !== 'unknown' ? `
-        <div class="co-item-qty">
-          <div class="have ${it.stock >= it.qty ? 'green' : it.stock > 0 ? 'yellow' : 'red'}">${it.stock >= it.qty ? '✅ 充足' : it.stock > 0 ? '⚡ ' + (it.qty - it.stock) + ' KG 不足' : '❌ 無庫存'}</div>
-        </div>` : ''}
+        <div style="flex-shrink:0;text-align:right">
+          <div style="font-size:1rem;font-weight:900;color:${verdictClass === 'green' ? '#10b981' : verdictClass === 'yellow' ? '#f59e0b' : verdictClass === 'red' ? '#ef4444' : '#64b5f6'};letter-spacing:1px">${verdict}</div>
+        </div>
       </div>`;
   });
-  document.getElementById('coResultCount').textContent = `共 ${_coItems.length} 項`;
-  document.getElementById('coResultSection').style.display = 'block';
 
-  // 通知 staff（內部用，客戶看不到）
-  coShowNotification();
+  let okCount = _coItems.filter(it => it.status === 'ok').length;
+  let totalCount = _coItems.length;
+  document.getElementById('coResultCount').textContent = okCount === totalCount ? `全部 ${totalCount} 項可出貨` : `${okCount}/${totalCount} 項可出貨`;
+  document.getElementById('coResultSection').style.display = 'block';
 }
 
-// 顯示內部通知（給國研員工看）
+// 顯示內部摘要（員工電腦可見）
 function coShowNotification() {
   let bar = document.getElementById('coNotifyBar');
   let chips = document.getElementById('coRoleChips');
   let hasOut = _coItems.some(it => it.status === 'out');
   let hasLow = _coItems.some(it => it.status === 'low');
+  let hasUnknown = _coItems.some(it => it.status === 'unknown');
   let insufficient = hasOut || hasLow;
 
-  if (insufficient) {
-    bar.className = 'insufficient';
-    bar.innerHTML = '⚠️ 部分品項需要備料或新生產';
+  if (hasUnknown) {
+    bar.className = 'error';
+    bar.innerHTML = '⚠️ 含新產品項，請聯絡國研化工確認庫存';
     bar.style.display = 'block';
-    chips.innerHTML = `
-      <div class="co-role-chip warn">⚠️ 通知廠長備料</div>
-      <div class="co-role-chip warn">⚠️ 通知採購備料</div>
-      <div class="co-role-chip">倉管待命</div>`;
+    chips.innerHTML = '';
+  } else if (insufficient) {
+    bar.className = 'insufficient';
+    bar.innerHTML = hasOut ? '❌ 有品項需新生產，廠長將主動回覆交期' : '⚡ 有品項需追加備料，廠長將主動回覆交期';
+    bar.style.display = 'block';
+    chips.innerHTML = '';
   } else {
     bar.className = 'sufficient';
-    bar.innerHTML = '✅ 可立即安排出貨';
+    bar.innerHTML = '✅ 可立即安排出貨，請倉管備貨';
     bar.style.display = 'block';
-    chips.innerHTML = `
-      <div class="co-role-chip notify">✅ 通知倉管備貨</div>
-      <div class="co-role-chip notify">✅ 通知採購確認</div>`;
+    chips.innerHTML = '';
   }
 }
 
@@ -3418,7 +3425,6 @@ function coClearAll() {
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coResultSection').style.display = 'none';
   document.getElementById('coNotifyBar').style.display = 'none';
-  document.getElementById('coRoleChips').innerHTML = '';
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
