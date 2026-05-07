@@ -1606,7 +1606,7 @@ input[type="date"] {
 .co-role-chip.notify { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
 .co-role-chip.warn { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #f59e0b; }
 
-/* 客服LINE連結 */
+/* 客服LINE連結*/
 .co-line-link {
   text-align: center;
   margin-top: 12px;
@@ -1618,6 +1618,27 @@ input[type="date"] {
   letter-spacing: 0.5px;
 }
 .co-line-link a:hover { color: #00B900; }
+
+/* 拖曳上傳區 */
+#coDropZone {
+  border: 2px dashed rgba(255,193,7,0.3);
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.02);
+}
+#coDropZone.drag-over {
+  border-color: #FFC107;
+  background: rgba(255,193,7,0.08);
+  transform: scale(1.01);
+}
+#coDropZone .dz-icon { font-size: 2rem; margin-bottom: 8px; }
+#coDropZone .dz-text { font-size: 0.85rem; color: rgba(255,255,255,0.45); font-weight: 500; }
+#coDropZone .dz-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 4px; }
+#coDropZone input[type=file] { display: none; }
 
 /* 通知鬧鐘聲音（用 Web Audio API） */
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -2560,8 +2581,15 @@ function stopVoiceInput() {
     <button class="co-capture-btn" onclick="coStartCamera()">
       <span class="icon">📷</span>
       <span>點我開啟相機</span>
-      <span class="sub">拍下訂單或產品清單，系统自動解析品名與數量</span>
+      <span class="sub">拍下訂單或產品清單，系統自動解析品名與數量</span>
     </button>
+    <!-- 拖曳上傳（電腦專用） -->
+    <div id="coDropZone" onclick="document.getElementById('coDropInput').click()" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
+      <div class="dz-icon">🖱️</div>
+      <div class="dz-text">或拖曳圖片到此處</div>
+      <div class="dz-hint">支援電腦直接拖曳檔案（PNG / JPG / WEBP）</div>
+      <input type="file" id="coDropInput" accept="image/*" style="display:none" onchange="coFileSelected(this)">
+    </div>
   </div>
 
   <!-- 解析進度（拍完照後顯示） -->
@@ -3079,6 +3107,31 @@ function coFileSelected(input) {
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+// 拖曳事件
+function coDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('coDropZone').classList.add('drag-over');
+}
+function coDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('coDropZone').classList.remove('drag-over');
+}
+function coDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('coDropZone').classList.remove('drag-over');
+  let files = e.dataTransfer.files;
+  if (files.length > 0 && files[0].type.startsWith('image/')) {
+    let input = document.getElementById('coDropInput');
+    let dt = new DataTransfer();
+    dt.items.add(files[0]);
+    input.files = dt.files;
+    coFileSelected(input);
+  }
 }
 
 // 分析圖片：base64 → vision API
