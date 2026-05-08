@@ -4124,6 +4124,21 @@ async function factoryConfirm(id) {
   updateBadges();
   updateMenuIconColors();
   alert('✅ 入庫完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已寫入正式歷史');
+  checkLowStockAfterOp();
+}
+
+async function checkLowStockAfterOp() {
+  // 入庫/出庫/生產完成後自動檢查低於 safety 的項目，全員廣播 alert
+  var d = getData();
+  var low = d.products.filter(function(p){ return calcProdStock(p.name, p.color||p.model||'') < (p.safety||50); });
+  if (low.length === 0) return;
+  low.forEach(function(p) {
+    var stock = calcProdStock(p.name, p.color||p.model||'');
+    var msg = '⚠️ 低庫存警示\n品名：' + p.name + '\n庫存：' + stock + 'KG（低於安全庫存 ' + (p.safety||50) + 'KG）';
+    // 視覺 alert，fmtAlertSpeech 決定朗讀內容（去代號前綴、數字逐字讀）
+    try { window.fmtAlertSpeech && window.fmtAlertSpeech(msg); } catch(e){}
+    alert(msg);
+  });
 }
 
 // ==================== 生產作業藍燈警示系統 ====================
@@ -4252,6 +4267,7 @@ async function doProd() {
   _selectedProd = null;
   renderProdGrid();
   renderPendingIn();
+  checkLowStockAfterOp();
 }
 
 // ==================== 出貨作業 ====================
@@ -4430,8 +4446,9 @@ async function confirmOut(id) {
   renderOutBlueAlert();
   updateBadges();
   updateMenuIconColors();
-  alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出貨');
-  try { window.speakText && window.speakText('發票送貨單確認完成，已完成出貨'); } catch(e) {}
+alert('✅ 發票送貨單確認完成！\n品名：' + item.name + '\n數量：' + item.qty + ' ' + item.unit + '\n已完成出貨');
+  try { window.speakText && window.speakText('發票送貨單確認完成，已完成出貨'); } catch(e){}
+  checkLowStockAfterOp();
 }
 
 function promptDelPendingOut(id) {
@@ -4694,35 +4711,36 @@ function formatForTTS(text) {
 
 window.speakText = function(text, callback) {
   var ttsText = formatForTTS(text);
-  // Try Web Speech Synthesis first (no API key needed, works offline)
-  if ('speechSynthesis' in window) {
-    speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(ttsText);
-    u.lang = 'zh-TW';
-    u.rate = 0.95;
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    u.onend = function() { if (callback) callback(); };
-    u.onerror = function() { if (callback) callback(); };
-    speechSynthesis.speak(u);
-    return;
-  }
-  // Fallback: MiniMax TTS (if Web Speech not available)
-  fetch('https://api.minimax.io/v1/t2a_v2', {
+  // Try local TTS server (edge-tts, Taiwanese voice, 20% slower)
+  fetch('http://127.0.0.1:8899/speak', {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + MINIMAX_TTS_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'speech-02-hd', text: text })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: ttsText })
   })
-  .then(function(r) { return r.arrayBuffer(); })
+  .then(function(r) { if (!r.ok) throw new Error('local tts failed'); return r.arrayBuffer(); })
   .then(function(buf) {
-    var blob = new Blob([buf], { type: 'audio/mp3' });
+    var blob = new Blob([buf], { type: 'audio/mpeg' });
     var url = URL.createObjectURL(blob);
     var a = new Audio(url);
     a.onended = function() { URL.revokeObjectURL(url); if (callback) callback(); };
-    a.onerror = function() { if (callback) callback(); };
+    a.onerror = function() { URL.revokeObjectURL(url); if (callback) callback(); };
     a.play();
   })
-  .catch(function(e) { console.warn('[TTS] MiniMax failed:', e); if (callback) callback(); });
+  .catch(function(e) {
+    console.warn('[TTS] local server failed, trying browser TTS:', e);
+    // Fallback: Web Speech Synthesis
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(ttsText);
+      u.lang = 'zh-TW';
+      u.rate = 0.95;
+      u.onend = function() { if (callback) callback(); };
+      u.onerror = function() { if (callback) callback(); };
+      speechSynthesis.speak(u);
+    } else {
+      if (callback) callback();
+    }
+  });
 };
 
 window.parseAndAnswer = function(query) {
