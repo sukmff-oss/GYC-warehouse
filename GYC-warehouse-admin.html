@@ -2581,9 +2581,9 @@ function stopVoiceInput() {
     <label for="coDropZoneInput" style="display:block;cursor:pointer">
       <div class="dz-icon">📂</div>
       <div class="dz-text">拖曳客戶訂單圖片到此處</div>
-      <div class="dz-hint">或點擊選擇檔案 · 支援 PNG / JPG / WEBP</div>
+      <div class="dz-hint">支援圖片 / PDF / WORD 檔案上傳</div>
     </label>
-    <input type="file" id="coDropZoneInput" accept="image/*" style="display:none"
+    <input type="file" id="coDropZoneInput" accept="image/*,.pdf,.doc,.docx" style="display:none"
            onchange="coDropZoneFile(this)">
   </div>
 
@@ -2647,7 +2647,7 @@ function stopVoiceInput() {
   <div style="margin-top:14px;text-align:center">
     <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;cursor:pointer">
       📁 或者選擇相簿圖片
-      <input type="file" accept="image/*" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
+      <input type="file" accept="image/*,.pdf,.doc,.docx" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
     </label>
   </div>
 </div>
@@ -3103,41 +3103,78 @@ function coSnapPhoto() {
 function coFileSelected(input) {
   if (!input.files || !input.files[0]) return;
   coStopCamera();
-  let file = input.files[0];
-  let reader = new FileReader();
-  reader.onload = function(e) {
-    let img = new Image();
-    img.onload = function() {
-      let canvas = document.getElementById('coCanvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      let ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      coAnalyzeImage(canvas);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  // 統一由 coDropZoneFile 處理
+  coDropZoneFile(input);
 }
 
 // 拖曳區：點擊選擇檔案
-function coDropZoneFile(input) {
+async function coDropZoneFile(input) {
   if (!input.files || !input.files[0]) return;
   let file = input.files[0];
+  console.log('[coDropZoneFile] 選擇:', file.name, file.type, file.size);
+
+  // 圖片：直接處理
+  if (file.type.startsWith('image/')) {
+    coReadFileAsDataURL(file, function(dataUrl) {
+      let img = new Image();
+      img.onload = function() {
+        let canvas = document.getElementById('coCanvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
+        coAnalyzeImage(canvas);
+      };
+      img.src = dataUrl;
+    });
+    return;
+  }
+
+  // PDF：使用 PDF.js 轉成圖片
+  if (file.type === 'application/pdf') {
+    document.getElementById('coLoading').style.display = 'block';
+    try {
+      let arrayBuffer = await file.arrayBuffer();
+      // 動態載入 PDF.js
+      if (!window.pdfjsLib) {
+        let script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = () => {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          renderPdfPage(arrayBuffer);
+        };
+        document.head.appendChild(script);
+      } else {
+        renderPdfPage(arrayBuffer);
+      }
+    } catch(e) {
+      document.getElementById('coLoading').style.display = 'none';
+      alert('PDF 處理失敗：' + e.message);
+    }
+    return;
+  }
+
+  // DOC/DOCX：提示用戶轉圖片
+  alert('WORD 檔案（.doc/.docx）請先截圖成圖片再上傳，謝謝！');
+}
+
+async function renderPdfPage(arrayBuffer) {
+  let pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let page = await pdf.getPage(1);
+  let viewport = page.getViewport({ scale: 2.0 });
+  let canvas = document.getElementById('coCanvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  document.getElementById('coLoading').style.display = 'none';
+  coAnalyzeImage(canvas);
+}
+
+function coReadFileAsDataURL(file, callback) {
   let reader = new FileReader();
-  reader.onload = function(e) {
-    let img = new Image();
-    img.onload = function() {
-      let canvas = document.getElementById('coCanvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      let ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
-      coAnalyzeImage(canvas);
-    };
-    img.src = e.target.result;
-  };
+  reader.onload = function(e) { callback(e.target.result); };
   reader.readAsDataURL(file);
 }
 
@@ -3159,26 +3196,15 @@ function coDrop(e) {
   let files = e.dataTransfer.files;
   if (files.length === 0) return;
   let file = files[0];
-  if (!file.type.startsWith('image/')) {
-    alert('請拖曳圖片檔案（PNG / JPG / WEBP）');
+  // 支援圖片與 PDF
+  let allowed = file.type.startsWith('image/') || file.type === 'application/pdf';
+  if (!allowed) {
+    alert('請拖曳圖片或 PDF 檔案（PNG / JPG / WEBP / PDF）');
     return;
   }
   coStopCamera();
-  let reader = new FileReader();
-  reader.onload = function(ev) {
-    let img = new Image();
-    img.onload = function() {
-      let canvas = document.getElementById('coCanvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      let ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      console.log('[coDrop] 圖片尺寸:', canvas.width, 'x', canvas.height);
-      coAnalyzeImage(canvas);
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+  // 統一由 coDropZoneFile 處理（圖片/PDF分流）
+  coDropZoneFile({ files: [file] });
 }
 
 // 分析圖片：base64 → vision API（含超時保護）
