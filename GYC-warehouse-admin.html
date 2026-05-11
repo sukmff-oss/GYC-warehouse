@@ -3232,7 +3232,17 @@ function coDrop(e) {
   coDropZoneFile({ files: [file] });
 }
 
-// 分析圖片：base64 → vision API（含超時保護）
+// ==================== 分析圖片：base64 → vision API（含超時保護）=================
+// 自動偵測：同機器的瀏覽器用 localhost，手機/外部設備用 WSL IP
+function getVisionProxyUrl() {
+  // 目前從同機器的瀏覽器存取 → 用 localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/analyze';
+  }
+  // 從其他設備存取 → 嘗試常見的 WSL gateway IP
+  return 'http://172.18.11.163:5000/analyze';
+}
+
 async function coAnalyzeImage(canvas) {
   console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
@@ -3249,9 +3259,10 @@ async function coAnalyzeImage(canvas) {
   }, 20000); // 20秒超時（proxy 端 30秒）
 
   try {
-    // 走本地 vision_proxy（NVIDIA/Groq API key 在 WSL 端，不會暴露）
-    console.log('[coAnalyzeImage] 呼叫本地 proxy http://localhost:5000/analyze');
-    let res = await fetch('http://localhost:5000/analyze', {
+    // 自動偵測 proxy URL（同機器用 localhost，外部設備用 WSL IP）
+    let proxyUrl = getVisionProxyUrl();
+    console.log('[coAnalyzeImage] 呼叫 proxy:', proxyUrl);
+    let res = await fetch(proxyUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64 })
