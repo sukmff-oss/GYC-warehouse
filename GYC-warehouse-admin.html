@@ -2575,6 +2575,17 @@ function stopVoiceInput() {
     <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
   </div>
 
+  <!-- 拖曳上傳區 -->
+  <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto"
+       ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)"
+       onclick="document.getElementById('coDropZoneInput').click()">
+    <div class="dz-icon">📂</div>
+    <div class="dz-text">拖曳客戶訂單圖片到此處</div>
+    <div class="dz-hint">或點擊選擇檔案 · 支援 PNG / JPG / WEBP</div>
+    <input type="file" id="coDropZoneInput" accept="image/*" style="display:none"
+           onchange="coDropZoneFile(this)">
+  </div>
+
   <!-- 客戶查詢區 -->
   <div class="co-section" style="width:min(680px,98vw)">
     <div class="co-section-title">📦 庫存即時查詢</div>
@@ -3087,7 +3098,7 @@ function coSnapPhoto() {
   tryCapture();
 }
 
-// 從相簿選擇圖片
+// 從相簿選擇圖片（Camera Overlay 內）
 function coFileSelected(input) {
   if (!input.files || !input.files[0]) return;
   coStopCamera();
@@ -3101,6 +3112,27 @@ function coFileSelected(input) {
       canvas.height = img.height;
       let ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
+      coAnalyzeImage(canvas);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 拖曳區：點擊選擇檔案
+function coDropZoneFile(input) {
+  if (!input.files || !input.files[0]) return;
+  let file = input.files[0];
+  let reader = new FileReader();
+  reader.onload = function(e) {
+    let img = new Image();
+    img.onload = function() {
+      let canvas = document.getElementById('coCanvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
       coAnalyzeImage(canvas);
     };
     img.src = e.target.result;
