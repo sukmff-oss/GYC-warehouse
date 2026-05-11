@@ -2600,6 +2600,14 @@ function stopVoiceInput() {
     </div>
   </div>
 
+  <!-- 等待解析 loading -->
+  <div id="coLoading" style="display:none;width:min(680px,98vw);margin:0 auto">
+    <div style="text-align:center;padding:32px;color:#64b5f6">
+      <div style="width:48px;height:48px;border:4px solid rgba(100,181,246,0.2);border-top-color:#64b5f6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div>
+      <div style="font-size:0.9rem;font-weight:500;letter-spacing:1px;color:rgba(255,255,255,0.7)">AI 解析中，請稍候...</div>
+    </div>
+  </div>
+
   <!-- 解析結果 -->
   <div id="coResultSection" style="display:none;width:min(680px,98vw)">
     <div class="co-section">
@@ -3109,7 +3117,11 @@ function coFileSelected(input) {
 
 // 拖曳區：點擊選擇檔案
 async function coDropZoneFile(input) {
-  if (!input.files || !input.files[0]) return;
+  console.log('[coDropZoneFile] called, input:', input, 'files:', input.files);
+  if (!input.files || !input.files[0]) {
+    console.warn('[coDropZoneFile] 沒有選擇檔案');
+    return;
+  }
   let file = input.files[0];
   console.log('[coDropZoneFile] 選擇:', file.name, file.type, file.size);
 
@@ -3134,24 +3146,33 @@ async function coDropZoneFile(input) {
   // PDF：使用 PDF.js 轉成圖片
   if (file.type === 'application/pdf') {
     document.getElementById('coLoading').style.display = 'block';
+    document.getElementById('coLoading').innerHTML =
+      '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.6)">' +
+      '<div style="font-size:2rem;margin-bottom:10px">📄</div>' +
+      '<div style="font-size:0.9rem">PDF 轉檔中，請稍候...</div>' +
+      '</div>';
     try {
       let arrayBuffer = await file.arrayBuffer();
       // 動態載入 PDF.js
       if (!window.pdfjsLib) {
-        let script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.onload = () => {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-          renderPdfPage(arrayBuffer);
-        };
-        document.head.appendChild(script);
-      } else {
-        renderPdfPage(arrayBuffer);
+        console.log('[coDropZoneFile] 載入 PDF.js...');
+        await new Promise((resolve, reject) => {
+          let script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          script.onload = () => {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+              'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            resolve();
+          };
+          script.onerror = () => reject(new Error('PDF.js CDN 載入失敗'));
+          document.head.appendChild(script);
+        });
       }
+      await renderPdfPage(arrayBuffer);
     } catch(e) {
+      console.error('[coDropZoneFile] PDF 處理失敗:', e);
       document.getElementById('coLoading').style.display = 'none';
-      alert('PDF 處理失敗：' + e.message);
+      alert('PDF 處理失敗：' + e.message + '\n請將 PDF 截圖成圖片後再上傳，謝謝！');
     }
     return;
   }
@@ -3161,13 +3182,17 @@ async function coDropZoneFile(input) {
 }
 
 async function renderPdfPage(arrayBuffer) {
+  console.log('[renderPdfPage] 開始渲染 PDF');
   let pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  console.log('[renderPdfPage] PDF 已載入，頁數:', pdf.numPages);
   let page = await pdf.getPage(1);
   let viewport = page.getViewport({ scale: 2.0 });
   let canvas = document.getElementById('coCanvas');
   canvas.width = viewport.width;
   canvas.height = viewport.height;
+  console.log('[renderPdfPage] 渲染中...');
   await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  console.log('[renderPdfPage] 完成');
   document.getElementById('coLoading').style.display = 'none';
   coAnalyzeImage(canvas);
 }
