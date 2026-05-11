@@ -3356,14 +3356,10 @@ function coDrop(e) {
 }
 
 // ==================== 分析圖片：base64 → vision API（含超時保護）=================
-// 自動偵測：同機器的瀏覽器用 localhost，手機/外部設備用 WSL IP
+// 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
 function getVisionProxyUrl() {
-  // 目前從同機器的瀏覽器存取 → 用 localhost
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:5000/analyze';
-  }
-  // 從其他設備存取 → 嘗試常見的 WSL gateway IP
-  return 'http://172.18.11.163:5000/analyze';
+  // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
+  return 'https://pointing-mustang-const-largest.trycloudflare.com/analyze';
 }
 
 async function coAnalyzeImage(canvas) {
