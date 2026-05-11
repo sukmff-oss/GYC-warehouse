@@ -1640,6 +1640,26 @@ input[type="date"] {
 #coDropZone .dz-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 4px; }
 #coDropZone input[type=file] { display: none; }
 
+/* 步驟指示器 */
+.co-step { display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer }
+.co-step-circle {
+  width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;
+  color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05);transition:all 0.3s;
+}
+.co-step.active .co-step-circle {
+  border-color:#FFC107;color:#FFC107;background:rgba(255,193,7,0.15);
+  box-shadow:0 0 12px rgba(255,193,7,0.3);
+}
+.co-step.completed .co-step-circle {
+  border-color:#10b981;color:#10b981;background:rgba(16,185,129,0.15);
+}
+.co-step-label { font-size:0.68rem;color:rgba(255,255,255,0.3);font-weight:500;white-space:nowrap }
+.co-step.active .co-step-label { color:rgba(255,193,7,0.8) }
+.co-step.completed .co-step-label { color:rgba(16,185,129,0.8) }
+.co-step-line { width:40px;height:2px;background:rgba(255,255,255,0.1);margin:0 4px;margin-bottom:18px }
+.co-step-line.done { background:#10b981 }
+
 /* 通知鬧鐘聲音（用 Web Audio API） */
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
@@ -2575,6 +2595,24 @@ function stopVoiceInput() {
     <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
   </div>
 
+  <!-- 步驟指示器 -->
+  <div id="coStepIndicator" style="width:min(680px,98vw);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;gap:0">
+    <div id="coStep1" class="co-step active" onclick="coGoToStep(1)">
+      <div class="co-step-circle">1</div>
+      <div class="co-step-label">上傳圖片</div>
+    </div>
+    <div class="co-step-line" id="coLine12"></div>
+    <div id="coStep2" class="co-step" onclick="coGoToStep(2)">
+      <div class="co-step-circle">2</div>
+      <div class="co-step-label">AI 分析</div>
+    </div>
+    <div class="co-step-line" id="coLine23"></div>
+    <div id="coStep3" class="co-step" onclick="coGoToStep(3)">
+      <div class="co-step-circle">3</div>
+      <div class="co-step-label">庫存結果</div>
+    </div>
+  </div>
+
   <!-- 拖曳上傳區 -->
   <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto;position:relative"
        ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
@@ -2585,6 +2623,14 @@ function stopVoiceInput() {
     </label>
     <input type="file" id="coDropZoneInput" accept="image/*,.pdf,.doc,.docx" style="display:none"
            onchange="coDropZoneFile(this)">
+  </div>
+
+  <!-- 檔案預覽區 -->
+  <div id="coFilePreview" style="display:none;width:min(680px,98vw);margin:16px auto 0">
+    <div style="font-size:0.8rem;color:rgba(255,193,7,0.8);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <span>📄</span><span id="coFileCount">已選擇 0 個檔案</span>
+    </div>
+    <div id="coFileList" style="display:flex;flex-wrap:wrap;gap:10px"></div>
   </div>
 
   <!-- 客戶查詢區 -->
@@ -3054,6 +3100,9 @@ function coReset() {
   document.getElementById('coNotifyBar').style.display = 'none';
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coManualInput').value = '';
+  coUpdateStep(1);
+  document.getElementById('coFilePreview').style.display = 'none';
+  document.getElementById('coFileList').innerHTML = '';
 }
 
 // 開啟相機
@@ -3117,13 +3166,18 @@ function coFileSelected(input) {
 
 // 拖曳區：點擊選擇檔案
 async function coDropZoneFile(input) {
-  console.log('[coDropZoneFile] called, input:', input, 'files:', input.files);
+  console.log('[coDropZoneFile] called, files:', input.files);
   if (!input.files || !input.files[0]) {
     console.warn('[coDropZoneFile] 沒有選擇檔案');
     return;
   }
   let file = input.files[0];
   console.log('[coDropZoneFile] 選擇:', file.name, file.type, file.size);
+
+  // 顯示檔案預覽
+  coShowFilePreview(input.files);
+  // 進入步驟 1（已選擇檔案）
+  coUpdateStep(1);
 
   // 圖片：直接處理
   if (file.type.startsWith('image/')) {
@@ -3136,6 +3190,7 @@ async function coDropZoneFile(input) {
         let ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
+        coUpdateStep(2); // 進入步驟 2：AI 分析中
         coAnalyzeImage(canvas);
       };
       img.src = dataUrl;
@@ -3145,6 +3200,7 @@ async function coDropZoneFile(input) {
 
   // PDF：使用 PDF.js 轉成圖片
   if (file.type === 'application/pdf') {
+    coUpdateStep(2); // 進入步驟 2
     document.getElementById('coLoading').style.display = 'block';
     document.getElementById('coLoading').innerHTML =
       '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.6)">' +
@@ -3201,6 +3257,73 @@ function coReadFileAsDataURL(file, callback) {
   let reader = new FileReader();
   reader.onload = function(e) { callback(e.target.result); };
   reader.readAsDataURL(file);
+}
+
+// ==================== 步驟指示器 ====================
+function coUpdateStep(step) {
+  let steps = [1, 2, 3];
+  steps.forEach(s => {
+    let el = document.getElementById('coStep' + s);
+    if (!el) return;
+    el.classList.remove('active', 'completed');
+    if (s < step) el.classList.add('completed');
+    else if (s === step) el.classList.add('active');
+  });
+  // 線條狀態
+  let line12 = document.getElementById('coLine12');
+  let line23 = document.getElementById('coLine23');
+  if (line12) {
+    line12.classList.toggle('done', step > 1);
+    line12.style.background = step > 1 ? '#10b981' : 'rgba(255,255,255,0.1)';
+  }
+  if (line23) {
+    line23.classList.toggle('done', step > 2);
+    line23.style.background = step > 2 ? '#10b981' : 'rgba(255,255,255,0.1)';
+  }
+  console.log('[coUpdateStep] 目前步驟:', step);
+}
+
+function coGoToStep(step) {
+  // 根據目前狀態允許跳轉（僅允許回上一步或當前步）
+  // 這裡可扩展为根据实际状态限制跳转
+  let currentStep = 1;
+  if (document.getElementById('coStep3').classList.contains('completed')) currentStep = 3;
+  else if (document.getElementById('coStep2').classList.contains('active') ||
+           document.getElementById('coStep2').classList.contains('completed')) currentStep = 2;
+  if (step <= currentStep) {
+    coUpdateStep(step);
+  }
+}
+
+// ==================== 檔案預覽 ====================
+function coShowFilePreview(files) {
+  let preview = document.getElementById('coFilePreview');
+  let fileList = document.getElementById('coFileList');
+  let fileCount = document.getElementById('coFileCount');
+
+  if (!files || files.length === 0) {
+    preview.style.display = 'none';
+    return;
+  }
+
+  preview.style.display = 'block';
+  fileCount.textContent = `已選擇 ${files.length} 個檔案`;
+
+  let html = '';
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
+    let isImage = file.type.startsWith('image/');
+    let icon = isImage ? '🖼' : (file.type === 'application/pdf' ? '📕' : '📄');
+    let name = file.name.length > 20 ? file.name.substring(0, 18) + '...' : file.name;
+    let size = (file.size / 1024).toFixed(0) + ' KB';
+
+    html += `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;font-size:0.75rem;color:rgba(255,255,255,0.7)">
+      <span style="font-size:1.2rem">${icon}</span>
+      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      <span style="color:rgba(255,255,255,0.3)">${size}</span>
+    </div>`;
+  }
+  fileList.innerHTML = html;
 }
 
 // 拖曳事件
@@ -3370,6 +3493,7 @@ function coParseAnswer(text) {
 
 // 比對庫存，顯示結果（業務友善版）
 function coDisplayResults(items) {
+  coUpdateStep(3); // 進入步驟 3：庫存結果
   let data = getData();
   _coItems = items.map(it => {
     let p = data.products.find(x => x.name === it.name);
@@ -3497,6 +3621,9 @@ function coClearAll() {
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coResultSection').style.display = 'none';
   document.getElementById('coNotifyBar').style.display = 'none';
+  coUpdateStep(1);
+  document.getElementById('coFilePreview').style.display = 'none';
+  document.getElementById('coFileList').innerHTML = '';
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
