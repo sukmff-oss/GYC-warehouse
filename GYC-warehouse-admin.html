@@ -2576,12 +2576,13 @@ function stopVoiceInput() {
   </div>
 
   <!-- 拖曳上傳區 -->
-  <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto"
-       ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)"
-       onclick="document.getElementById('coDropZoneInput').click()">
-    <div class="dz-icon">📂</div>
-    <div class="dz-text">拖曳客戶訂單圖片到此處</div>
-    <div class="dz-hint">或點擊選擇檔案 · 支援 PNG / JPG / WEBP</div>
+  <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto;position:relative"
+       ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
+    <label for="coDropZoneInput" style="display:block;cursor:pointer">
+      <div class="dz-icon">📂</div>
+      <div class="dz-text">拖曳客戶訂單圖片到此處</div>
+      <div class="dz-hint">或點擊選擇檔案 · 支援 PNG / JPG / WEBP</div>
+    </label>
     <input type="file" id="coDropZoneInput" accept="image/*" style="display:none"
            onchange="coDropZoneFile(this)">
   </div>
