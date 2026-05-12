@@ -3359,7 +3359,7 @@ function coDrop(e) {
 // 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
 function getVisionProxyUrl() {
   // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
-  return 'https://gregory-electron-mart-wings.trycloudflare.com/analyze';
+  return 'https://nursing-ranch-eval-characteristics.trycloudflare.com/analyze';
 }
 
 async function coAnalyzeImage(canvas) {
@@ -3420,6 +3420,7 @@ async function coAnalyzeImage(canvas) {
           </div>`;
         document.getElementById('coResultCount').textContent = '';
         document.getElementById('coNotifyBar').style.display = 'none';
+        if(document.getElementById('coRoleChips'))
         document.getElementById('coRoleChips').innerHTML = '';
         clearTimeout(timeoutId);
         return;
@@ -3458,7 +3459,8 @@ async function coAnalyzeImage(canvas) {
       </div>`;
     document.getElementById('coResultCount').textContent = '';
     document.getElementById('coNotifyBar').style.display = 'none';
-    document.getElementById('coRoleChips').innerHTML = '';
+    if(document.getElementById('coRoleChips'))
+        document.getElementById('coRoleChips').innerHTML = '';
     return;
   }
 
@@ -4918,13 +4920,7 @@ function initApp() {
 
 // ==================== 事件監聽器 ====================
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('btnSu').addEventListener('click', function() {showPwdInput('su');});
-  document.getElementById('btnFactory').addEventListener('click', function() {showPwdInput('factory');});
-  document.getElementById('btnWarehouse').addEventListener('click', function() {showPwdInput('warehouse');});
-  document.getElementById('btnPurchase').addEventListener('click', function() {showPwdInput('purchase');});
-  document.getElementById('btnAdmin').addEventListener('click', function() {showPwdInput('admin');});
   document.getElementById('loginPwd').addEventListener('keydown', function(e) {if (e.key === 'Enter') tryLogin();});
-  document.getElementById('btnBack').addEventListener('click', function() {backToRoles();});
   initApp();
 });
 
