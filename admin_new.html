@@ -3359,29 +3359,14 @@ function coDrop(e) {
 // 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
 function getVisionProxyUrl() {
   // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
-  return 'https://gregory-electron-mart-wings.trycloudflare.com/analyze';
+  return 'https://pointing-mustang-const-largest.trycloudflare.com/analyze';
 }
 
 async function coAnalyzeImage(canvas) {
   console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
   document.getElementById('coResultSection').style.display = 'none';
-
-  // 圖片壓縮：限制最大 800px，避免 tunnel 逾時，同時加快上傳
-  const MAX_SIZE = 800;
-  let workCanvas = canvas;
-  if (canvas.width > MAX_SIZE || canvas.height > MAX_SIZE) {
-    let w = canvas.width, h = canvas.height;
-    if (w > h) { w = MAX_SIZE; h = Math.round(canvas.height * (MAX_SIZE / canvas.width)); }
-    else { h = MAX_SIZE; w = Math.round(canvas.width * (MAX_SIZE / canvas.height)); }
-    const tmp = document.createElement('canvas');
-    tmp.width = w; tmp.height = h;
-    tmp.getContext('2d').drawImage(canvas, 0, 0, w, h);
-    workCanvas = tmp;
-    console.log('[coAnalyzeImage] 已縮小至:', w, 'x', h);
-  }
-
-  let dataUrl = workCanvas.toDataURL('image/jpeg', 0.5);
+  let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   let base64 = dataUrl.split(',')[1];
   let answer = null;
   let allFailed = false;
