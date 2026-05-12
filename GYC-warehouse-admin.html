@@ -3355,11 +3355,11 @@ function coDrop(e) {
   coDropZoneFile({ files: [file] });
 }
 
-// ==================== 分析圖片：base64 → vision API（含超時保護）=================
-// 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
+// ==================== 分析圖片：base64 → vision API（Windows MiniMax Proxy）=================
+// 使用 Windows 本機 Flask + Cloudflare Tunnel，支援外部手機連線上傳圖片分析
 function getVisionProxyUrl() {
-  // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
-  return 'https://excess-medal-noble-pursue.trycloudflare.com/analyze';
+  // Windows Flask vision_proxy.py，cloudflared tunnel 轉發
+  return 'https://cooking-pushed-absence-treat.trycloudflare.com/analyze';
 }
 
 async function coAnalyzeImage(canvas) {
