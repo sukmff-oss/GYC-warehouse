@@ -1619,46 +1619,27 @@ input[type="date"] {
 }
 .co-line-link a:hover { color: #00B900; }
 
-/* 拖曳上傳區 */
-#coDropZone {
-  border: 2px dashed rgba(255,193,7,0.3);
-  border-radius: 14px;
+/* 統一上傳區（圖片+文件） */
+.co-upload-zone {
+  width: min(680px, 98vw);
+  margin: 10px auto;
   padding: 28px 20px;
-  text-align: center;
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  border: 2px dashed rgba(255,193,7,0.3);
+  background: rgba(255,193,7,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  margin-top: 12px;
-  background: rgba(255,255,255,0.02);
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
 }
-#coDropZone.drag-over {
-  border-color: #FFC107;
-  background: rgba(255,193,7,0.08);
+.co-upload-zone.drag-over {
+  border-color: rgba(255,193,7,0.8);
+  background: rgba(255,193,7,0.1);
   transform: scale(1.01);
 }
-#coDropZone .dz-icon { font-size: 2rem; margin-bottom: 8px; }
-#coDropZone .dz-text { font-size: 0.85rem; color: rgba(255,255,255,0.45); font-weight: 500; }
-#coDropZone .dz-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 4px; }
-#coDropZone input[type=file] { display: none; }
-
-/* 步驟指示器 */
-.co-step { display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer }
-.co-step-circle {
-  width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
-  display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;
-  color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05);transition:all 0.3s;
-}
-.co-step.active .co-step-circle {
-  border-color:#FFC107;color:#FFC107;background:rgba(255,193,7,0.15);
-  box-shadow:0 0 12px rgba(255,193,7,0.3);
-}
-.co-step.completed .co-step-circle {
-  border-color:#10b981;color:#10b981;background:rgba(16,185,129,0.15);
-}
-.co-step-label { font-size:0.68rem;color:rgba(255,255,255,0.3);font-weight:500;white-space:nowrap }
-.co-step.active .co-step-label { color:rgba(255,193,7,0.8) }
-.co-step.completed .co-step-label { color:rgba(16,185,129,0.8) }
-.co-step-line { width:40px;height:2px;background:rgba(255,255,255,0.1);margin:0 4px;margin-bottom:18px }
-.co-step-line.done { background:#10b981 }
 
 /* 通知鬧鐘聲音（用 Web Audio API） */
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -2247,11 +2228,6 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">類別管理</span>
     </button>
-    <!-- 第4排：蘇董專用（限蘇董和管理員） -->
-    <button class="menu-btn" id="btnSuPage" onclick="showPage('stockPageSu')">
-      <span class="role-icon-wrap stock"><span class="role-icon">👁️</span></span>
-      <span class="menu-label">蘇董專用</span>
-    </button>
     <!-- 登出系統（獨立一列） -->
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
@@ -2600,42 +2576,26 @@ function stopVoiceInput() {
     <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
   </div>
 
-  <!-- 步驟指示器 -->
-  <div id="coStepIndicator" style="width:min(680px,98vw);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;gap:0">
-    <div id="coStep1" class="co-step active" onclick="coGoToStep(1)">
-      <div class="co-step-circle">1</div>
-      <div class="co-step-label">上傳圖片</div>
-    </div>
-    <div class="co-step-line" id="coLine12"></div>
-    <div id="coStep2" class="co-step" onclick="coGoToStep(2)">
-      <div class="co-step-circle">2</div>
-      <div class="co-step-label">AI 分析</div>
-    </div>
-    <div class="co-step-line" id="coLine23"></div>
-    <div id="coStep3" class="co-step" onclick="coGoToStep(3)">
-      <div class="co-step-circle">3</div>
-      <div class="co-step-label">庫存結果</div>
-    </div>
+  <!-- 統一上傳區：圖片+文件拖曳上傳 + 分析文字編輯區 -->
+  <div id="coUploadZone" class="co-upload-zone" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
+    <input type="file" id="coUploadInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none" onchange="coUploadSelected(this)">
+    <div id="coUploadIcon" style="font-size:2.4rem;margin-bottom:8px">📂</div>
+    <div id="coUploadText" style="font-size:0.88rem;color:rgba(255,255,255,0.5);font-weight:500">拖曳圖片或文件到此處</div>
+    <div id="coUploadHint" style="font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:4px">支援：PNG / JPG / WEBP / PDF / Word / TXT</div>
+    <label for="coUploadInput" style="margin-top:10px;padding:7px 16px;border-radius:8px;background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;font-size:0.78rem;font-weight:700;cursor:pointer">📁 選擇檔案</label>
   </div>
 
-  <!-- 拖曳上傳區 -->
-  <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto;position:relative"
-       ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
-    <label for="coDropZoneInput" style="display:block;cursor:pointer">
-      <div class="dz-icon">📂</div>
-      <div class="dz-text">拖曳客戶訂單圖片到此處</div>
-      <div class="dz-hint">支援圖片 / PDF / WORD 檔案上傳</div>
-    </label>
-    <input type="file" id="coDropZoneInput" accept="image/*,.pdf,.doc,.docx" style="display:none"
-           onchange="coDropZoneFile(this)">
-  </div>
-
-  <!-- 檔案預覽區 -->
-  <div id="coFilePreview" style="display:none;width:min(680px,98vw);margin:16px auto 0">
-    <div style="font-size:0.8rem;color:rgba(255,193,7,0.8);margin-bottom:10px;display:flex;align-items:center;gap:8px">
-      <span>📄</span><span id="coFileCount">已選擇 0 個檔案</span>
+  <!-- 文件文字提取 + 編輯區（文件專用，圖片不留存） -->
+  <div id="coDocPanel" style="display:none;width:min(680px,98vw);margin-top:8px">
+    <div class="co-section">
+      <div class="co-section-title">📝 請確認 / 修正提取的文字</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:10px">AI 會分析以下文字來抓品名 × 數量，紅字為偵測到的關鍵數值</div>
+      <textarea id="coDocText" style="width:100%;min-height:140px;padding:14px;border-radius:12px;border:2px solid rgba(255,193,7,0.25);background:rgba(0,0,0,0.3);color:#fff;font-size:0.9rem;line-height:1.7;resize:vertical;font-family:var(--font-family)" placeholder="從文件提取的文字會顯示在這裡，請確認或修正後再分析..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="coAnalyzeDocText()" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,193,7,0.25);border:2px solid rgba(255,193,7,0.6);color:#FFC107;font-weight:700;cursor:pointer;font-size:0.9rem">🔍 送出分析</button>
+        <button onclick="coDocClose()" style="padding:12px 18px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem">✕ 取消</button>
+      </div>
     </div>
-    <div id="coFileList" style="display:flex;flex-wrap:wrap;gap:10px"></div>
   </div>
 
   <!-- 客戶查詢區 -->
@@ -2648,14 +2608,6 @@ function stopVoiceInput() {
     </div>
     <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:10px;line-height:1.7">
       支援格式：CO-508 × 185　｜　CO-508 * 185　｜　CO-508 185　｜　CO-508,185
-    </div>
-  </div>
-
-  <!-- 等待解析 loading -->
-  <div id="coLoading" style="display:none;width:min(680px,98vw);margin:0 auto">
-    <div style="text-align:center;padding:32px;color:#64b5f6">
-      <div style="width:48px;height:48px;border:4px solid rgba(100,181,246,0.2);border-top-color:#64b5f6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div>
-      <div style="font-size:0.9rem;font-weight:500;letter-spacing:1px;color:rgba(255,255,255,0.7)">AI 解析中，請稍候...</div>
     </div>
   </div>
 
@@ -2706,7 +2658,7 @@ function stopVoiceInput() {
   <div style="margin-top:14px;text-align:center">
     <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;cursor:pointer">
       📁 或者選擇相簿圖片
-      <input type="file" accept="image/*,.pdf,.doc,.docx" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
+      <input type="file" accept="image/*" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
     </label>
   </div>
 </div>
@@ -3015,11 +2967,6 @@ function applyRolePermissions() {
     btn.style.opacity = allowed ? '1' : '0.35';
     btn.style.pointerEvents = allowed ? 'auto' : 'none';
   });
-  // 蘇董專用按鈕：只有 su 和 admin 角色可見
-  let suBtn = document.getElementById('btnSuPage');
-  if (suBtn) {
-    suBtn.style.display = (_currentRole === 'su' || _currentRole === 'admin') ? 'block' : 'none';
-  }
 // 採購：禁用出貨作業的數量編輯（只能看網格提示）
   if (_currentRole === 'purchase') {
     let sec = document.getElementById('outQtySection');
@@ -3043,9 +2990,7 @@ function applyRolePermissions() {
 
 // ==================== 頁面切換 ====================
 function doLogout() {
-  // 清除所有登入資訊，直接重載
-  localStorage.removeItem('_savedRole');
-  localStorage.removeItem('_savedPwd');
+  if (!confirm('確定要登出？')) return;
   location.reload();
 }
 
@@ -3112,9 +3057,6 @@ function coReset() {
   document.getElementById('coNotifyBar').style.display = 'none';
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coManualInput').value = '';
-  coUpdateStep(1);
-  document.getElementById('coFilePreview').style.display = 'none';
-  document.getElementById('coFileList').innerHTML = '';
 }
 
 // 開啟相機
@@ -3168,232 +3110,134 @@ function coSnapPhoto() {
   tryCapture();
 }
 
-// 從相簿選擇圖片（Camera Overlay 內）
-function coFileSelected(input) {
+// 統一上傳處理：圖片直接分析，文件提取文字
+function coUploadSelected(input) {
   if (!input.files || !input.files[0]) return;
   coStopCamera();
-  // 統一由 coDropZoneFile 處理
-  coDropZoneFile(input);
-}
-
-// 拖曳區：點擊選擇檔案
-async function coDropZoneFile(input) {
-  console.log('[coDropZoneFile] called, files:', input.files);
-  if (!input.files || !input.files[0]) {
-    console.warn('[coDropZoneFile] 沒有選擇檔案');
-    return;
-  }
   let file = input.files[0];
-  console.log('[coDropZoneFile] 選擇:', file.name, file.type, file.size);
+  coProcessUploadFile(file);
+}
 
-  // 顯示檔案預覽
-  coShowFilePreview(input.files);
-  // 進入步驟 1（已選擇檔案）
-  coUpdateStep(1);
-
-  // 圖片：直接處理
-  if (file.type.startsWith('image/')) {
-    coReadFileAsDataURL(file, function(dataUrl) {
-      let img = new Image();
-      img.onload = function() {
-        let canvas = document.getElementById('coCanvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
-        coUpdateStep(2); // 進入步驟 2：AI 分析中
-        coAnalyzeImage(canvas);
-      };
-      img.src = dataUrl;
-    });
-    return;
-  }
-
-  // PDF：使用 PDF.js 轉成圖片
-  if (file.type === 'application/pdf') {
-    coUpdateStep(2); // 進入步驟 2
-    document.getElementById('coLoading').style.display = 'block';
-    document.getElementById('coLoading').innerHTML =
-      '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.6)">' +
-      '<div style="font-size:2rem;margin-bottom:10px">📄</div>' +
-      '<div style="font-size:0.9rem">PDF 轉檔中，請稍候...</div>' +
-      '</div>';
-    try {
-      let arrayBuffer = await file.arrayBuffer();
-      // 動態載入 PDF.js
-      if (!window.pdfjsLib) {
-        console.log('[coDropZoneFile] 載入 PDF.js...');
-        await new Promise((resolve, reject) => {
-          let script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-          script.onload = () => {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-              'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            resolve();
-          };
-          script.onerror = () => reject(new Error('PDF.js CDN 載入失敗'));
-          document.head.appendChild(script);
-        });
-      }
-      await renderPdfPage(arrayBuffer);
-    } catch(e) {
-      console.error('[coDropZoneFile] PDF 處理失敗:', e);
-      document.getElementById('coLoading').style.display = 'none';
-      alert('PDF 處理失敗：' + e.message + '\n請將 PDF 截圖成圖片後再上傳，謝謝！');
+function coProcessUploadFile(file) {
+  let mime = file.type;
+  let isImage = mime.startsWith('image/');
+// 從相簿選擇圖片（橋接到 coUploadSelected）
+function coFileSelected(input) {
+  coUploadSelected(input);
+}
+    // 文件：提取文字後顯示編輯區
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      let text = e.target.result;
+      // 簡單清理控制字元
+      text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      if (!text) { alert('無法從此文件提取文字，請確認是文字型PDF或Word'); return; }
+      document.getElementById('coDocText').value = text;
+      document.getElementById('coDocPanel').style.display = 'block';
+      document.getElementById('coUploadZone').style.display = 'none';
+    };
+    if (isTxt) {
+      reader.readAsText(file, 'utf-8');
+    } else {
+      // PDF/Word 用 text/plain 嘗試讀取（純文字PDF可用）
+      reader.readAsText(file, 'utf-8');
     }
-    return;
-  }
-
-  // DOC/DOCX：提示用戶轉圖片
-  alert('WORD 檔案（.doc/.docx）請先截圖成圖片再上傳，謝謝！');
-}
-
-async function renderPdfPage(arrayBuffer) {
-  console.log('[renderPdfPage] 開始渲染 PDF');
-  let pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  console.log('[renderPdfPage] PDF 已載入，頁數:', pdf.numPages);
-  let page = await pdf.getPage(1);
-  let viewport = page.getViewport({ scale: 2.0 });
-  let canvas = document.getElementById('coCanvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  console.log('[renderPdfPage] 渲染中...');
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-  console.log('[renderPdfPage] 完成');
-  document.getElementById('coLoading').style.display = 'none';
-  coAnalyzeImage(canvas);
-}
-
-function coReadFileAsDataURL(file, callback) {
-  let reader = new FileReader();
-  reader.onload = function(e) { callback(e.target.result); };
-  reader.readAsDataURL(file);
-}
-
-// ==================== 步驟指示器 ====================
-function coUpdateStep(step) {
-  let steps = [1, 2, 3];
-  steps.forEach(s => {
-    let el = document.getElementById('coStep' + s);
-    if (!el) return;
-    el.classList.remove('active', 'completed');
-    if (s < step) el.classList.add('completed');
-    else if (s === step) el.classList.add('active');
-  });
-  // 線條狀態
-  let line12 = document.getElementById('coLine12');
-  let line23 = document.getElementById('coLine23');
-  if (line12) {
-    line12.classList.toggle('done', step > 1);
-    line12.style.background = step > 1 ? '#10b981' : 'rgba(255,255,255,0.1)';
-  }
-  if (line23) {
-    line23.classList.toggle('done', step > 2);
-    line23.style.background = step > 2 ? '#10b981' : 'rgba(255,255,255,0.1)';
-  }
-  console.log('[coUpdateStep] 目前步驟:', step);
-}
-
-function coGoToStep(step) {
-  // 根據目前狀態允許跳轉（僅允許回上一步或當前步）
-  // 這裡可扩展为根据实际状态限制跳转
-  let currentStep = 1;
-  if (document.getElementById('coStep3').classList.contains('completed')) currentStep = 3;
-  else if (document.getElementById('coStep2').classList.contains('active') ||
-           document.getElementById('coStep2').classList.contains('completed')) currentStep = 2;
-  if (step <= currentStep) {
-    coUpdateStep(step);
+  } else {
+    alert('不支援的檔案格式，請上傳 PNG / JPG / WEBP / PDF / Word / TXT');
   }
 }
 
-// ==================== 檔案預覽 ====================
-function coShowFilePreview(files) {
-  let preview = document.getElementById('coFilePreview');
-  let fileList = document.getElementById('coFileList');
-  let fileCount = document.getElementById('coFileCount');
-
-  if (!files || files.length === 0) {
-    preview.style.display = 'none';
-    return;
-  }
-
-  preview.style.display = 'block';
-  fileCount.textContent = `已選擇 ${files.length} 個檔案`;
-
-  let html = '';
-  for (let i = 0; i < files.length; i++) {
-    let file = files[i];
-    let isImage = file.type.startsWith('image/');
-    let icon = isImage ? '🖼' : (file.type === 'application/pdf' ? '📕' : '📄');
-    let name = file.name.length > 20 ? file.name.substring(0, 18) + '...' : file.name;
-    let size = (file.size / 1024).toFixed(0) + ' KB';
-
-    html += `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;font-size:0.75rem;color:rgba(255,255,255,0.7)">
-      <span style="font-size:1.2rem">${icon}</span>
-      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
-      <span style="color:rgba(255,255,255,0.3)">${size}</span>
-    </div>`;
-  }
-  fileList.innerHTML = html;
-}
-
-// 拖曳事件
+// 拖曳事件（已绑定到 coUploadZone 的 ondragover/ondragleave/ondrop）
 function coDragOver(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.add('drag-over');
+  document.getElementById('coUploadZone').classList.add('drag-over');
 }
 function coDragLeave(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.remove('drag-over');
+  document.getElementById('coUploadZone').classList.remove('drag-over');
 }
 function coDrop(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.remove('drag-over');
+  document.getElementById('coUploadZone').classList.remove('drag-over');
   let files = e.dataTransfer.files;
   if (files.length === 0) return;
-  let file = files[0];
-  // 支援圖片與 PDF
-  let allowed = file.type.startsWith('image/') || file.type === 'application/pdf';
-  if (!allowed) {
-    alert('請拖曳圖片或 PDF 檔案（PNG / JPG / WEBP / PDF）');
-    return;
+  coProcessUploadFile(files[0]);
+}
+
+// 送出文件文字分析
+async function coAnalyzeDocText() {
+  let text = document.getElementById('coDocText').value.trim();
+  if (!text) { alert('請先上傳文件'); return; }
+  document.getElementById('coDocPanel').style.display = 'none';
+  document.getElementById('coUploadZone').style.display = 'flex';
+  // 用本地 AI 解析文字中的品名×數量
+  let prompt = '你是國研化工的庫存管理助手。以下是從客戶訂單文件中提取的文字，請找出所有「品名 代號」和「數量（公斤）」的組合，用「品名 數量」的格式一行一行列出。只列出明確的組合，跳過猜測。如果品名只有代號（如CO-508、WP-175），直接用代號作為品名。\n\n文字內容：\n' + text;
+  try {
+    let res = await fetch('http://localhost:5000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: null, text: prompt })
+    });
+    let json = await res.json();
+    let answer = json.answer || json.response || '';
+    coParseAnswerToItems(answer);
+  } catch(e) {
+    // fallback：正則抓品名×數量
+    coParseByRegex(text);
   }
-  coStopCamera();
-  // 統一由 coDropZoneFile 處理（圖片/PDF分流）
-  coDropZoneFile({ files: [file] });
 }
 
-// ==================== 分析圖片：base64 → vision API（Windows MiniMax Proxy）=================
-// 使用 Windows 本機 Flask + Cloudflare Tunnel，支援外部手機連線上傳圖片分析
-function getVisionProxyUrl() {
-  // Windows Flask vision_proxy.py，cloudflared tunnel 轉發
-  return 'https://input-inns-brochure-arm.trycloudflare.com/analyze';
+// 關閉文件面板
+function coDocClose() {
+  document.getElementById('coDocPanel').style.display = 'none';
+  document.getElementById('coUploadZone').style.display = 'flex';
 }
 
+// 從AI回覆解析品名×數量
+function coParseAnswerToItems(answer) {
+  let lines = answer.split('\n').filter(l => l.trim());
+  let items = [];
+  lines.forEach(l => {
+    l = l.trim().replace(/^[●◆■○◆✅❌\-\*\#]+\s*/, '');
+    // 抓「品名 數量」或「品名×數量」
+    let m = l.match(/([A-Za-z0-9_\-]{2,})\s*[\*×xX]\s*(\d+(?:\.\d+)?)/);
+    if (!m) m = l.match(/([A-Za-z0-9_\-]{2,})\s+(\d+(?:\.\d+)?)\s*(?:KG|公斤|kg)?/);
+    if (!m) m = l.match(/(\d+(?:\.\d+)?)\s*[\*×xX]\s*([A-Za-z0-9_\-]{2,})/);
+    if (m) {
+      let name = m[2].toUpperCase().replace(/\s+/g, '-');
+      let qty = parseFloat(m[1]);
+      if (isNaN(qty)) { qty = parseFloat(m[2]); name = m[1].toUpperCase().replace(/\s+/g, '-'); }
+      if (!isNaN(qty) && qty > 0) items.push({ name: name.trim(), qty: qty });
+    }
+  });
+  if (items.length > 0) {
+    items.forEach(it => coAddItem(it.name, it.qty));
+  } else {
+    coParseByRegex(document.getElementById('coDocText').value);
+  }
+}
+
+// fallback：正則直接抓品名×數量
+function coParseByRegex(text) {
+  let items = [];
+  let matches = text.matchAll(/([A-Za-z]{2,}[\-]?\d+)\s*[\*×xX\-,]\s*(\d+(?:\.\d+)?)\s*(?:KG|公斤|kg)?/gi);
+  for (let m of matches) items.push({ name: m[1].toUpperCase(), qty: parseFloat(m[2]) });
+  if (items.length > 0) {
+    items.forEach(it => coAddItem(it.name, it.qty));
+  } else {
+    alert('找不到品名和數量的組合，請直接在手動輸入區填寫');
+  }
+}
+
+// 分析圖片：base64 → vision API（含超時保護）
 async function coAnalyzeImage(canvas) {
   console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
   document.getElementById('coResultSection').style.display = 'none';
-
-  // 圖片壓縮：限制最大 800px，避免 tunnel 逾時，同時加快上傳
-  const MAX_SIZE = 800;
-  let workCanvas = canvas;
-  if (canvas.width > MAX_SIZE || canvas.height > MAX_SIZE) {
-    let w = canvas.width, h = canvas.height;
-    if (w > h) { w = MAX_SIZE; h = Math.round(canvas.height * (MAX_SIZE / canvas.width)); }
-    else { h = MAX_SIZE; w = Math.round(canvas.width * (MAX_SIZE / canvas.height)); }
-    const tmp = document.createElement('canvas');
-    tmp.width = w; tmp.height = h;
-    tmp.getContext('2d').drawImage(canvas, 0, 0, w, h);
-    workCanvas = tmp;
-    console.log('[coAnalyzeImage] 已縮小至:', w, 'x', h);
-  }
-
-  let dataUrl = workCanvas.toDataURL('image/jpeg', 0.5);
+  let dataUrl = canvas.toDataURL('image/jpeg', 0.85);
   let base64 = dataUrl.split(',')[1];
   let answer = null;
   let allFailed = false;
@@ -3405,10 +3249,9 @@ async function coAnalyzeImage(canvas) {
   }, 20000); // 20秒超時（proxy 端 30秒）
 
   try {
-    // 自動偵測 proxy URL（同機器用 localhost，外部設備用 WSL IP）
-    let proxyUrl = getVisionProxyUrl();
-    console.log('[coAnalyzeImage] 呼叫 proxy:', proxyUrl);
-    let res = await fetch(proxyUrl, {
+    // 走本地 vision_proxy（NVIDIA/Groq API key 在 WSL 端，不會暴露）
+    console.log('[coAnalyzeImage] 呼叫本地 proxy http://localhost:5000/analyze');
+    let res = await fetch('http://localhost:5000/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64 })
@@ -3432,7 +3275,6 @@ async function coAnalyzeImage(canvas) {
           </div>`;
         document.getElementById('coResultCount').textContent = '';
         document.getElementById('coNotifyBar').style.display = 'none';
-        if(document.getElementById('coRoleChips'))
         document.getElementById('coRoleChips').innerHTML = '';
         clearTimeout(timeoutId);
         return;
@@ -3471,8 +3313,7 @@ async function coAnalyzeImage(canvas) {
       </div>`;
     document.getElementById('coResultCount').textContent = '';
     document.getElementById('coNotifyBar').style.display = 'none';
-    if(document.getElementById('coRoleChips'))
-        document.getElementById('coRoleChips').innerHTML = '';
+    document.getElementById('coRoleChips').innerHTML = '';
     return;
   }
 
@@ -3518,7 +3359,6 @@ function coParseAnswer(text) {
 
 // 比對庫存，顯示結果（業務友善版）
 function coDisplayResults(items) {
-  coUpdateStep(3); // 進入步驟 3：庫存結果
   let data = getData();
   _coItems = items.map(it => {
     let p = data.products.find(x => x.name === it.name);
@@ -3646,9 +3486,6 @@ function coClearAll() {
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coResultSection').style.display = 'none';
   document.getElementById('coNotifyBar').style.display = 'none';
-  coUpdateStep(1);
-  document.getElementById('coFilePreview').style.display = 'none';
-  document.getElementById('coFileList').innerHTML = '';
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
@@ -4932,7 +4769,13 @@ function initApp() {
 
 // ==================== 事件監聽器 ====================
 document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('btnSu').addEventListener('click', function() {showPwdInput('su');});
+  document.getElementById('btnFactory').addEventListener('click', function() {showPwdInput('factory');});
+  document.getElementById('btnWarehouse').addEventListener('click', function() {showPwdInput('warehouse');});
+  document.getElementById('btnPurchase').addEventListener('click', function() {showPwdInput('purchase');});
+  document.getElementById('btnAdmin').addEventListener('click', function() {showPwdInput('admin');});
   document.getElementById('loginPwd').addEventListener('keydown', function(e) {if (e.key === 'Enter') tryLogin();});
+  document.getElementById('btnBack').addEventListener('click', function() {backToRoles();});
   initApp();
 });
 
