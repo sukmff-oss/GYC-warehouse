@@ -85,7 +85,7 @@ def order():
         items = data.get("items", [])
         total = data.get("total", 0)
         
-        lines = ["🍜 國研化工員工餐廳", "━━━━━━━━━━━━━━━"]
+        lines = ["🚗 粉紅超跑外送", "━━━━━━━━━━━━━━━"]
         for item in items:
             lines.append(f"• {item['name']} x{item['qty']} = ${item['price']}")
         lines.append("━━━━━━━━━━━━━━━")
@@ -102,7 +102,7 @@ def order():
 # ==================== LINE 測試 ====================
 @app.route("/test-line")
 def test_line():
-    result = line_push_message("✅ LINE 通知測試成功！國研化工員工餐廳系統已就緒。")
+    result = line_push_message("✅ LINE 通知測試成功！國研化工外送系統已就緒。")
     return jsonify(result)
 
 if __name__ == "__main__":
