@@ -2248,7 +2248,7 @@ function stopVoiceInput() {
       <span class="menu-label">類別管理</span>
     </button>
     <!-- 第4排：蘇董專用（限蘇董和管理員） -->
-    <button class="menu-btn" id="btnSuPage" onclick="showPage('stockPageSu')" style="display:none">
+    <button class="menu-btn" id="btnSuPage" onclick="showPage('stockPageSu')">
       <span class="role-icon-wrap stock"><span class="role-icon">👁️</span></span>
       <span class="menu-label">蘇董專用</span>
     </button>
@@ -3018,7 +3018,7 @@ function applyRolePermissions() {
   // 蘇董專用按鈕：只有 su 和 admin 角色可見
   let suBtn = document.getElementById('btnSuPage');
   if (suBtn) {
-    suBtn.style.display = (_currentRole === 'su' || _currentRole === 'admin') ? 'grid' : 'none';
+    suBtn.style.display = (_currentRole === 'su' || _currentRole === 'admin') ? 'block' : 'none';
   }
 // 採購：禁用出貨作業的數量編輯（只能看網格提示）
   if (_currentRole === 'purchase') {
