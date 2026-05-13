@@ -16,22 +16,8 @@
       position: relative;
       overflow: hidden;
     }
-    .header::before {
-      content: '🐝';
-      position: absolute;
-      top: 8px;
-      left: 20px;
-      font-size: 2.5rem;
-      opacity: 0.4;
-    }
-    .header::after {
-      content: '⚡';
-      position: absolute;
-      top: 8px;
-      right: 20px;
-      font-size: 2rem;
-      opacity: 0.4;
-    }
+    .header::before { content: '🐝'; position: absolute; top: 8px; left: 20px; font-size: 2.5rem; opacity: 0.4; }
+    .header::after { content: '⚡'; position: absolute; top: 8px; right: 20px; font-size: 2rem; opacity: 0.4; }
     .header h1 { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; }
     .header small { display: block; font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
 
@@ -48,44 +34,61 @@
     }
     .notice strong { font-size: 1.1rem; }
 
-    .order-list { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .order-list { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
 
-    .order-item {
+    .category {
       background: white;
       border-radius: 20px;
       padding: 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
       box-shadow: 0 4px 20px rgba(255,77,109,0.08);
       border: 1px solid #ffe4ec;
-      transition: all 0.2s ease;
     }
-    .order-item:active { transform: scale(0.98); }
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #c9184a;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px dashed #ffb3c6;
+    }
+    .category-title span { font-size: 1.4rem; }
+
+    .order-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f8f8f8;
+    }
+    .order-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .order-item:first-of-type { padding-top: 0; }
 
     .item-icon {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
       background: linear-gradient(135deg, #fff0f5, #ffe4ec);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       flex-shrink: 0;
       border: 2px solid #ffb3c6;
     }
     .item-info { flex: 1; }
-    .item-name { font-size: 1.1rem; font-weight: bold; color: #2d2d2d; }
-    .item-price { font-size: 1rem; color: #e63973; margin-top: 4px; font-weight: bold; }
+    .item-name { font-size: 1rem; font-weight: bold; color: #2d2d2d; }
+    .item-price { font-size: 0.9rem; color: #e63973; margin-top: 2px; font-weight: bold; }
 
-    .qty-control { display: flex; align-items: center; gap: 12px; }
+    .qty-control { display: flex; align-items: center; gap: 10px; }
     .qty-btn {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: none;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
       display: flex;
@@ -93,10 +96,10 @@
       justify-content: center;
       transition: all 0.2s;
     }
-    .qty-btn.minus { background: #f8f8f8; color: #999; border: 2px solid #eee; }
-    .qty-btn.plus { background: linear-gradient(135deg, #ff8fab, #ff4d6d); color: white; border: none; box-shadow: 0 4px 12px rgba(255,77,109,0.3); }
+    .qty-btn.minus { background: #f5f5f5; color: #999; border: 2px solid #eee; }
+    .qty-btn.plus { background: linear-gradient(135deg, #ff8fab, #ff4d6d); color: white; border: none; box-shadow: 0 3px 10px rgba(255,77,109,0.3); }
     .qty-btn:active { transform: scale(0.9); }
-    .qty-num { font-size: 1.2rem; font-weight: bold; min-width: 36px; text-align: center; color: #c9184a; }
+    .qty-num { font-size: 1.1rem; font-weight: bold; min-width: 32px; text-align: center; color: #c9184a; }
 
     .bottom-bar {
       position: fixed;
@@ -153,53 +156,89 @@
 
 <script>
 const menu = [
-  { id: 1, name: '滷肉飯', price: 60, icon: '🍚' },
-  { id: 2, name: '便當', price: 100, icon: '🍱' },
-  { id: 3, name: '咖哩飯', price: 90, icon: '🍛' },
-  { id: 4, name: '陽春麵', price: 70, icon: '🍜' },
-  { id: 5, name: '牛肉麵', price: 120, icon: '🥩' },
-  { id: 6, name: '餛飩湯', price: 80, icon: '🥟' },
-  { id: 7, name: '鐵板麵', price: 60, icon: '🍳' },
-  { id: 8, name: '炸雞排', price: 70, icon: '🍗' },
-  { id: 9, name: '薯條', price: 40, icon: '🍟' },
-  { id: 10, name: '貢丸湯', price: 50, icon: '🍡' },
-  { id: 11, name: '豆漿', price: 25, icon: '🥛' },
-  { id: 12, name: '奶茶', price: 30, icon: '🧋' },
+  // 🍜 麵食
+  { category: '🍜 麵食', items: [
+    { id: 1, name: '陽春麵', price: 70, icon: '🍜' },
+    { id: 2, name: '牛肉麵', price: 120, icon: '🥩' },
+    { id: 3, name: '餛飩湯', price: 80, icon: '🥟' },
+    { id: 4, name: '鐵板麵', price: 60, icon: '🍳' },
+  ]},
+  // 🍚 飯類
+  { category: '🍚 飯類', items: [
+    { id: 5, name: '滷肉飯', price: 60, icon: '🍚' },
+    { id: 6, name: '便當', price: 100, icon: '🍱' },
+    { id: 7, name: '咖哩飯', price: 90, icon: '🍛' },
+  ]},
+  // 🍗 炸物
+  { category: '🍗 炸物', items: [
+    { id: 8, name: '炸雞排', price: 70, icon: '🍗' },
+    { id: 9, name: '薯條', price: 40, icon: '🍟' },
+    { id: 10, name: '炸粿', price: 40, icon: '🫓' },
+  ]},
+  // 🥢 滷味
+  { category: '🥢 滷味', items: [
+    { id: 11, name: '滷蛋', price: 15, icon: '🥚' },
+    { id: 12, name: '豆干', price: 15, icon: '🟤' },
+    { id: 13, name: '貢丸', price: 30, icon: '🍡' },
+  ]},
+  // 🥚 蔥油蛋餅
+  { category: '🥚 蔥油蛋餅', items: [
+    { id: 14, name: '蔥油餅', price: 35, icon: '🫓' },
+    { id: 15, name: '蛋餅', price: 35, icon: '🥚' },
+    { id: 16, name: '蔥抓餅', price: 40, icon: '🫓' },
+  ]},
+  // 🧋 飲料
+  { category: '🧋 飲料', items: [
+    { id: 17, name: '豆漿', price: 25, icon: '🥛' },
+    { id: 18, name: '奶茶', price: 30, icon: '🧋' },
+    { id: 19, name: '紅茶', price: 25, icon: '🍵' },
+  ]},
 ];
+
 const orders = {};
 let total = 0;
+
 function renderMenu() {
   const list = document.getElementById('orderList');
-  list.innerHTML = menu.map(item => `
-    <div class="order-item">
-      <div class="item-icon">${item.icon}</div>
-      <div class="item-info">
-        <div class="item-name">${item.name}</div>
-        <div class="item-price">$${item.price}</div>
-      </div>
-      <div class="qty-control">
-        <button class="qty-btn minus" onclick="changeQty(${item.id}, -1)">−</button>
-        <span class="qty-num" id="qty-${item.id}">0</span>
-        <button class="qty-btn plus" onclick="changeQty(${item.id}, 1)">+</button>
-      </div>
+  list.innerHTML = menu.map(cat => `
+    <div class="category">
+      <div class="category-title">${cat.category}</div>
+      ${cat.items.map(item => `
+        <div class="order-item">
+          <div class="item-icon">${item.icon}</div>
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">$${item.price}</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn minus" onclick="changeQty(${item.id}, -1)">−</button>
+            <span class="qty-num" id="qty-${item.id}">0</span>
+            <button class="qty-btn plus" onclick="changeQty(${item.id}, 1)">+</button>
+          </div>
+        </div>
+      `).join('')}
     </div>
   `).join('');
 }
+
 function changeQty(id, delta) {
   if (!orders[id]) orders[id] = 0;
   orders[id] = Math.max(0, orders[id] + delta);
   document.getElementById('qty-' + id).textContent = orders[id];
   recalc();
 }
+
 function recalc() {
-  total = menu.reduce((sum, item) => sum + (orders[item.id] || 0) * item.price, 0);
+  total = menu.flatMap(c => c.items).reduce((sum, item) => sum + (orders[item.id] || 0) * item.price, 0);
   document.getElementById('totalAmount').textContent = total;
   document.getElementById('submitBtn').disabled = total === 0;
 }
+
 const API_BASE = 'https://gyc-warehouse.onrender.com';
+
 function submitOrder() {
   if (total === 0) return;
-  const orderItems = menu.filter(item => (orders[item.id] || 0) > 0).map(item => ({ name: item.name, price: item.price, qty: orders[item.id] }));
+  const orderItems = menu.flatMap(c => c.items).filter(item => (orders[item.id] || 0) > 0).map(item => ({ name: item.name, price: item.price, qty: orders[item.id] }));
   const orderData = { items: orderItems, total: total, time: new Date().toLocaleString('zh-TW') };
   const btn = document.getElementById('submitBtn');
   btn.textContent = '傳送中...';
@@ -210,11 +249,12 @@ function submitOrder() {
     if (res.success) { alert('✅ 訂單已送出！\n\n您的手機將收到 LINE 通知。'); }
     else { alert('❌ 傳送失敗：' + (res.error || '未知錯誤')); }
     Object.keys(orders).forEach(k => orders[k] = 0);
-    menu.forEach(item => { document.getElementById('qty-' + item.id).textContent = '0'; });
+    menu.flatMap(c => c.items).forEach(item => { document.getElementById('qty-' + item.id).textContent = '0'; });
     recalc();
   })
   .catch(err => { alert('❌ 網路錯誤：' + err); btn.textContent = '送出訂單'; btn.disabled = false; });
 }
+
 renderMenu();
 </script>
 </body>
