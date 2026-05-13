@@ -3057,7 +3057,9 @@ function applyRolePermissions() {
 
 // ==================== 頁面切換 ====================
 function doLogout() {
-  if (!confirm('確定要登出？')) return;
+  // 清除所有登入資訊，直接重載
+  localStorage.removeItem('_savedRole');
+  localStorage.removeItem('_savedPwd');
   location.reload();
 }
 
