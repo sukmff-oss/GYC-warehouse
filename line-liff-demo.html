@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>🚗 粉紅超跑外送</title>
+  <title>🐝 工地小蜜蜂外送</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif; background: #fff5f8; min-height: 100vh; padding-bottom: 90px; }
 
-    /* 頂部 Header */
     .header {
       background: linear-gradient(135deg, #ff8fab 0%, #ff4d6d 100%);
       color: white;
@@ -18,25 +17,24 @@
       overflow: hidden;
     }
     .header::before {
-      content: '🚗';
+      content: '🐝';
       position: absolute;
-      top: 10px;
+      top: 8px;
       left: 20px;
-      font-size: 2rem;
-      opacity: 0.3;
+      font-size: 2.5rem;
+      opacity: 0.4;
     }
     .header::after {
-      content: '💕';
+      content: '⚡';
       position: absolute;
-      top: 10px;
+      top: 8px;
       right: 20px;
       font-size: 2rem;
-      opacity: 0.3;
+      opacity: 0.4;
     }
     .header h1 { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; }
     .header small { display: block; font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
 
-    /* 公告 */
     .notice {
       margin: 16px 16px 0;
       padding: 14px 16px;
@@ -50,10 +48,8 @@
     }
     .notice strong { font-size: 1.1rem; }
 
-    /* 菜單列表 */
     .order-list { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 
-    /* 餐點卡片 */
     .order-item {
       background: white;
       border-radius: 20px;
@@ -83,7 +79,6 @@
     .item-name { font-size: 1.1rem; font-weight: bold; color: #2d2d2d; }
     .item-price { font-size: 1rem; color: #e63973; margin-top: 4px; font-weight: bold; }
 
-    /* 數量增減按鈕 */
     .qty-control { display: flex; align-items: center; gap: 12px; }
     .qty-btn {
       width: 40px;
@@ -98,27 +93,11 @@
       justify-content: center;
       transition: all 0.2s;
     }
-    .qty-btn.minus {
-      background: #f8f8f8;
-      color: #999;
-      border: 2px solid #eee;
-    }
-    .qty-btn.plus {
-      background: linear-gradient(135deg, #ff8fab, #ff4d6d);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 12px rgba(255,77,109,0.3);
-    }
+    .qty-btn.minus { background: #f8f8f8; color: #999; border: 2px solid #eee; }
+    .qty-btn.plus { background: linear-gradient(135deg, #ff8fab, #ff4d6d); color: white; border: none; box-shadow: 0 4px 12px rgba(255,77,109,0.3); }
     .qty-btn:active { transform: scale(0.9); }
-    .qty-num {
-      font-size: 1.2rem;
-      font-weight: bold;
-      min-width: 36px;
-      text-align: center;
-      color: #c9184a;
-    }
+    .qty-num { font-size: 1.2rem; font-weight: bold; min-width: 36px; text-align: center; color: #c9184a; }
 
-    /* 底部固定欄 */
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -147,18 +126,14 @@
       box-shadow: 0 6px 20px rgba(255,77,109,0.4);
       transition: all 0.2s;
     }
-    .submit-btn:disabled {
-      background: #ddd;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
+    .submit-btn:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; }
     .submit-btn:not(:disabled):active { transform: scale(0.95); }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🚗 粉紅超跑外送</h1>
+  <h1>🐝 工地小蜜蜂外送</h1>
   <small>每週一至週五 11:30 供餐</small>
 </div>
 
@@ -178,12 +153,18 @@
 
 <script>
 const menu = [
-  { id: 1, name: '紅燒牛肉麵', price: 120, icon: '🍜' },
-  { id: 2, name: '陽春麵', price: 80, icon: '🍜' },
-  { id: 3, name: '餛飩湯', price: 90, icon: '🥟' },
-  { id: 4, name: '滷肉飯', price: 60, icon: '🍚' },
-  { id: 5, name: '貢丸湯', price: 50, icon: '🍡' },
-  { id: 6, name: '燙青菜', price: 40, icon: '🥬' },
+  { id: 1, name: '滷肉飯', price: 60, icon: '🍚' },
+  { id: 2, name: '便當', price: 100, icon: '🍱' },
+  { id: 3, name: '咖哩飯', price: 90, icon: '🍛' },
+  { id: 4, name: '陽春麵', price: 70, icon: '🍜' },
+  { id: 5, name: '牛肉麵', price: 120, icon: '🥩' },
+  { id: 6, name: '餛飩湯', price: 80, icon: '🥟' },
+  { id: 7, name: '鐵板麵', price: 60, icon: '🍳' },
+  { id: 8, name: '炸雞排', price: 70, icon: '🍗' },
+  { id: 9, name: '薯條', price: 40, icon: '🍟' },
+  { id: 10, name: '貢丸湯', price: 50, icon: '🍡' },
+  { id: 11, name: '豆漿', price: 25, icon: '🥛' },
+  { id: 12, name: '奶茶', price: 30, icon: '🧋' },
 ];
 const orders = {};
 let total = 0;
