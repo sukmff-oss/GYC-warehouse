@@ -89,7 +89,7 @@ def order():
         for item in items:
             lines.append(f"• {item['name']} x{item['qty']} = ${item['price']}")
         lines.append("━━━━━━━━━━━━━━━")
-        lines.append(f"📍 外送：{data.get('location', '')}")
+        lines.append(f"📍 地點：{data.get('location', '')}")
         lines.append(f"💰 合計：${total}")
         lines.append(f"🕐 時間：{data.get('time', '')}")
         
