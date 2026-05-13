@@ -1,12 +1,14 @@
 """
-Vision Proxy + LINE 點餐通知 - Railway Ready
+Vision Proxy + LINE 點餐通知 - Railway Ready + CORS
 """
 import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import base64
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
 # ===== MiniMax API 設定 =====
 MINIMAX_API_KEY = os.environ.get("MINIMAX_API_KEY", "")
@@ -83,7 +85,6 @@ def order():
         items = data.get("items", [])
         total = data.get("total", 0)
         
-        # 組 LINE 訊息
         lines = ["🍜 國研化工員工餐廳", "━━━━━━━━━━━━━━━"]
         for item in items:
             lines.append(f"• {item['name']} x{item['qty']} = ${item['price']}")
