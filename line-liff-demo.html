@@ -63,7 +63,7 @@ function recalc() {
   document.getElementById('totalAmount').textContent = total;
   document.getElementById('submitBtn').disabled = total === 0;
 }
-const API_BASE = 'https://diff-everywhere-dream-atmospheric.trycloudflare.com';
+const API_BASE = 'https://gyc-warehouse.onrender.com';
 function submitOrder() {
   if (total === 0) return;
   const orderItems = menu.filter(item => (orders[item.id] || 0) > 0).map(item => ({ name: item.name, price: item.price, qty: orders[item.id] }));
