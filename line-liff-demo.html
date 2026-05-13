@@ -101,6 +101,46 @@
     .qty-btn:active { transform: scale(0.9); }
     .qty-num { font-size: 1.1rem; font-weight: bold; min-width: 32px; text-align: center; color: #c9184a; }
 
+    /* 外送地點選擇 */
+    .location-section {
+      margin: 0 16px;
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(255,77,109,0.08);
+      border: 2px solid #ffb3c6;
+    }
+    .location-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #c9184a;
+      margin-bottom: 14px;
+    }
+    .location-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .location-btn {
+      padding: 12px;
+      border: 2px solid #ffe4ec;
+      border-radius: 12px;
+      background: white;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .location-btn.selected {
+      border-color: #ff4d6d;
+      background: linear-gradient(135deg, #ff8fab, #ff4d6d);
+      color: white;
+    }
+
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -145,6 +185,18 @@
 </div>
 
 <div class="order-list" id="orderList"></div>
+
+<div class="location-section">
+  <div class="location-title">📍 選擇外送地區</div>
+  <div class="location-grid">
+    <button class="location-btn" onclick="selectLocation('蘆竹區', this)">1️⃣ 蘆竹區</button>
+    <button class="location-btn" onclick="selectLocation('大園區', this)">2️⃣ 大園區</button>
+    <button class="location-btn" onclick="selectLocation('大湳區', this)">3️⃣ 大湳區</button>
+    <button class="location-btn" onclick="selectLocation('中壢區', this)">4️⃣ 中壢區</button>
+  </div>
+</div>
+
+<div style="height: 100px;"></div>
 
 <div class="bottom-bar">
   <div class="total-section">
@@ -192,6 +244,7 @@ const menu = [
 
 const orders = {};
 let total = 0;
+let selectedLocation = '';
 
 function renderMenu() {
   const list = document.getElementById('orderList');
@@ -216,6 +269,13 @@ function renderMenu() {
   `).join('');
 }
 
+function selectLocation(location, btn) {
+  selectedLocation = location;
+  document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  checkSubmit();
+}
+
 function changeQty(id, delta) {
   if (!orders[id]) orders[id] = 0;
   orders[id] = Math.max(0, orders[id] + delta);
@@ -226,25 +286,37 @@ function changeQty(id, delta) {
 function recalc() {
   total = menu.flatMap(c => c.items).reduce((sum, item) => sum + (orders[item.id] || 0) * item.price, 0);
   document.getElementById('totalAmount').textContent = total;
-  document.getElementById('submitBtn').disabled = total === 0;
+  checkSubmit();
+}
+
+function checkSubmit() {
+  const hasItems = menu.flatMap(c => c.items).some(item => orders[item.id] > 0);
+  document.getElementById('submitBtn').disabled = !(hasItems && selectedLocation);
 }
 
 const API_BASE = 'https://gyc-warehouse.onrender.com';
 
 function submitOrder() {
-  if (total === 0) return;
+  if (total === 0 || !selectedLocation) return;
   const orderItems = menu.flatMap(c => c.items).filter(item => (orders[item.id] || 0) > 0).map(item => ({ name: item.name, price: item.price, qty: orders[item.id] }));
-  const orderData = { items: orderItems, total: total, time: new Date().toLocaleString('zh-TW') };
+  const orderData = { 
+    items: orderItems, 
+    total: total, 
+    location: selectedLocation,
+    time: new Date().toLocaleString('zh-TW') 
+  };
   const btn = document.getElementById('submitBtn');
   btn.textContent = '傳送中...';
   btn.disabled = true;
   fetch(API_BASE + '/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(orderData) })
   .then(r => r.json())
   .then(res => {
-    if (res.success) { alert('✅ 訂單已送出！\n\n您的手機將收到 LINE 通知。'); }
+    if (res.success) { alert('✅ 訂單已送出！\n\n外送地區：' + selectedLocation + '\n您的手機將收到 LINE 通知。'); }
     else { alert('❌ 傳送失敗：' + (res.error || '未知錯誤')); }
     Object.keys(orders).forEach(k => orders[k] = 0);
     menu.flatMap(c => c.items).forEach(item => { document.getElementById('qty-' + item.id).textContent = '0'; });
+    document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('selected'));
+    selectedLocation = '';
     recalc();
   })
   .catch(err => { alert('❌ 網路錯誤：' + err); btn.textContent = '送出訂單'; btn.disabled = false; });
