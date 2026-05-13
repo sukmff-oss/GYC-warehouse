@@ -214,25 +214,54 @@ function recalc() {
   document.getElementById('submitBtn').disabled = total === 0;
 }
 
+const API_BASE = 'https://cooking-pushed-absence-treat.trycloudflare.com';
+
 function submitOrder() {
   if (total === 0) return;
-  let msg = '🍜 點餐訂單\n━━━━━━━━━\n';
-  menu.forEach(item => {
-    if (orders[item.id] > 0) {
-      msg += `${item.name} x${orders[item.id]} = $${item.price * orders[item.id]}\n`;
+  
+  // 組合訂單資料
+  const orderItems = menu.filter(item => (orders[item.id] || 0) > 0).map(item => ({
+    name: item.name,
+    price: item.price,
+    qty: orders[item.id]
+  }));
+  
+  const orderData = {
+    items: orderItems,
+    total: total,
+    time: new Date().toLocaleString('zh-TW')
+  };
+  
+  // 顯示傳送中
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = '傳送中...';
+  btn.disabled = true;
+  
+  // 發送到 Flask 伺服器
+  fetch(API_BASE + '/order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderData)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      alert('✅ 訂單已送出！\n\n您的手機將收到 LINE 通知。');
+    } else {
+      alert('❌ 傳送失敗：' + (res.error || '未知錯誤'));
     }
+    // 重置
+    Object.keys(orders).forEach(k => orders[k] = 0);
+    menu.forEach(item => {
+      document.getElementById('qty-' + item.id).textContent = '0';
+    });
+    recalc();
+  })
+  .catch(err => {
+    alert('❌ 網路錯誤：' + err);
+    btn.textContent = '送出訂單';
+    btn.disabled = false;
   });
-  msg += `━━━━━━━━━\n💰 合計：$${total}\n📝 時間：${new Date().toLocaleString('zh-TW')}`;
-  
-  // 示範用 alert，正式可改成 LINE 發送
-  alert('訂單已送出！\n\n' + msg);
-  
-  // 重置
-  Object.keys(orders).forEach(k => orders[k] = 0);
-  menu.forEach(item => {
-    document.getElementById('qty-' + item.id).textContent = '0';
-  });
-  recalc();
 }
 
 renderMenu();
