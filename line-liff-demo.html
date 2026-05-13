@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>員工餐廳點餐</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    .header {
+      background: linear-gradient(135deg, #00b900, #00a000);
+      color: white;
+      padding: 20px 16px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header small {
+      display: block;
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+    .order-list {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .order-item {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .item-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      background: #fff3e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .item-info {
+      flex: 1;
+    }
+    .item-name {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+    .item-price {
+      font-size: 0.85rem;
+      color: #e53935;
+      margin-top: 2px;
+    }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .qty-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn.minus {
+      background: #eeeeee;
+      color: #666;
+    }
+    .qty-btn.plus {
+      background: #00b900;
+      color: white;
+    }
+    .qty-num {
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+    }
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 16px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .total-section {
+      flex: 1;
+    }
+    .total-label {
+      font-size: 0.8rem;
+      color: #999;
+    }
+    .total-price {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #e53935;
+    }
+    .submit-btn {
+      background: #00b900;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .notice {
+      margin: 0 12px 12px;
+      padding: 10px 14px;
+      background: #fff8e1;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #795548;
+      border-left: 4px solid #ffb300;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  🍜 國研化工員工餐廳
+  <small>每週一至週五 11:30 供餐</small>
+</div>
+
+<div class="notice">
+  ⚠️ 今日開放點餐至 11:00，逾時不候。
+</div>
+
+<div class="order-list" id="orderList">
+  <!-- 動態產生 -->
+</div>
+
+<div class="bottom-bar">
+  <div class="total-section">
+    <div class="total-label">訂單合計</div>
+    <div class="total-price">$<span id="totalAmount">0</span></div>
+  </div>
+  <button class="submit-btn" id="submitBtn" onclick="submitOrder()" disabled>送出訂單</button>
+</div>
+
+<script>
+// 菜單資料
+const menu = [
+  { id: 1, name: '紅燒牛肉麵', price: 120, icon: '🍜' },
+  { id: 2, name: '陽春麵', price: 80, icon: '🍜' },
+  { id: 3, name: '餛飩湯', price: 90, icon: '🥟' },
+  { id: 4, name: '滷肉飯', price: 60, icon: '🍚' },
+  { id: 5, name: '貢丸湯', price: 50, icon: '🍡' },
+  { id: 6, name: '燙青菜', price: 40, icon: '🥬' },
+];
+
+const orders = {};
+let total = 0;
+
+function renderMenu() {
+  const list = document.getElementById('orderList');
+  list.innerHTML = menu.map(item => `
+    <div class="order-item">
+      <div class="item-icon">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-price">$${item.price}</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn minus" onclick="changeQty(${item.id}, -1)">−</button>
+        <span class="qty-num" id="qty-${item.id}">0</span>
+        <button class="qty-btn plus" onclick="changeQty(${item.id}, 1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeQty(id, delta) {
+  if (!orders[id]) orders[id] = 0;
+  orders[id] = Math.max(0, orders[id] + delta);
+  document.getElementById('qty-' + id).textContent = orders[id];
+  recalc();
+}
+
+function recalc() {
+  total = menu.reduce((sum, item) => sum + (orders[item.id] || 0) * item.price, 0);
+  document.getElementById('totalAmount').textContent = total;
+  document.getElementById('submitBtn').disabled = total === 0;
+}
+
+function submitOrder() {
+  if (total === 0) return;
+  let msg = '🍜 點餐訂單\n━━━━━━━━━\n';
+  menu.forEach(item => {
+    if (orders[item.id] > 0) {
+      msg += `${item.name} x${orders[item.id]} = $${item.price * orders[item.id]}\n`;
+    }
+  });
+  msg += `━━━━━━━━━\n💰 合計：$${total}\n📝 時間：${new Date().toLocaleString('zh-TW')}`;
+  
+  // 示範用 alert，正式可改成 LINE 發送
+  alert('訂單已送出！\n\n' + msg);
+  
+  // 重置
+  Object.keys(orders).forEach(k => orders[k] = 0);
+  menu.forEach(item => {
+    document.getElementById('qty-' + item.id).textContent = '0';
+  });
+  recalc();
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>
