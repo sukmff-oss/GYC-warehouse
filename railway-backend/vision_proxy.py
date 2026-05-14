@@ -598,8 +598,10 @@ def kitchen_update():
         order["status"] = status
         # Notify user
         if status == "ready":
-            # 發送 Flex Message 私人卡片（顧客點按鈕確認，不暴露在群組）
-            line_push_flex_confirm(order)
+            uid = order.get("user_id", "")
+            if uid:
+                line_push_flex_confirm(order)
+                line_push(uid, "✅ 您的餐點已備好，請取餐！🚗\n\n請在私人訊息中點「✅ 已取餐確認」按鈕完成訂單")
         elif status == "delivered":
             line_push(order.get("user_id", ""), "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
         elif status == "preparing":
