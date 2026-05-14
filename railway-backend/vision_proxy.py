@@ -337,7 +337,16 @@ def order():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ==================== 廚房面板（用字串拼接，避免巢狀問題）====================
+# ---- 廚房面板 Debug ----
+@app.route("/kitchen/test")
+def kitchen_test():
+    try:
+        active = [o for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
+        return "orders count: " + str(len(active))
+    except Exception as e:
+        return "error: " + str(e), 500
+
+# ---- 廚房面板（用字串拼接，避免巢狀問題）====================
 @app.route("/kitchen")
 def kitchen():
     try:
