@@ -136,13 +136,19 @@ def format_user_orders(user_id):
 
     lines = ["📋 您的訂單列表", "━━━━━━━━━━━━━━━"]
     for o in orders:
-        lines.append(f"#{o['id']} | {STATUS_NAMES.get(o['status'], o['status'])}")
+        status = STATUS_NAMES.get(o['status'], o['status'])
+        if o['status'] == 'ready':
+            lines.append(f"#{o['id']} | 📢 {status} 請取餐！")
+            lines.append(f"  💡 收到餐點後請回覆：@order 確認 #{o['id']}")
+        else:
+            lines.append(f"#{o['id']} | {status}")
         for item in o['items']:
             lines.append(f"  • {item['name']} x{item['qty']}")
         lines.append(f"  💰 ${o['total']} | 🕐 {o['created_at']}")
         lines.append("")
     lines.append("━━━━━━━━━━━━━━━")
     lines.append("📝 取消請傳：@order 取消 #訂單ID")
+    lines.append("✅ 取餐確認：@order 確認 #訂單ID")
     return "\n".join(lines)
 
 # ==================== LINE 指令處理 ====================
@@ -183,6 +189,23 @@ def handle_order_command(cmd, user_id, user_name, reply_token):
             return f"❌ 訂單 #{oid} 已經在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法取消"
         order['status'] = 'cancelled'
         return f"✅ 訂單 #{oid} 已取消"
+
+    # 顧客確認收到餐點
+    if cmd.startswith("確認 ") or cmd.startswith("收餐 ") or cmd.startswith("已取餐 "):
+        confirm_id = re.search(r'[#@]?(\w{6,8})', cmd)
+        if not confirm_id:
+            return "❌ 請指定訂單ID，例如：@order 確認 #ABC12345"
+        oid = confirm_id.group(1).upper()
+        order = orders_db.get(oid)
+        if not order:
+            return f"❌ 找不到訂單 #{oid}"
+        if order.get('user_id') != user_id:
+            return "❌ 只有訂購人可以確認自己的訂單"
+        if order['status'] != 'ready':
+            return f"❌ 訂單 #{oid} 目前在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法確認"
+        order['status'] = 'delivered'
+        line_push(user_id, "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
+        return f"✅ 訂單 #{oid} 已確認完成，感謝您的好評！"
 
     # 製作訂單
     items, total = parse_order(cmd)
@@ -379,9 +402,7 @@ def kitchen():
                     "<button class='btn btn-cancel' onclick=\"updateStatus('" + oid + "','cancelled')\">- 取消</button>"
                     "</div>")
             elif o['status'] == 'ready':
-                btns = ("<div class=btn-row>"
-                    "<button class='btn btn-done' onclick=\"updateStatus('" + oid + "','delivered')\">- 已外送</button>"
-                    "</div>")
+                btns = ("<div style='text-align:center;color:#6bff6b;font-size:13px;font-weight:700;padding:8px'>📢 已通知取餐，等候顧客確認</div>")
             return ("<div class='order-card'>"
                 "<div class=order-id>#" + oid + "</div>"
                 "<div class=order-name>" + uname + "</div>"
@@ -417,6 +438,7 @@ def kitchen():
             ".col-title.pending { color: #ffd93d; border-color: #ffd93d; }"
             ".col-title.preparing { color: #6bcbff; border-color: #6bcbff; }"
             ".col-title.ready { color: #6bff6b; border-color: #6bff6b; }"
+            ".col-title.picked { color: #ff9ff3; border-color: #ff9ff3; }"
             ".count { font-size: 12px; opacity: 0.7; float: right; }"
             ".order-card { background: #0f3460; border-radius: 10px; padding: 12px; margin-bottom: 10px; }"
             ".order-id { font-size: 12px; color: #aaa; margin-bottom: 4px; }"
@@ -438,7 +460,7 @@ def kitchen():
             "<div class='main'>"
             "<div class='col'><div class='col-title pending'>⏳ 待製作<span class='count'>" + pc + " 單</span></div>" + pending_cards + "</div>"
             "<div class='col'><div class='col-title preparing'>👨‍🍳 製作中<span class='count'>" + prc + " 單</span></div>" + preparing_cards + "</div>"
-            "<div class='col'><div class='col-title ready'>✅ 完成待取<span class='count'>" + rc + " 單</span></div>" + ready_cards + "</div>"
+            "<div class='col'><div class='col-title ready'>📢 待取餐<span class='count'>" + rc + " 單</span></div>" + ready_cards + "</div>"
             "</div>"
             "<div class='footer'>🚗 粉紅超跑點餐系統 | 自動更新</div>"
             "<script>"
@@ -478,8 +500,8 @@ def kitchen_update():
         # Notify user
         status_msg = {
             "preparing": "👨‍🍳 您的訂單已開始製作，請稍候",
-            "ready": "✅ 您的訂單已完成製作，等待取餐/外送",
-            "delivered": "🚗 您的訂單已外送完成，祝您用餐愉快！",
+            "ready": "✅ 您的餐點已備好，請取餐！🚗",
+            "delivered": "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評",
             "cancelled": "❌ 您的訂單已取消",
         }
         msg = status_msg.get(status, f"📋 訂單 #{oid} 狀態更新為：{STATUS_NAMES.get(status, status)}")
