@@ -67,6 +67,24 @@ def line_push(user_id, text):
     except Exception as e:
         print(f"[LINE PUSH ERROR] {e}")
 
+def line_push_with_quickreply(user_id, text, quick_reply_items):
+    """發送帶 Quick Reply 的訊息"""
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
+    payload = {
+        "to": user_id,
+        "messages": [{
+            "type": "text",
+            "text": text,
+            "quickReply": {
+                "items": quick_reply_items
+            }
+        }]
+    }
+    try:
+        requests.post(LINE_API_PUSH, headers=headers, json=payload, timeout=10)
+    except Exception as e:
+        print(f"[LINE QUICKREPLY PUSH ERROR] {e}")
+
 def line_push_flex_confirm(order):
     """發送 Flex Message 給顧客，要求確認收到餐點（私人訊息，別人看不到）"""
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
@@ -600,8 +618,11 @@ def kitchen_update():
         if status == "ready":
             uid = order.get("user_id", "")
             if uid:
-                line_push_flex_confirm(order)
-                line_push(uid, "✅ 您的餐點已備好，請取餐！🚗\n\n請在私人訊息中點「✅ 已取餐確認」按鈕完成訂單")
+                # 用 Quick Reply 按鈕（可靠）
+                line_push_with_quickreply(uid,
+                    f"✅ 您的餐點已備好，請取餐！🚗\n\n📋 訂單 #{order['id']}\n💰 合計：${order['total']}\n\n請點下方按鈕確認取餐：",
+                    [{"type": "action", "action": {"type": "postback", "label": "✅ 已取餐確認", "data": f"action=confirm_delivery&order_id={order['id']}", "displayText": "✅ 已取餐確認"}}]
+                )
         elif status == "delivered":
             line_push(order.get("user_id", ""), "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
         elif status == "preparing":
