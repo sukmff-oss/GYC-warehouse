@@ -7,7 +7,7 @@ import re
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import base64
 import requests
@@ -87,7 +87,7 @@ def line_get_profile(user_id):
 # ==================== 訂單工具 ====================
 
 def gen_order_id():
-    return str(uuid.uuidint())[:8].upper()
+    return str(uuid.uuid4())[:8].upper()
 
 def parse_order(text):
     """解析 '排骨便當x2 + 涼麵x1' -> [(item, qty, price), ...], total"""
