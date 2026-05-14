@@ -6,134 +6,122 @@
   <title>🚗 粉紅超跑點餐服務</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif; background: #fff5f8; min-height: 100vh; padding-bottom: 90px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif; background: #fff5f8; min-height: 100vh; padding-bottom: 80px; }
 
     .header {
       background: linear-gradient(135deg, #ff8fab 0%, #ff4d6d 100%);
       color: white;
-      padding: 24px 20px 16px;
+      padding: 12px 16px 10px;
       text-align: center;
       position: relative;
       overflow: hidden;
     }
-    .header::before { content: '🚗'; position: absolute; top: 8px; left: 20px; font-size: 2.5rem; opacity: 0.4; }
-    .header
+    .header::before { content: '🚗'; position: absolute; top: 6px; left: 12px; font-size: 1.8rem; opacity: 0.4; }
     .header h1 { font-size: 0.9rem; font-weight: bold; letter-spacing: 1px; }
-    .header small { display: block; font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
+    .header small { display: block; font-size: 0.75rem; opacity: 0.9; margin-top: 2px; }
 
     .notice {
-      margin: 16px 16px 0;
-      padding: 14px 16px;
+      margin: 10px 12px 0;
+      padding: 10px 12px;
       background: linear-gradient(135deg, #fff0f5, #fff);
-      border-radius: 16px;
-      font-size: 0.9rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
       color: #c9184a;
       border: 2px solid #ffb3c6;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(255,77,109,0.1);
     }
-    .notice strong { font-size: 1.1rem; }
+    .notice strong { font-size: 0.9rem; }
 
-    .order-list { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+    .order-list { padding: 10px 12px; display: flex; flex-direction: column; gap: 12px; }
 
     .category {
       background: white;
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: 0 4px 20px rgba(255,77,109,0.08);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(255,77,109,0.08);
       border: 1px solid #ffe4ec;
     }
     .category-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 1.1rem;
+      gap: 6px;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #c9184a;
-      margin-bottom: 14px;
-      padding-bottom: 10px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 2px dashed #ffb3c6;
     }
-    .category-title span { font-size: 1.4rem; }
 
     .order-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 0;
+      gap: 10px;
+      padding: 8px 0;
       border-bottom: 1px solid #f8f8f8;
     }
-    .order-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .order-item:first-of-type { padding-top: 0; }
+    .order-item:last-child { border-bottom: none; }
 
     .item-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
       background: linear-gradient(135deg, #fff0f5, #ffe4ec);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       flex-shrink: 0;
       border: 2px solid #ffb3c6;
     }
     .item-info { flex: 1; }
-    .item-name { font-size: 1rem; font-weight: bold; color: #2d2d2d; }
-    .item-price { font-size: 0.9rem; color: #e63973; margin-top: 2px; font-weight: bold; }
+    .item-name { font-size: 0.9rem; font-weight: bold; color: #2d2d2d; }
+    .item-price { font-size: 0.8rem; color: #e63973; margin-top: 2px; font-weight: bold; }
 
-    .qty-control { display: flex; align-items: center; gap: 10px; }
+    .qty-control { display: flex; align-items: center; gap: 8px; }
     .qty-btn {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: none;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
     }
     .qty-btn.minus { background: #f5f5f5; color: #999; border: 2px solid #eee; }
-    .qty-btn.plus { background: linear-gradient(135deg, #ff8fab, #ff4d6d); color: white; border: none; box-shadow: 0 3px 10px rgba(255,77,109,0.3); }
-    .qty-btn:active { transform: scale(0.9); }
-    .qty-num { font-size: 1.1rem; font-weight: bold; min-width: 32px; text-align: center; color: #c9184a; }
+    .qty-btn.plus { background: linear-gradient(135deg, #ff8fab, #ff4d6d); color: white; border: none; }
+    .qty-num { font-size: 1rem; font-weight: bold; min-width: 28px; text-align: center; color: #c9184a; }
 
-    /* 外送地點選擇 */
     .location-section {
-      margin: 0 16px;
+      margin: 0 12px;
       background: white;
-      border-radius: 20px;
-      padding: 16px;
-      box-shadow: 0 4px 20px rgba(255,77,109,0.08);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 2px 10px rgba(255,77,109,0.08);
       border: 2px solid #ffb3c6;
     }
     .location-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: #c9184a;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .location-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
     .location-btn {
-      padding: 12px;
+      padding: 10px;
       border: 2px solid #ffe4ec;
-      border-radius: 12px;
+      border-radius: 10px;
       background: white;
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: bold;
       color: #666;
-      cursor: pointer;
-      transition: all 0.2s;
     }
     .location-btn.selected {
       border-color: #ff4d6d;
@@ -147,40 +135,35 @@
       left: 0;
       right: 0;
       background: white;
-      padding: 14px 20px;
-      box-shadow: 0 -4px 20px rgba(255,77,109,0.15);
+      padding: 10px 16px;
+      box-shadow: 0 -4px 15px rgba(255,77,109,0.15);
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       border-top: 2px solid #ffe4ec;
     }
     .total-section { flex: 1; }
-    .total-label { font-size: 0.85rem; color: #999; }
-    .total-price { font-size: 1.5rem; font-weight: bold; color: #e63973; }
+    .total-label { font-size: 0.75rem; color: #999; }
+    .total-price { font-size: 1.3rem; font-weight: bold; color: #e63973; }
     .submit-btn {
       background: linear-gradient(135deg, #ff8fab, #ff4d6d);
       color: white;
       border: none;
-      border-radius: 30px;
-      padding: 14px 32px;
-      font-size: 1.1rem;
+      border-radius: 25px;
+      padding: 12px 28px;
+      font-size: 1rem;
       font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255,77,109,0.4);
-      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(255,77,109,0.4);
     }
     .submit-btn:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; }
-    .submit-btn:not(:disabled):active { transform: scale(0.95); }
   </style>
 </head>
 <body>
 
 <div class="header">
-  
-  
   <h1>🚗 粉紅超跑點餐服務</h1>
   <small>外送專線：09-09-09-2299</small>
-  <a href="line-liff-demo.html" style="position:absolute;top:8px;right:20px;"><img src="粉紅超跑點餐QRCode.png" width="50" height="50" style="border-radius:8px;border:2px solid white;"></a>
+  <a href="line-liff-demo.html" style="position:absolute;top:6px;right:8px;"><img src="粉紅超跑點餐QRCode.png" width="40" height="40" style="border-radius:8px;border:2px solid white;"></a>
 </div>
 
 <div class="notice">
@@ -199,7 +182,7 @@
   </div>
 </div>
 
-<div style="height: 100px;"></div>
+<div style="height: 80px;"></div>
 
 <div class="bottom-bar">
   <div class="total-section">
@@ -302,12 +285,7 @@ const API_BASE = 'https://gyc-warehouse.onrender.com';
 function submitOrder() {
   if (total === 0 || !selectedLocation) return;
   const orderItems = menu.flatMap(c => c.items).filter(item => (orders[item.id] || 0) > 0).map(item => ({ name: item.name, price: item.price, qty: orders[item.id] }));
-  const orderData = { 
-    items: orderItems, 
-    total: total, 
-    location: selectedLocation,
-    time: new Date().toLocaleString('zh-TW') 
-  };
+  const orderData = { items: orderItems, total: total, location: selectedLocation, time: new Date().toLocaleString('zh-TW') };
   const btn = document.getElementById('submitBtn');
   btn.textContent = '傳送中...';
   btn.disabled = true;
