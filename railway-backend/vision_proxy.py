@@ -337,117 +337,119 @@ def order():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ---- 廚房面板 ----
+# ==================== 廚房面板（用字串拼接，避免巢狀問題）====================
 @app.route("/kitchen")
 def kitchen():
-    # 所有未完成的訂單
-    active = [o for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
-    active.sort(key=lambda x: x['created_at'])
+    try:
+        # 所有未完成的訂單
+        active = [o for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
+        active.sort(key=lambda x: x['created_at'])
 
-    # 狀態分組
-    pending   = [o for o in active if o['status'] == 'pending']
-    preparing = [o for o in active if o['status'] == 'preparing']
-    ready     = [o for o in active if o['status'] == 'ready']
+        pending   = [o for o in active if o['status'] == 'pending']
+        preparing = [o for o in active if o['status'] == 'preparing']
+        ready     = [o for o in active if o['status'] == 'ready']
 
-    html = """
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>👨‍🍳 粉紅超跑廚房面板</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: 'Noto Sans TC', sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }
-.header { background: linear-gradient(135deg, #ff6b9d, #ff8fab); padding: 16px 24px; font-size: 22px; font-weight: 700; text-align: center; }
-.header span { font-size: 13px; opacity: 0.9; font-weight: 400; }
-.main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; }
-.col { background: #16213e; border-radius: 16px; padding: 16px; }
-.col-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid; }
-.col-title.pending   { color: #ffd93d; border-color: #ffd93d; }
-.col-title.preparing { color: #6bcbff; border-color: #6bcbff; }
-.col-title.ready     { color: #6bff6b; border-color: #6bff6b; }
-.count { font-size: 12px; opacity: 0.7; float: right; }
-.order-card { background: #0f3460; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-.order-id { font-size: 12px; color: #aaa; margin-bottom: 4px; }
-.order-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-.order-item { font-size: 13px; color: #ddd; padding: 2px 0; }
-.order-total { font-size: 14px; font-weight: 700; color: #ff6b9d; margin-top: 6px; }
-.order-time { font-size: 11px; color: #888; margin-top: 4px; }
-.btn-row { display: flex; gap: 6px; margin-top: 10px; }
-.btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans TC', sans-serif; transition: transform 0.2s; }
-.btn:hover { transform: scale(0.97); }
-.btn-next   { background: #6bcbff; color: #000; }
-.btn-done   { background: #6bff6b; color: #000; }
-.btn-cancel { background: #ff4444; color: #fff; }
-.order-card.new { box-shadow: 0 0 0 2px #ffd93d; }
-.footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-</style>
-</head>
-<body>
-<div class="header">
-  👨‍🍳 粉紅超跑廚房面板
-  <br><span>共 {total} 張未完成訂單</span>
-</div>
-<div class="main">
-  <div class="col">
-    <div class="col-title pending">⏳ 待製作<span class="count">{pc} 單</span></div>
-    {pending_cards}
-  </div>
-  <div class="col">
-    <div class="col-title preparing">👨‍🍳 製作中<span class="count">{prc} 單</span></div>
-    {preparing_cards}
-  </div>
-  <div class="col">
-    <div class="col-title ready">✅ 完成待取<span class="count">{rc} 單</span></div>
-    {ready_cards}
-  </div>
-</div>
-<div class="footer">🚗 粉紅超跑點餐系統 | 自動更新</div>
-<script>
-// 自動更新
-setInterval(() => location.reload(), 15000);
+        empty_msg = "<div style='text-align:center;color:#555;padding:40px'>目前沒有訂單</div>"
 
-function updateStatus(orderId, newStatus) {{
-  fetch('/kitchen/update', {{
-    method: 'POST',
-    headers: {{'Content-Type': 'application/json'}},
-    body: JSON.stringify({{orderId, status: newStatus}})
-  }}).then(r => r.json()).then(d => {{
-    if (d.success) location.reload();
-  }});
-}}
-</script>
-</body>
-</html>"""
+        def make_card_html(o):
+            cls = "order-card"
+            items_html = "".join("<div class=order-item>- " + i['name'] + " x" + str(i['qty']) + "</div>" for i in o['items'])
+            btns = ""
+            oid = o['id']
+            uname = o.get('user_name', '匿名')
+            total = o['total']
+            ctime = o['created_at']
+            if o['status'] == 'pending':
+                btns = ("<div class=btn-row>"
+                    "<button class='btn btn-next' onclick=\"updateStatus('" + oid + "','preparing')\">- 開始製作</button>"
+                    "<button class='btn btn-cancel' onclick=\"updateStatus('" + oid + "','cancelled')\">- 取消</button>"
+                    "</div>")
+            elif o['status'] == 'preparing':
+                btns = ("<div class=btn-row>"
+                    "<button class='btn btn-done' onclick=\"updateStatus('" + oid + "','ready')\">- 完成</button>"
+                    "<button class='btn btn-cancel' onclick=\"updateStatus('" + oid + "','cancelled')\">- 取消</button>"
+                    "</div>")
+            elif o['status'] == 'ready':
+                btns = ("<div class=btn-row>"
+                    "<button class='btn btn-done' onclick=\"updateStatus('" + oid + "','delivered')\">- 已外送</button>"
+                    "</div>")
+            return ("<div class='order-card'>"
+                "<div class=order-id>#" + oid + "</div>"
+                "<div class=order-name>" + uname + "</div>"
+                + items_html
+                + "<div class=order-total>$" + str(total) + "</div>"
+                + "<div class=order-time>" + ctime + "</div>"
+                + btns + "</div>")
 
-    def make_card(o, highlight=False):
-        cls = "order-card new" if highlight else "order-card"
-        items_html = "".join(f"<div class=order-item>• {i['name']} x{i['qty']}</div>" for i in o['items'])
-        btns = ""
-        if o['status'] == 'pending':
-            btns = f"<div class=btn-row><button class=btn btn-next onclick=updateStatus('{o['id']}','preparing')>▶ 開始製作</button><button class=btn btn-cancel onclick=updateStatus('{o['id']}','cancelled')>✕ 取消</button></div>"
-        elif o['status'] == 'preparing':
-            btns = f"<div class=btn-row><button class=btn btn-done onclick=updateStatus('{o['id']}','ready')>✅ 完成</button><button class=btn btn-cancel onclick=updateStatus('{o['id']}','cancelled')>✕ 取消</button></div>"
-        elif o['status'] == 'ready':
-            btns = f"<div class=btn-row><button class=btn btn-done onclick=updateStatus('{o['id']}','delivered')>🚗 已外送</button></div>"
-        return f"<div class='{cls}'><div class=order-id>#{o['id']}</div><div class=order-name>{o.get('user_name','匿名')}</div>{items_html}<div class=order-total>${o['total']}</div><div class=order-time>{o['created_at']}</div>{btns}</div>"
+        pending_cards   = "".join(make_card_html(o) for o in pending) or empty_msg
+        preparing_cards = "".join(make_card_html(o) for o in preparing) or empty_msg
+        ready_cards    = "".join(make_card_html(o) for o in ready) or empty_msg
 
-    pending_cards   = "".join(make_card(o) for o in pending)
-    preparing_cards = "".join(make_card(o) for o in preparing)
-    ready_cards    = "".join(make_card(o) for o in ready)
+        total_count = str(len(active))
+        pc = str(len(pending))
+        prc = str(len(preparing))
+        rc = str(len(ready))
 
-    if not active:
-        empty = "<div style='text-align:center;color:#555;padding:40px'>目前沒有訂單</div>"
-        pending_cards = preparing_cards = ready_cards = empty
-
-    return html.format(
-        total=len(active),
-        pc=len(pending), prc=len(preparing), rc=len(ready),
-        pending_cards=pending_cards,
-        preparing_cards=preparing_cards,
-        ready_cards=ready_cards,
-    )
+        html = (
+            "<!DOCTYPE html>"
+            "<html lang='zh-TW'>"
+            "<head>"
+            "<meta charset='UTF-8'>"
+            "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+            "<title>👨‍🍳 粉紅超跑廚房面板</title>"
+            "<style>"
+            "* { margin:0; padding:0; box-sizing:border-box; }"
+            "body { font-family: sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }"
+            ".header { background: linear-gradient(135deg, #ff6b9d, #ff8fab); padding: 16px 24px; font-size: 22px; font-weight: 700; text-align: center; }"
+            ".header span { font-size: 13px; opacity: 0.9; font-weight: 400; }"
+            ".main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; }"
+            ".col { background: #16213e; border-radius: 16px; padding: 16px; }"
+            ".col-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid; }"
+            ".col-title.pending { color: #ffd93d; border-color: #ffd93d; }"
+            ".col-title.preparing { color: #6bcbff; border-color: #6bcbff; }"
+            ".col-title.ready { color: #6bff6b; border-color: #6bff6b; }"
+            ".count { font-size: 12px; opacity: 0.7; float: right; }"
+            ".order-card { background: #0f3460; border-radius: 10px; padding: 12px; margin-bottom: 10px; }"
+            ".order-id { font-size: 12px; color: #aaa; margin-bottom: 4px; }"
+            ".order-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }"
+            ".order-item { font-size: 13px; color: #ddd; padding: 2px 0; }"
+            ".order-total { font-size: 14px; font-weight: 700; color: #ff6b9d; margin-top: 6px; }"
+            ".order-time { font-size: 11px; color: #888; margin-top: 4px; }"
+            ".btn-row { display: flex; gap: 6px; margin-top: 10px; }"
+            ".btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }"
+            ".btn:hover { transform: scale(0.97); }"
+            ".btn-next { background: #6bcbff; color: #000; }"
+            ".btn-done { background: #6bff6b; color: #000; }"
+            ".btn-cancel { background: #ff4444; color: #fff; }"
+            ".footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }"
+            "</style>"
+            "</head>"
+            "<body>"
+            "<div class='header'>👨‍🍳 粉紅超跑廚房面板<br><span>共 " + total_count + " 張未完成訂單</span></div>"
+            "<div class='main'>"
+            "<div class='col'><div class='col-title pending'>⏳ 待製作<span class='count'>" + pc + " 單</span></div>" + pending_cards + "</div>"
+            "<div class='col'><div class='col-title preparing'>👨‍🍳 製作中<span class='count'>" + prc + " 單</span></div>" + preparing_cards + "</div>"
+            "<div class='col'><div class='col-title ready'>✅ 完成待取<span class='count'>" + rc + " 單</span></div>" + ready_cards + "</div>"
+            "</div>"
+            "<div class='footer'>🚗 粉紅超跑點餐系統 | 自動更新</div>"
+            "<script>"
+            "setInterval(function(){ location.reload(); }, 15000);"
+            "function updateStatus(orderId, newStatus) {"
+            "  fetch('/kitchen/update', {"
+            "    method: 'POST',"
+            "    headers: {'Content-Type': 'application/json'},"
+            "    body: JSON.stringify({orderId: orderId, status: newStatus})"
+            "  }).then(function(r){ return r.json(); }).then(function(d){"
+            "    if (d.success) location.reload();"
+            "  });"
+            "}"
+            "</script>"
+            "</body>"
+            "</html>"
+        )
+        return html
+    except Exception as e:
+        return "kitchen error: " + str(e), 500
 
 # ---- 廚房更新狀態 ----
 @app.route("/kitchen/update", methods=["POST"])
