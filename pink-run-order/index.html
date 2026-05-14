@@ -322,16 +322,8 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* ===== Category Icon ===== */
     .cat-icon { margin-right: 4px; }
-
-    /* ===== Empty State ===== */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #aaa;
-    }
-
+    .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
     .empty-icon { font-size: 60px; margin-bottom: 16px; }
     .empty-text { font-size: 16px; }
   </style>
@@ -391,36 +383,33 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ============ 菜單資料（含真實圖片） ============
     const menuData = [
       // 麵食
-      { id: 1,  name: '泡麵',      price: 60,  category: '麵食', desc: '調理簡單，香氣四溢',                  img: 'food_01.jpg' },
-      { id: 2,  name: '涼麵',      price: 50,  category: '麵食', desc: '清爽開胃，夏日首選',                  img: 'food_02.jpg' },
+      { id: 1,  name: '泡麵',      price: 60,  category: '麵食', desc: '調理簡單，香氣四溢',              img: 'food_01.jpg' },
+      { id: 2,  name: '涼麵',      price: 50,  category: '麵食', desc: '清爽開胃，夏日首選',              img: 'food_02.jpg' },
       // 飯類
-      { id: 3,  name: '排骨便當',  price: 100, category: '飯類', desc: '傳統美味，肉質軟嫩',                  img: 'food_03.jpg' },
-      { id: 4,  name: '雞腿便當',  price: 100, category: '飯類', desc: '酥脆外皮，肉汁豐富',                  img: 'food_04.jpg' },
+      { id: 3,  name: '排骨便當',  price: 100, category: '飯類', desc: '傳統美味，肉質軟嫩',              img: 'food_03.jpg' },
+      { id: 4,  name: '雞腿便當',  price: 100, category: '飯類', desc: '酥脆外皮，肉汁豐富',              img: 'food_04.jpg' },
       // 炸物
-      { id: 5,  name: '炸雞排',    price: 70,  category: '炸物', desc: '金黃酥脆，份量十足',                  img: 'food_05.jpg' },
-      { id: 6,  name: '薯條',      price: 40,  category: '炸物', desc: '外酥內軟，人氣小食',                  img: 'food_06.jpg' },
-      { id: 7,  name: '炸雞翅',    price: 40,  category: '炸物', desc: '吮指回味，聚會必備',                  img: 'food_07.jpg' },
+      { id: 5,  name: '炸雞排',    price: 70,  category: '炸物', desc: '金黃酥脆，份量十足',              img: 'food_05.jpg' },
+      { id: 6,  name: '薯條',      price: 40,  category: '炸物', desc: '外酥內軟，人氣小食',              img: 'food_06.jpg' },
+      { id: 7,  name: '炸雞翅',    price: 40,  category: '炸物', desc: '吮指回味，聚會必備',              img: 'food_07.jpg' },
       // 滷味
-      { id: 8,  name: '滷蛋',      price: 15,  category: '滷味', desc: '入味三分，蛋白Q彈',                  img: 'food_08.jpg' },
-      { id: 9,  name: '豆干',      price: 15,  category: '滷味', desc: '豆香濃郁，軟嫩多汁',                  img: 'food_09.jpg' },
-      { id: 10, name: '鴨頭',      price: 30,  category: '滷味', desc: '經典滷味，香氣撲鼻',                  img: 'food_08.jpg' },
+      { id: 8,  name: '滷蛋',      price: 15,  category: '滷味', desc: '入味三分，蛋白Q彈',              img: 'food_08.jpg' },
+      { id: 9,  name: '豆干',      price: 15,  category: '滷味', desc: '豆香濃郁，軟嫩多汁',              img: 'food_09.jpg' },
+      { id: 10, name: '鴨頭',      price: 30,  category: '滷味', desc: '經典滷味，香氣撲鼻',              img: 'food_10.jpg' },
       // 飲料
-      { id: 11, name: '冰飲',      price: 35,  category: '飲料', desc: '清涼解渴，消暑聖品',                  img: 'food_11.jpg' },
-      { id: 12, name: '咖啡',      price: 40,  category: '飲料', desc: '香醇濃郁，提神醒腦',                  img: 'food_12.jpg' },
-      { id: 13, name: '手工搖飲',  price: 50,  category: '飲料', desc: '現點現搖，新鮮好喝',                  img: 'food_13.jpg' },
+      { id: 11, name: '冰飲',      price: 35,  category: '飲料', desc: '清涼解渴，消暑聖品',              img: 'food_11.jpg' },
+      { id: 12, name: '咖啡',      price: 40,  category: '飲料', desc: '香醇濃郁，提神醒腦',              img: 'food_12.jpg' },
+      { id: 13, name: '手工搖飲',  price: 50,  category: '飲料', desc: '現點現搖，新鮮好喝',              img: 'food_13.jpg' },
       // 其他
-      { id: 14, name: '香菸',      price: 100, category: '其他', desc: '請攜帶證件',                        img: 'food_11.jpg' },
-      { id: 15, name: '檳榔',      price: 50,  category: '其他', desc: '提神好幫手',                          img: 'food_12.jpg' },
+      { id: 14, name: '香菸',      price: 100, category: '其他', desc: '請攜帶證件',                    img: 'food_14.jpg' },
+      { id: 15, name: '檳榔',      price: 50,  category: '其他', desc: '提神好幫手',                      img: 'food_15.jpg' },
     ];
 
-    // ============ 購物車 ============
     const cart = {};
     let currentCategory = 'all';
 
-    // ============ DOM ============
     const menuContainer = document.getElementById('menuContainer');
     const cartBadge     = document.getElementById('cartBadge');
     const cartTotal    = document.getElementById('cartTotal');
@@ -428,14 +417,12 @@
     const toast        = document.getElementById('toast');
     const categoryTabs = document.querySelectorAll('.category-tab');
 
-    // ============ Toast ============
     function showToast(msg) {
       toast.textContent = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 1500);
     }
 
-    // ============ 渲染菜單 ============
     function renderMenu() {
       const filtered = currentCategory === 'all'
         ? menuData
@@ -476,41 +463,28 @@
       }).join('');
     }
 
-    // ============ 數量增減 ============
     function changeQty(id, delta) {
       const item = menuData.find(m => m.id === id);
       if (!item) return;
-
       const newQty = Math.max(0, (cart[id] || 0) + delta);
-      if (newQty === 0) {
-        delete cart[id];
-      } else {
-        cart[id] = newQty;
-      }
-
+      if (newQty === 0) { delete cart[id]; } else { cart[id] = newQty; }
       updateCart();
       renderMenu();
-
-      if (delta > 0) {
-        showToast(`已加入 ${item.name}`);
-      }
+      if (delta > 0) showToast(`已加入 ${item.name}`);
     }
 
-    // ============ 更新購物車 ============
     function updateCart() {
       const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
       const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
         const item = menuData.find(m => m.id === parseInt(id));
         return sum + (item ? item.price * qty : 0);
       }, 0);
-
       cartBadge.textContent = totalItems;
       cartBadge.classList.toggle('hidden', totalItems === 0);
       cartTotal.textContent = `$${totalPrice}`;
       checkoutBtn.disabled = totalItems === 0;
     }
 
-    // ============ 類別切換 ============
     categoryTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         categoryTabs.forEach(t => t.classList.remove('active'));
@@ -520,13 +494,11 @@
       });
     });
 
-    // ============ 送出訂單 ============
     checkoutBtn.addEventListener('click', () => {
       if (Object.keys(cart).length === 0) return;
       showToast('功能示範中，正式版將開啟 LINE 點餐');
     });
 
-    // ============ 初始化 ============
     renderMenu();
     updateCart();
   </script>
