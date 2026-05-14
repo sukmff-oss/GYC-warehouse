@@ -67,6 +67,71 @@ def line_push(user_id, text):
     except Exception as e:
         print(f"[LINE PUSH ERROR] {e}")
 
+def line_push_flex_confirm(order):
+    """發送 Flex Message 給顧客，要求確認收到餐點（私人訊息，別人看不到）"""
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
+
+    # 組合品項文字
+    items_text = "\n".join(f"  • {i['name']} x{i['qty']}  ${i['price'] * i['qty']}" for i in order['items'])
+
+    flex = {
+        "type": "flex",
+        "altText": f"📢 您的餐點已備好！請確認取餐 #訂單 {order['id']}",
+        "contents": {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [{"type": "text", "text": "📢 餐點已備好", "weight": "bold", "size": "lg", "color": "#FFFFFF"}],
+                "backgroundColor": "#FF6B9D",
+                "paddingAll": "12px"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {"type": "text", "text": f"📋 訂單 #{order['id']}", "weight": "bold", "size": "md", "color": "#333333", "margin": "0px"},
+                    {"type": "text", "text": f"👤 {order.get('user_name', '顧客')}", "size": "sm", "color": "#666666", "margin": "4px 0px 0px 0px"},
+                    {"type": "separator", "margin": "10px", "color": "#DDDDDD"},
+                    {"type": "text", "text": items_text, "size": "sm", "color": "#333333", "margin": "8px 0px 0px 0px", "wrap": True},
+                    {"type": "separator", "margin": "10px", "color": "#DDDDDD"},
+                    {"type": "text", "text": f"💰 合計：${order['total']}", "weight": "bold", "size": "md", "color": "#FF6B9D", "margin": "4px 0px 0px 0px"},
+                ],
+                "paddingAll": "12px",
+                "backgroundColor": "#FFFFFF"
+            },
+            "footer": {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                    {
+                        "type": "button",
+                        "action": {
+                            "type": "postback",
+                            "label": "✅ 已取餐確認",
+                            "data": f"action=confirm_delivery&order_id={order['id']}",
+                            "displayText": "✅ 已取餐確認"
+                        },
+                        "style": "primary",
+                        "color": "#6bff6b",
+                        "height": "sm"
+                    }
+                ],
+                "paddingAll": "12px",
+                "backgroundColor": "#FFFFFF"
+            },
+            "styles": {
+                "header": {"backgroundColor": "#FF6B9D"},
+                "footer": {"backgroundColor": "#FFFFFF"}
+            }
+        }
+    }
+    payload = {"to": order.get("user_id", ""), "messages": [flex]}
+    try:
+        requests.post(LINE_API_PUSH, headers=headers, json=payload, timeout=10)
+    except Exception as e:
+        print(f"[LINE FLEX PUSH ERROR] {e}")
+
 def line_reply(reply_token, text):
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
     payload = {"replyToken": reply_token, "messages": [{"type": "text", "text": text}]}
@@ -275,6 +340,29 @@ def webhook():
     try:
         body = request.get_json()
         for event in body.get("events", []):
+            # ===== Postback（Flex Message 按鈕點擊）=====
+            if event["type"] == "postback":
+                user_id     = event["source"].get("userId", "")
+                reply_token = event.get("replyToken", "")
+                data        = event.get("postback", {}).get("data", "")
+                if data.startswith("action=confirm_delivery"):
+                    # 解析 order_id
+                    order_id = None
+                    for part in data.split("&"):
+                        if part.startswith("order_id="):
+                            order_id = part.split("=", 1)[1]
+                    if order_id:
+                        order = orders_db.get(order_id)
+                        if order and order.get("user_id") == user_id and order["status"] == "ready":
+                            order["status"] = "delivered"
+                            line_reply(reply_token, "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
+                        elif order:
+                            line_reply(reply_token, f"❌ 訂單 #{order_id} 目前狀態為「{STATUS_NAMES.get(order['status'], order['status'])}」，無法確認")
+                        else:
+                            line_reply(reply_token, f"❌ 找不到訂單 #{order_id}")
+                    continue
+
+            # ===== Message 事件 =====
             if event["type"] != "message" or event["message"]["type"] != "text":
                 continue
 
@@ -509,14 +597,15 @@ def kitchen_update():
 
         order["status"] = status
         # Notify user
-        status_msg = {
-            "preparing": "👨‍🍳 您的訂單已開始製作，請稍候",
-            "ready": "✅ 您的餐點已備好，請取餐！🚗",
-            "delivered": "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評",
-            "cancelled": "❌ 您的訂單已取消",
-        }
-        msg = status_msg.get(status, f"📋 訂單 #{oid} 狀態更新為：{STATUS_NAMES.get(status, status)}")
-        line_push(order.get("user_id", ""), msg)
+        if status == "ready":
+            # 發送 Flex Message 私人卡片（顧客點按鈕確認，不暴露在群組）
+            line_push_flex_confirm(order)
+        elif status == "delivered":
+            line_push(order.get("user_id", ""), "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
+        elif status == "preparing":
+            line_push(order.get("user_id", ""), "👨‍🍳 您的訂單已開始製作，請稍候")
+        elif status == "cancelled":
+            line_push(order.get("user_id", ""), "❌ 您的訂單已取消")
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
