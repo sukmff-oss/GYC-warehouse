@@ -85,6 +85,95 @@ def line_push_with_quickreply(user_id, text, quick_reply_items):
     except Exception as e:
         print(f"[LINE QUICKREPLY PUSH ERROR] {e}")
 
+def line_reply_flex(reply_token, flex):
+    """用 reply token 回傳 Flex Message"""
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
+    payload = {"replyToken": reply_token, "messages": [flex]}
+    try:
+        requests.post(LINE_API_REPLY, headers=headers, json=payload, timeout=10)
+    except Exception as e:
+        print(f"[LINE REPLY FLEX ERROR] {e}")
+
+def build_quick_order_flex():
+    """建立今日精選快速點餐 Flex Message"""
+    flex = {
+        "type": "flex",
+        "altText": "🚗 粉紅超跑 - 今日精選 | 點品項直接下單",
+        "contents": {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {"type": "text", "text": "🚗 粉紅超跑", "weight": "bold", "size": "xl", "color": "#FFFFFF"},
+                    {"type": "text", "text": "今日精選 點下去馬上點餐", "size": "sm", "color": "#FFCCDD", "margin": "2px 0px 0px 0px"}
+                ],
+                "backgroundColor": "#FF6B9D",
+                "paddingAll": "14px"
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {"type": "text", "text": "👇 點下方按鈕直接點餐", "size": "sm", "color": "#888888", "align": "center", "margin": "0px 0px 10px 0px"}
+                ],
+                "paddingAll": "10px",
+                "backgroundColor": "#FFF5F8"
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "button", "action": {"type": "postback", "label": "🍚 排骨便當 $100", "data": "action=quick_order&id=3&name=排骨便當&price=100&qty=1", "displayText": "🍚 排骨便當"}, "style": "primary", "color": "#FF6B9D", "height": "md"},
+                            {"type": "button", "action": {"type": "postback", "label": "🍗 雞腿便當 $100", "data": "action=quick_order&id=4&name=雞腿便當&price=100&qty=1", "displayText": "🍗 雞腿便當"}, "style": "primary", "color": "#FF6B9D", "height": "md"},
+                        ],
+                        "spacing": "8px"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "button", "action": {"type": "postback", "label": "🍖 炸雞排 $70", "data": "action=quick_order&id=5&name=炸雞排&price=70&qty=1", "displayText": "🍖 炸雞排"}, "style": "primary", "color": "#FF8FAB", "height": "md"},
+                            {"type": "button", "action": {"type": "postback", "label": "🥒 涼麵 $50", "data": "action=quick_order&id=2&name=涼麵&price=50&qty=1", "displayText": "🥒 涼麵"}, "style": "primary", "color": "#FF8FAB", "height": "md"},
+                        ],
+                        "spacing": "8px"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "button", "action": {"type": "postback", "label": "🍟 薯條 $40", "data": "action=quick_order&id=6&name=薯條&price=40&qty=1", "displayText": "🍟 薯條"}, "style": "primary", "color": "#FF8FAB", "height": "md"},
+                            {"type": "button", "action": {"type": "postback", "label": "🧋 冰飲 $35", "data": "action=quick_order&id=11&name=冰飲&price=35&qty=1", "displayText": "🧋 冰飲"}, "style": "primary", "color": "#FF8FAB", "height": "md"},
+                        ],
+                        "spacing": "8px"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {"type": "button", "action": {"type": "postback", "label": "🍜 泡麵 $60", "data": "action=quick_order&id=1&name=泡麵&price=60&qty=1", "displayText": "🍜 泡麵"}, "style": "primary", "color": "#FFB6C1", "height": "md"},
+                            {"type": "button", "action": {"type": "postback", "label": "🥚 蔥油蛋餅 $35", "data": "action=quick_order&id=2&name=蔥油蛋餅&price=35&qty=1", "displayText": "🥚 蔥油蛋餅"}, "style": "primary", "color": "#FFB6C1", "height": "md"},
+                        ],
+                        "spacing": "8px"
+                    },
+                    {"type": "text", "text": "📝 其他品項請用：@order 品項x數量", "size": "xs", "color": "#AAAAAA", "align": "center", "margin": "8px 0px 0px 0px"}
+                ],
+                "paddingAll": "8px",
+                "backgroundColor": "#FFFFFF"
+            },
+            "styles": {
+                "header": {"backgroundColor": "#FF6B9D"},
+                "body": {"backgroundColor": "#FFF5F8"},
+                "footer": {"backgroundColor": "#FFFFFF"}
+            }
+        }
+    }
+    return flex
+
 def line_push_flex_confirm(order):
     """發送 Flex Message 給顧客，要求確認收到餐點（私人訊息，別人看不到）"""
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
@@ -380,6 +469,34 @@ def webhook():
                             line_reply(reply_token, f"❌ 找不到訂單 #{order_id}")
                     continue
 
+                if data.startswith("action=quick_order"):
+                    # 解析品項參數
+                    item_id, item_name, price, qty = None, None, None, None
+                    for part in data.split("&"):
+                        if part.startswith("id="): item_id = part.split("=", 1)[1]
+                        elif part.startswith("name="): item_name = part.split("=", 1)[1]
+                        elif part.startswith("price="): price = part.split("=", 1)[1]
+                        elif part.startswith("qty="): qty = part.split("=", 1)[1]
+                    if item_id and item_name and price:
+                        from datetime import datetime
+                        order_id = gen_order_id()
+                        order = {
+                            "id": order_id,
+                            "user_id": user_id,
+                            "user_name": user_name or "顧客",
+                            "items": [{"id": int(item_id), "name": item_name, "price": int(price), "qty": int(qty or 1)}],
+                            "total": int(price) * int(qty or 1),
+                            "location": "外送",
+                            "status": "pending",
+                            "created_at": datetime.now().strftime("%m/%d %H:%M"),
+                        }
+                        save_order(order)
+                        # 推播廚房（完整明細）
+                        line_push(LINE_USER_ID, f"🏎 快速點餐 from {user_name or '顧客'}\n📋 #{order_id}\n- {item_name} x{qty or 1} = ${int(price) * int(qty or 1)}\n🕐 {order['created_at']}")
+                        # 回覆群組（不明細，只說已收到）
+                        line_reply(reply_token, f"✅ {user_name or '顧客'}已點餐：{item_name} x{qty or 1} 💰${int(price) * int(qty or 1)}\n📋 訂單 #{order_id}\n⏳ 等待廚房確認中...")
+                    continue
+
             # ===== Message 事件 =====
             if event["type"] != "message" or event["message"]["type"] != "text":
                 continue
@@ -390,6 +507,13 @@ def webhook():
             text        = event["message"]["text"].strip()
             user_name   = line_get_profile(user_id)
             is_group    = (source_type != "user")
+
+            # 今日菜單指令 -> 回覆 Flex 卡片（群組互動）
+            cmd_stripped = text.strip()
+            if cmd_stripped.lower() in ["@order 今日菜單", "/order 今日菜單", "@今日菜單", "/今日菜單", "今日菜單", "看今日精選"]:
+                flex = build_quick_order_flex()
+                line_reply_flex(reply_token, flex)
+                continue
 
             if text.lower().startswith("@order") or text.lower().startswith("/order"):
                 cmd = text.split(maxsplit=1)[1].strip() if len(text.split(maxsplit=1)) > 1 else ""
