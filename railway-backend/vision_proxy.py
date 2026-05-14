@@ -153,8 +153,9 @@ def format_user_orders(user_id):
 
 # ==================== LINE 指令處理 ====================
 
-def handle_order_command(cmd, user_id, user_name, reply_token):
+def handle_order_command(cmd, user_id, user_name, reply_token, source_type):
     cmd = cmd.strip()
+    is_group = (source_type != "user")  # user=私人DM, group/room=群組
 
     if not cmd or cmd in ["看菜單", "菜單", "menu"]:
         lines = [
@@ -169,48 +170,47 @@ def handle_order_command(cmd, user_id, user_name, reply_token):
             "━━━━━━━━━━━━━━━",
             "📝 點餐：@order 排骨便當x2 + 涼麵x1",
         ]
-        return "\n".join(lines)
+        return "\n".join(lines), None  # (回覆顧客, 推播廚房)
 
     if cmd in ["我的訂單", "看訂單", "訂單"]:
-        return format_user_orders(user_id)
+        return format_user_orders(user_id), None
 
     # 取消訂單
     if cmd.startswith("取消 ") or cmd.startswith("cancel "):
         cancel_id = re.search(r'[#@]?(\w{6,8})', cmd)
         if not cancel_id:
-            return "❌ 請指定訂單ID，例如：@order 取消 #ABC12345"
+            return "❌ 請指定訂單ID，例如：@order 取消 #ABC12345", None
         oid = cancel_id.group(1).upper()
         order = orders_db.get(oid)
         if not order:
-            return f"❌ 找不到訂單 #{oid}"
+            return f"❌ 找不到訂單 #{oid}", None
         if order.get('user_id') != user_id:
-            return "❌ 只有訂購人可以取消自己的訂單"
+            return "❌ 只有訂購人可以取消自己的訂單", None
         if order['status'] not in ('pending', 'preparing'):
-            return f"❌ 訂單 #{oid} 已經在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法取消"
+            return f"❌ 訂單 #{oid} 已經在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法取消", None
         order['status'] = 'cancelled'
-        return f"✅ 訂單 #{oid} 已取消"
+        return f"✅ 訂單 #{oid} 已取消", None
 
     # 顧客確認收到餐點
     if cmd.startswith("確認 ") or cmd.startswith("收餐 ") or cmd.startswith("已取餐 "):
         confirm_id = re.search(r'[#@]?(\w{6,8})', cmd)
         if not confirm_id:
-            return "❌ 請指定訂單ID，例如：@order 確認 #ABC12345"
+            return "❌ 請指定訂單ID，例如：@order 確認 #ABC12345", None
         oid = confirm_id.group(1).upper()
         order = orders_db.get(oid)
         if not order:
-            return f"❌ 找不到訂單 #{oid}"
+            return f"❌ 找不到訂單 #{oid}", None
         if order.get('user_id') != user_id:
-            return "❌ 只有訂購人可以確認自己的訂單"
+            return "❌ 只有訂購人可以確認自己的訂單", None
         if order['status'] != 'ready':
-            return f"❌ 訂單 #{oid} 目前在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法確認"
+            return f"❌ 訂單 #{oid} 目前在「{STATUS_NAMES.get(order['status'], order['status'])}」狀態，無法確認", None
         order['status'] = 'delivered'
-        line_push(user_id, "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
-        return f"✅ 訂單 #{oid} 已確認完成，感謝您的好評！"
+        return f"✅ 訂單 #{oid} 已確認完成，感謝您的好評！⭐", None
 
     # 製作訂單
     items, total = parse_order(cmd)
     if not items:
-        return f"❌ 找不太到「{cmd}」，請確認品名後再傳一次\n\n📝 範例：@order 排骨便當x2 + 涼麵x1"
+        return f"❌ 找不太到「{cmd}」，請確認品名後再傳一次\n\n📝 範例：@order 排骨便當x2 + 涼麵x1", None
 
     # 建立訂單
     order_id = gen_order_id()
@@ -227,37 +227,41 @@ def handle_order_command(cmd, user_id, user_name, reply_token):
     save_order(order)
 
     # 回覆用戶
-    lines = [
+    customer_lines = [
         f"✅ {user_name} 已點餐",
         f"📋 訂單 #{order_id}",
         "━━━━━━━━━━━━━━━",
     ]
     for item in items:
-        lines.append(f"• {item['name']} x{item['qty']} = ${item['price'] * item['qty']}")
-    lines += [
+        customer_lines.append(f"- {item['name']} x{item['qty']} = ${item['price'] * item['qty']}")
+    customer_lines += [
         "━━━━━━━━━━━━━━━",
         f"💰 合計：${total}",
         "⏳ 等待廚房確認中...",
     ]
-    reply_text = "\n".join(lines)
+    reply_to_customer = "\n".join(customer_lines)
 
-    # Push 給蘇董（廚房）
+    # 推播廚房
     push_lines = [
         f"🏎 新訂單 from {user_name}",
         f"📋  #{order_id}",
         "━━━━━━━━━━━━━━━",
     ]
     for item in items:
-        push_lines.append(f"• {item['name']} x{item['qty']}")
+        push_lines.append(f"- {item['name']} x{item['qty']}")
     push_lines += [
         "━━━━━━━━━━━━━━━",
         f"💰 合計：${total}",
         f"🕐 {order['created_at']}",
     ]
+    push_to_kitchen = "\n".join(push_lines)
 
-    line_reply(reply_token, reply_text)
-    line_push(LINE_USER_ID, "\n".join(push_lines))
-    return None  # 已回覆
+    # 群組不回覆（不暴露別人訂單），只推給廚房
+    # DM（私人對話）才回覆顧客
+    if is_group:
+        return None, push_to_kitchen  # (不回覆顧客, 推播廚房)
+    else:
+        return reply_to_customer, push_to_kitchen  # (回覆顧客, 推播廚房)
 
 # ==================== 路由 ====================
 
@@ -274,19 +278,26 @@ def webhook():
             if event["type"] != "message" or event["message"]["type"] != "text":
                 continue
 
-            user_id    = event["source"]["userId"]
+            user_id     = event["source"]["userId"]
+            source_type = event["source"].get("type", "user")  # user=私人DM, group/群組, room=包廂
             reply_token = event.get("replyToken", "")
             text        = event["message"]["text"].strip()
             user_name   = line_get_profile(user_id)
+            is_group    = (source_type != "user")
 
             if text.lower().startswith("@order") or text.lower().startswith("/order"):
                 cmd = text.split(maxsplit=1)[1].strip() if len(text.split(maxsplit=1)) > 1 else ""
-                reply_text = handle_order_command(cmd, user_id, user_name, reply_token)
-                if reply_text:
-                    line_reply(reply_token, reply_text)
+                reply_msg, push_msg = handle_order_command(cmd, user_id, user_name, reply_token, source_type)
+                # 回覆顧客（群組不回覆公開訊息）
+                if reply_msg and not is_group:
+                    line_reply(reply_token, reply_msg)
+                # 推播廚房
+                if push_msg:
+                    line_push(LINE_USER_ID, push_msg)
             else:
-                reply_text = f"📌 收到：{text}\n要點餐請傳「@order 品項x數量」\n例如：@order 排骨便當x2 + 涼麵x1"
-                line_reply(reply_token, reply_text)
+                # 非點餐指令：群組不回覆，私人DM才回覆
+                if not is_group:
+                    line_reply(reply_token, f"📌 收到：{text}\n要點餐請傳「@order 品項x數量」\n例如：@order 排骨便當x2 + 涼麵x1")
 
         return jsonify({"success": True})
     except Exception as e:
