@@ -339,21 +339,27 @@
     let liffUserId = ''; // LINE userId for order binding
     let liffReadyPromise = null; // 用來確保 LIFF 初始化完成
 
-    // Initialize LINE LIFF 並等待完成
+    // Initialize LINE LIFF 並等待完成（最長等8秒，避免永遠卡住）
     async function initLiff() {
       try {
-        await liff.init({ liffId: '2006532535-XxG5N7qG' });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          liffUserId = profile.userId;
-          console.log('LINE UserID:', liffUserId);
-          updateCheckoutBtn(); // 拿到ID後立即更新按鈕狀態
-        } else {
-          console.log('LINE not logged in');
-        }
+        // 用 Promise.race 包 liff.init，超過8秒就放棄
+        const initWithTimeout = Promise.race([
+          liff.init({ liffId: '2006532535-XxG5N7qG' }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 8000))
+        ]);
+        await initWithTimeout;
       } catch(e) {
-        console.log('LIFF init failed:', e.message);
+        console.log('LIFF init timeout/fail:', e.message);
       }
+      // 無論 init 成功與否，都嘗試拿 profile（在 LINE 內通常可以拿到）
+      try {
+        const profile = await liff.getProfile();
+        liffUserId = profile.userId;
+        console.log('LINE UserID:', liffUserId);
+      } catch(e2) {
+        console.log('getProfile failed:', e2.message);
+      }
+      updateCheckoutBtn(); // 拿到ID後更新按鈕，沒拿到也更新（可以送出但沒通知）
     }
     liffReadyPromise = initLiff(); // 啟動非同步初始化
 
@@ -474,9 +480,12 @@
     async function submitOrder() {
       if (isSubmitting) return;
 
-      // 確保 LIFF 初始化完成，拿到 LINE ID
+      // 送出前等 LIFF 完成（最多額外等5秒，超過就放行不等了）
       if (liffReadyPromise) {
-        await liffReadyPromise;
+        await Promise.race([
+          liffReadyPromise,
+          new Promise(resolve => setTimeout(resolve, 5000))
+        ]);
       }
 
       // 驗證
