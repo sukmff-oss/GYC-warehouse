@@ -531,12 +531,14 @@ def webhook():
 
             # ===== 我的訂單指令 =====
             if text.strip() in ["我的訂單", "/我的訂單"]:
-                user_orders = [(oid, o) for oid, o in orders_db.items() if o.get("user_id") == user_id and o.get("status") != "delivered"]
+                user_orders = [(oid, o) for oid, o in orders_db.items()
+                               if o.get("user_id") == user_id and o.get("status") not in ("delivered",)]
                 if user_orders:
                     lines = [f"📋 {user_name or '您'}的訂單："]
                     for oid, o in user_orders:
                         items_str = "、".join([f"{i['name']}x{i['qty']}" for i in o.get("items", [])])
-                        lines.append(f"#{oid} {items_str} = ${o['total']} [{STATUS_NAMES.get(o['status'], o['status'])}]")
+                        status_display = {"pending": "⏳ 待製作", "preparing": "👨‍🍳 製作中", "ready": "📢 待取餐"}.get(o['status'], o['status'])
+                        lines.append(f"#{oid} {items_str} = ${o['total']} 【{status_display}】")
                     line_push(user_id, "\n".join(lines))
                 else:
                     line_push(user_id, "📋 目前沒有未完成的訂單，歡迎點餐！\n傳「@order 品項x數量」即可下訂")
@@ -605,7 +607,7 @@ def order():
         items  = data.get("items", [])
         total  = data.get("total", 0)
         loc    = data.get("location", "")
-        user_id = data.get("user_id", "web_user")
+        user_id = data.get("line_user_id", "web_user")
         user_name = name or "網頁顧客"
 
         order_id = gen_order_id()

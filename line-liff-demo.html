@@ -333,8 +333,24 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
+  <script src="https://d.line-scdn.net/liff/initialization.js"></script>
   <script>
     const API_BASE = 'https://gyc-warehouse.onrender.com';
+    let liffUserId = ''; // LINE userId for order binding
+
+    // Initialize LINE LIFF
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: '2006532535-XxG5N7qG' }); // Replace with your LIFF ID
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          liffUserId = profile.userId;
+        }
+      } catch(e) {
+        console.log('LIFF init failed (not in LINE context):', e.message);
+      }
+    }
+    initLiff();
 
     const menuData = [
       { id: 1,  name: '泡麵',      price: 60,  category: '麵食', desc: '調理簡單，香氣四溢',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_01.jpg' },
@@ -490,7 +506,8 @@
         items: orderItems,
         total: total,
         location: selectedLocation,
-        time: new Date().toLocaleString('zh-TW')
+        time: new Date().toLocaleString('zh-TW'),
+        line_user_id: liffUserId  // 綁定 LINE 用戶
       };
 
       // 顯示 loading
