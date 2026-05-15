@@ -507,7 +507,8 @@ def webhook():
                         # 推播廚房（完整明細）
                         line_push(LINE_USER_ID, f"🏎 快速點餐 from {user_name or '顧客'}\n📋 #{order_id}\n- {item_name} x{qty or 1} = ${int(price) * int(qty or 1)}\n🕐 {order['created_at']}")
                         # 推播顧客確認（改用push不受群組限制）
-                        line_push(user_id, f"✅ {user_name or '顧客'}已點餐：{item_name} x{qty or 1} 💰${int(price) * int(qty or 1)}\n📋 訂單 #{order_id}\n⏳ 等待廚房確認中...")
+                        if user_id:
+                            line_push(user_id, f"✅ {user_name or '顧客'}已點餐：{item_name} x{qty or 1} 💰${int(price) * int(qty or 1)}\n📋 訂單 #{order_id}\n⏳ 等待廚房確認中...")
                     continue
 
             # ===== Message 事件 =====
@@ -667,6 +668,8 @@ def kitchen_test():
     try:
         active = [o for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
         return "orders count: " + str(len(active))
+    except Exception as e:
+        return "error: " + str(e)
 
 # ---- 訂單偵錯 ----
 @app.route("/debug/orders")
