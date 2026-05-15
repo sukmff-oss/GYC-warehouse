@@ -339,7 +339,7 @@
     let liffUserId = ''; // LINE userId for order binding
     let liffReadyPromise = null; // 用來確保 LIFF 初始化完成
 
-    // Initialize LINE LIFF 並等待完成（最長等8秒，超時失敗）
+    // Initialize LINE LIFF 並等待完成（最長等15秒，避免永遠卡住）
     let liffBindFailed = false; // 綁定失敗標記
     let liffBindFailedToastShown = false; // 失敗toast只顯示一次
 
@@ -347,14 +347,16 @@
       try {
         const initWithTimeout = Promise.race([
           liff.init({ liffId: '2010079227-AYQrqZ5M' }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 8000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 15000))
         ]);
         await initWithTimeout;
+        console.log('LIFF init OK');
       } catch(e) {
         console.log('LIFF init timeout/fail:', e.message);
       }
       // 嘗試拿 profile
       try {
+        console.log('Trying getProfile...');
         const profile = await liff.getProfile();
         liffUserId = profile.userId;
         console.log('LINE UserID:', liffUserId);
