@@ -351,18 +351,33 @@
         ]);
         await initWithTimeout;
         console.log('LIFF init OK');
+
+        // 方式1：從 context 直接拿 userId（不需要額外API call）
+        try {
+          const ctx = liff.context;
+          if (ctx && ctx.userId) {
+            liffUserId = ctx.userId;
+            console.log('LINE UserID from context:', liffUserId);
+          }
+        } catch(e3) {
+          console.log('getContext failed:', e3.message);
+        }
+
+        // 方式2：如果 context 沒拿到，再試 getProfile
+        if (!liffUserId) {
+          try {
+            const profile = await liff.getProfile();
+            liffUserId = profile.userId;
+            console.log('LINE UserID from getProfile:', liffUserId);
+          } catch(e2) {
+            console.log('getProfile failed:', e2.message);
+          }
+        }
+
       } catch(e) {
         console.log('LIFF init timeout/fail:', e.message);
       }
-      // 嘗試拿 profile
-      try {
-        console.log('Trying getProfile...');
-        const profile = await liff.getProfile();
-        liffUserId = profile.userId;
-        console.log('LINE UserID:', liffUserId);
-      } catch(e2) {
-        console.log('getProfile failed:', e2.message);
-      }
+
       // 檢查結果
       if (!liffUserId) {
         liffBindFailed = true;
