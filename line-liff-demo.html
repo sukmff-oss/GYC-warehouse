@@ -346,7 +346,7 @@
     async function initLiff() {
       try {
         const initWithTimeout = Promise.race([
-          liff.init({ liffId: '2006532535-XxG5N7qG' }),
+          liff.init({ liffId: '2010079227-AYQrqZ5M' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 15000))
         ]);
         await initWithTimeout;
