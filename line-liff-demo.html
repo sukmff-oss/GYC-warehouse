@@ -339,10 +339,12 @@
     let liffUserId = ''; // LINE userId for order binding
     let liffReadyPromise = null; // 用來確保 LIFF 初始化完成
 
-    // Initialize LINE LIFF 並等待完成（最長等8秒，避免永遠卡住）
+    // Initialize LINE LIFF 並等待完成（最長等8秒，超時失敗）
+    let liffBindFailed = false; // 綁定失敗標記
+    let liffBindFailedToastShown = false; // 失敗toast只顯示一次
+
     async function initLiff() {
       try {
-        // 用 Promise.race 包 liff.init，超過8秒就放棄
         const initWithTimeout = Promise.race([
           liff.init({ liffId: '2006532535-XxG5N7qG' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 8000))
@@ -351,7 +353,7 @@
       } catch(e) {
         console.log('LIFF init timeout/fail:', e.message);
       }
-      // 無論 init 成功與否，都嘗試拿 profile（在 LINE 內通常可以拿到）
+      // 嘗試拿 profile
       try {
         const profile = await liff.getProfile();
         liffUserId = profile.userId;
@@ -359,7 +361,11 @@
       } catch(e2) {
         console.log('getProfile failed:', e2.message);
       }
-      updateCheckoutBtn(); // 拿到ID後更新按鈕，沒拿到也更新（可以送出但沒通知）
+      // 檢查結果
+      if (!liffUserId) {
+        liffBindFailed = true;
+      }
+      updateCheckoutBtn();
     }
     liffReadyPromise = initLiff(); // 啟動非同步初始化
 
@@ -469,23 +475,37 @@
       const hasCustomer = nameInput.value.trim().length > 0 && phoneInput.value.trim().length > 0;
       const hasLocation = selectedLocation !== '';
       const hasLiffId = !!liffUserId; // 必須已綁定LINE ID才能送出
+      const hasFailed = liffBindFailed;
       checkoutBtn.disabled = !(hasItems && hasCustomer && hasLocation && hasLiffId);
-      if (!hasLiffId) {
+
+      if (hasFailed) {
+        checkoutBtn.textContent = '❌ LINE綁定失敗，請稍後再試';
+        checkoutBtn.style.background = '#cccccc';
+        if (!liffBindFailedToastShown) {
+          liffBindFailedToastShown = true;
+          showToast('LINE綁定失敗，請重新整理後再試', 'error');
+        }
+      } else if (!hasLiffId) {
         checkoutBtn.textContent = 'LINE綁定中...';
+        checkoutBtn.style.background = '';
       } else {
         checkoutBtn.textContent = '送出訂單';
+        checkoutBtn.style.background = '';
       }
     }
 
     async function submitOrder() {
       if (isSubmitting) return;
 
-      // 送出前等 LIFF 完成（最多額外等5秒，超過就放行不等了）
+      // 送出前等 LIFF 完成（拿到 LINE ID）
       if (liffReadyPromise) {
-        await Promise.race([
-          liffReadyPromise,
-          new Promise(resolve => setTimeout(resolve, 5000))
-        ]);
+        await liffReadyPromise;
+      }
+      // LINE ID 拿不到就阻擋
+      if (!liffUserId) {
+        showToast('LINE綁定失敗，請稍後再試', 'error');
+        isSubmitting = false;
+        return;
       }
 
       // 驗證
