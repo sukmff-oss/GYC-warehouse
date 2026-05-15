@@ -607,7 +607,7 @@ def order():
         items  = data.get("items", [])
         total  = data.get("total", 0)
         loc    = data.get("location", "")
-        user_id = data.get("line_user_id", "web_user")
+        user_id = data.get("line_user_id") or "web_user"
         user_name = name or "網頁顧客"
 
         order_id = gen_order_id()
