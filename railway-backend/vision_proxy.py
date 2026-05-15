@@ -452,6 +452,7 @@ def webhook():
                 user_id     = event["source"].get("userId", "")
                 reply_token = event.get("replyToken", "")
                 data        = event.get("postback", {}).get("data", "")
+                user_name   = line_get_profile(user_id) if user_id else "顧客"
                 if data.startswith("action=confirm_delivery"):
                     # 解析 order_id
                     order_id = None
