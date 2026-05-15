@@ -67,6 +67,18 @@ def line_push(user_id, text):
     except Exception as e:
         print(f"[LINE PUSH ERROR] {e}")
 
+def line_push_flex(user_id, flex):
+    """用 push 方式發送 Flex Message（不受 reply token 限制）"""
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
+    payload = {"to": user_id, "messages": [flex]}
+    try:
+        resp = requests.post(LINE_API_PUSH, headers=headers, json=payload, timeout=10)
+        print(f"[LINE PUSH FLEX] status={resp.status_code}")
+        return resp.json()
+    except Exception as e:
+        print(f"[LINE PUSH FLEX ERROR] {e}")
+        return {"error": str(e)}
+
 def line_push_with_quickreply(user_id, text, quick_reply_items):
     """發送帶 Quick Reply 的訊息"""
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {LINE_ACCESS_TOKEN}"}
@@ -509,14 +521,12 @@ def webhook():
             user_name   = line_get_profile(user_id)
             is_group    = (source_type != "user")
 
-            # 今日菜單指令 -> 回覆 Flex 卡片（群組互動）
+            # 今日菜單指令 -> 推播 Flex 卡片（群組/私人皆用 push）
             cmd_stripped = text.strip()
-            print(f"[DEBUG] 收到的文字: '{text}', 比對結果: {cmd_stripped.lower() in ['@order 今日菜單', '/order 今日菜單', '@今日菜單', '/今日菜單', '今日菜單', '看今日精選']}")
             if cmd_stripped.lower() in ["@order 今日菜單", "/order 今日菜單", "@今日菜單", "/今日菜單", "今日菜單", "看今日精選"]:
-                print(f"[DEBUG] 符合今日菜單條件，即將發送 Flex")
                 flex = build_quick_order_flex()
-                line_reply_flex(reply_token, flex)
-                print(f"[DEBUG] Flex 已發送")
+                result = line_push_flex(user_id, flex)
+                print(f"[DEBUG] 今日菜單 Flex 推送結果: {result}")
                 continue
 
             if text.lower().startswith("@order") or text.lower().startswith("/order"):
