@@ -510,9 +510,12 @@ def webhook():
 
             # 今日菜單指令 -> 回覆 Flex 卡片（群組互動）
             cmd_stripped = text.strip()
+            print(f"[DEBUG] 收到的文字: '{text}', 比對結果: {cmd_stripped.lower() in ['@order 今日菜單', '/order 今日菜單', '@今日菜單', '/今日菜單', '今日菜單', '看今日精選']}")
             if cmd_stripped.lower() in ["@order 今日菜單", "/order 今日菜單", "@今日菜單", "/今日菜單", "今日菜單", "看今日精選"]:
+                print(f"[DEBUG] 符合今日菜單條件，即將發送 Flex")
                 flex = build_quick_order_flex()
                 line_reply_flex(reply_token, flex)
+                print(f"[DEBUG] Flex 已發送")
                 continue
 
             if text.lower().startswith("@order") or text.lower().startswith("/order"):
