@@ -337,20 +337,25 @@
   <script>
     const API_BASE = 'https://gyc-warehouse.onrender.com';
     let liffUserId = ''; // LINE userId for order binding
+    let liffReadyPromise = null; // 用來確保 LIFF 初始化完成
 
-    // Initialize LINE LIFF
+    // Initialize LINE LIFF 並等待完成
     async function initLiff() {
       try {
-        await liff.init({ liffId: '2006532535-XxG5N7qG' }); // Replace with your LIFF ID
+        await liff.init({ liffId: '2006532535-XxG5N7qG' });
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
           liffUserId = profile.userId;
+          console.log('LINE UserID:', liffUserId);
+          updateCheckoutBtn(); // 拿到ID後立即更新按鈕狀態
+        } else {
+          console.log('LINE not logged in');
         }
       } catch(e) {
-        console.log('LIFF init failed (not in LINE context):', e.message);
+        console.log('LIFF init failed:', e.message);
       }
     }
-    initLiff();
+    liffReadyPromise = initLiff(); // 啟動非同步初始化
 
     const menuData = [
       { id: 1,  name: '泡麵',      price: 60,  category: '麵食', desc: '調理簡單，香氣四溢',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_01.jpg' },
@@ -457,11 +462,22 @@
       const hasItems = Object.keys(cart).length > 0;
       const hasCustomer = nameInput.value.trim().length > 0 && phoneInput.value.trim().length > 0;
       const hasLocation = selectedLocation !== '';
-      checkoutBtn.disabled = !(hasItems && hasCustomer && hasLocation);
+      const hasLiffId = !!liffUserId; // 必須已綁定LINE ID才能送出
+      checkoutBtn.disabled = !(hasItems && hasCustomer && hasLocation && hasLiffId);
+      if (!hasLiffId) {
+        checkoutBtn.textContent = 'LINE綁定中...';
+      } else {
+        checkoutBtn.textContent = '送出訂單';
+      }
     }
 
     async function submitOrder() {
       if (isSubmitting) return;
+
+      // 確保 LIFF 初始化完成，拿到 LINE ID
+      if (liffReadyPromise) {
+        await liffReadyPromise;
+      }
 
       // 驗證
       const name = nameInput.value.trim();

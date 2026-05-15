@@ -673,7 +673,6 @@ def kitchen_test():
 def debug_orders():
     try:
         import json
-        # 只取未完成的訂單，顯示 user_id
         active = [{
             "id": o["id"],
             "user_id": o.get("user_id"),
@@ -685,23 +684,6 @@ def debug_orders():
         return jsonify({"count": len(active), "orders": active})
     except Exception as e:
         return "error: " + str(e), 500
-
-# ---- 訂單偵錯 ----
-@app.route("/debug/orders")
-def debug_orders():
-    try:
-        import json
-        active = [{
-            "id": o["id"],
-            "user_id": o.get("user_id"),
-            "user_name": o.get("user_name"),
-            "status": o["status"],
-            "items": o.get("items"),
-            "total": o.get("total"),
-        } for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
-        return jsonify({"count": len(active), "orders": active})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 # ---- 廚房面板（用字串拼接，避免巢狀問題）====================
 @app.route("/kitchen")
