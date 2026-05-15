@@ -529,6 +529,32 @@ def webhook():
                 print(f"[DEBUG] 今日菜單 Flex 推送結果: {result}")
                 continue
 
+            # ===== 我的訂單指令 =====
+            if text.strip() in ["我的訂單", "/我的訂單"]:
+                user_orders = [(oid, o) for oid, o in orders_db.items() if o.get("user_id") == user_id and o.get("status") != "delivered"]
+                if user_orders:
+                    lines = [f"📋 {user_name or '您'}的訂單："]
+                    for oid, o in user_orders:
+                        items_str = "、".join([f"{i['name']}x{i['qty']}" for i in o.get("items", [])])
+                        lines.append(f"#{oid} {items_str} = ${o['total']} [{STATUS_NAMES.get(o['status'], o['status'])}]")
+                    line_push(user_id, "\n".join(lines))
+                else:
+                    line_push(user_id, "📋 目前沒有未完成的訂單，歡迎點餐！\n傳「@order 品項x數量」即可下訂")
+                continue
+
+            # ===== 聯絡我們指令 =====
+            if text.strip() in ["聯絡我們", "/聯絡我們"]:
+                contact = """📞 粉紅超跑聯絡資訊
+
+🍗 粉絲專線：09-09-09-2299
+💬 LINE：@938ukusa
+🚗 外送區域：蘆竹、大園、大湳、中壢
+⏰ 營業時間：全天配送
+
+感謝您對粉紅超跑的支持！"""
+                line_push(user_id, contact)
+                continue
+
             if text.lower().startswith("@order") or text.lower().startswith("/order"):
                 cmd = text.split(maxsplit=1)[1].strip() if len(text.split(maxsplit=1)) > 1 else ""
                 reply_msg, push_msg = handle_order_command(cmd, user_id, user_name, reply_token, source_type)
