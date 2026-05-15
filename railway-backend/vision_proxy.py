@@ -639,6 +639,24 @@ def order():
             f"🕐 {order['created_at']}",
         ]
         line_push(LINE_USER_ID, "\n".join(lines))
+        # 推播確認給顧客
+        confirm_lines = [
+            f"✅ 訂單已收到！#{order_id}",
+            "━━━━━━━━━━━━━━━",
+            f"👤 {name} / 📞 {phone}",
+        ]
+        for item in items:
+            confirm_lines.append(f"• {item['name']} x{item['qty']} = ${item['price'] * item['qty']}")
+        confirm_lines += [
+            "━━━━━━━━━━━━━━━",
+            f"📍 外送：{loc}",
+            f"💰 合計：${total}",
+            f"🕐 {order['created_at']}",
+            "━━━━━━━━━━━━━━━",
+            "⏳ 廚房準備中，請等候通知",
+        ]
+        if user_id != "web_user":
+            line_push(user_id, "\n".join(confirm_lines))
         return jsonify({"success": True, "order_id": order_id})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -649,8 +667,41 @@ def kitchen_test():
     try:
         active = [o for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
         return "orders count: " + str(len(active))
+
+# ---- 訂單偵錯 ----
+@app.route("/debug/orders")
+def debug_orders():
+    try:
+        import json
+        # 只取未完成的訂單，顯示 user_id
+        active = [{
+            "id": o["id"],
+            "user_id": o.get("user_id"),
+            "user_name": o.get("user_name"),
+            "status": o["status"],
+            "items": o.get("items"),
+            "total": o.get("total"),
+        } for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
+        return jsonify({"count": len(active), "orders": active})
     except Exception as e:
         return "error: " + str(e), 500
+
+# ---- 訂單偵錯 ----
+@app.route("/debug/orders")
+def debug_orders():
+    try:
+        import json
+        active = [{
+            "id": o["id"],
+            "user_id": o.get("user_id"),
+            "user_name": o.get("user_name"),
+            "status": o["status"],
+            "items": o.get("items"),
+            "total": o.get("total"),
+        } for o in orders_db.values() if o['status'] not in ('delivered', 'cancelled')]
+        return jsonify({"count": len(active), "orders": active})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ---- 廚房面板（用字串拼接，避免巢狀問題）====================
 @app.route("/kitchen")
