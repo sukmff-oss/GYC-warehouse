@@ -631,7 +631,7 @@ def order():
             "━━━━━━━━━━━━━━━",
         ]
         for item in items:
-            lines.append(f"• {item['name']} x{item['qty']} = ${item['price']}")
+            lines.append(f"• {item['name']} x{item['qty']} = ${item['price'] * item['qty']}")
         lines += [
             "━━━━━━━━━━━━━━━",
             f"📍 外送：{loc}",
