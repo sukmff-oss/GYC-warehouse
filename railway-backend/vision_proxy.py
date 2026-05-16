@@ -817,20 +817,19 @@ def kitchen_update():
 
         order["status"] = status
         # Notify user
-        if status == "ready":
-            uid = order.get("user_id", "")
-            if uid:
-                # 用 Quick Reply 按鈕（可靠）
-                line_push_with_quickreply(uid,
-                    f"✅ 您的餐點已備好，請取餐！🚗\n\n📋 訂單 #{order['id']}\n💰 合計：${order['total']}\n\n請點下方按鈕確認取餐：",
-                    [{"type": "action", "action": {"type": "postback", "label": "✅ 已取餐確認", "data": f"action=confirm_delivery&order_id={order['id']}", "displayText": "✅ 已取餐確認"}}]
-                )
-        elif status == "delivered":
-            line_push(order.get("user_id", ""), "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
-        elif status == "preparing":
-            line_push(order.get("user_id", ""), "👨‍🍳 您的訂單已開始製作，請稍候")
-        elif status == "cancelled":
-            line_push(order.get("user_id", ""), "❌ 您的訂單已取消")
+        uid = order.get("user_id", "")
+        if status == "ready" and uid:
+            # 用 Quick Reply 按鈕（可靠）
+            line_push_with_quickreply(uid,
+                f"✅ 您的餐點已備好，請取餐！🚗\n\n📋 訂單 #{order['id']}\n💰 合計：${order['total']}\n\n請點下方按鈕確認取餐：",
+                [{"type": "action", "action": {"type": "postback", "label": "✅ 已取餐確認", "data": f"action=confirm_delivery&order_id={order['id']}", "displayText": "✅ 已取餐確認"}}]
+            )
+        elif status == "delivered" and uid:
+            line_push(uid, "🚗 您的訂單已外送完成，祝您用餐愉快！⭐ 感謝您的5星好評")
+        elif status == "preparing" and uid:
+            line_push(uid, "👨‍🍳 您的訂單已開始製作，請稍候")
+        elif status == "cancelled" and uid:
+            line_push(uid, "❌ 您的訂單已取消")
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
