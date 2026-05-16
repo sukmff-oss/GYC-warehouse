@@ -515,12 +515,8 @@
       if (liffReadyPromise) {
         await liffReadyPromise;
       }
-      // LINE ID 拿不到就阻擋
-      if (!liffUserId) {
-        showToast('LINE綁定失敗，請稍後再試', 'error');
-        isSubmitting = false;
-        return;
-      }
+      // 無 LINE ID 仍可點餐（只是沒有顧客確認通知）
+      // LINE ID 由 Render 後端統一推播給管理員
 
       // 驗證
       const name = nameInput.value.trim();
