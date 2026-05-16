@@ -61,10 +61,16 @@ def init_db():
     conn.close()
     print("[DB] customers table initialized")
 
+def row_to_dict(row):
+    """將 sqlite3.Row 轉為普通 dict"""
+    if row is None:
+        return None
+    return dict(zip(row.keys(), row))
+
 def upsert_customer(phone, line_user_id, name=''):
     """新增或更新顧客（以 phone 為 key）"""
     conn = sqlite3.connect(DB_PATH)
-    cur = conn.execute("""
+    conn.execute("""
         INSERT INTO customers (phone, line_user_id, name, updated_at)
         VALUES (?, ?, ?, datetime('now', 'localtime'))
         ON CONFLICT(phone) DO UPDATE SET
@@ -86,7 +92,7 @@ def get_customer_by_phone(phone):
         (phone,)
     ).fetchone()
     conn.close()
-    return dict(row) if row else None
+    return row_to_dict(row)
 
 def get_customer_by_line_uid(line_user_id):
     """用 LINE userId 查顧客"""
@@ -98,7 +104,7 @@ def get_customer_by_line_uid(line_user_id):
         (line_user_id,)
     ).fetchone()
     conn.close()
-    return dict(row) if row else None
+    return row_to_dict(row)
 
 # 啟動時初始化資料庫
 init_db()
@@ -960,6 +966,7 @@ def customers_page():
         conn = sqlite3.connect(DB_PATH)
         rows = conn.execute("SELECT id, phone, name, line_user_id, created_at FROM customers ORDER BY id DESC").fetchall()
         conn.close()
+        # rows 是普通 tuple 列表，直接迭代
         html = """<!DOCTYPE html><html><head><meta charset="UTF-8">
         <title>LINE 顧客綁定管理</title>
         <style>
