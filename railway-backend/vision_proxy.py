@@ -1,13 +1,14 @@
 """
 Vision Proxy + LINE 點餐系統 v2 - 含訂單管理與廚房面板
-支援網頁訂餐 + LINE 指令點餐 + 廚房狀態更新
+支援網頁訂餐 + LINE 指令點餐 + 廚房狀態更新 + LINE 顧客綁定
 """
 import os
 import re
 import json
 import uuid
+import sqlite3
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 import base64
 import requests
@@ -24,6 +25,83 @@ LINE_USER_ID       = os.environ.get("LINE_USER_ID", "U42399a8c32c2980e1df24f3a22
 LINE_API_PUSH      = "https://api.line.me/v2/bot/message/push"
 LINE_API_REPLY     = "https://api.line.me/v2/bot/message/reply"
 LINE_API_PROFILE   = "https://api.line.me/v2/bot/profile"
+
+# ===== LINE 顧客綁定資料庫 (SQLite) =====
+DB_PATH = os.path.join(os.path.dirname(__file__), "customers.db")
+
+def get_db():
+    """取得資料庫連線（每個 request 獨立連線）"""
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_PATH)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    """初始化顧客資料表"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone TEXT UNIQUE NOT NULL,
+            name TEXT DEFAULT '',
+            line_user_id TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_customers_line_uid ON customers(line_user_id)")
+    conn.commit()
+    conn.close()
+    print("[DB] customers table initialized")
+
+def upsert_customer(phone, line_user_id, name=''):
+    """新增或更新顧客（以 phone 為 key）"""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.execute("""
+        INSERT INTO customers (phone, line_user_id, name, updated_at)
+        VALUES (?, ?, ?, datetime('now', 'localtime'))
+        ON CONFLICT(phone) DO UPDATE SET
+            line_user_id = excluded.line_user_id,
+            name = COALESCE(excluded.name, name),
+            updated_at = datetime('now', 'localtime')
+    """, (phone, line_user_id, name))
+    conn.commit()
+    conn.close()
+    return True
+
+def get_customer_by_phone(phone):
+    """用電話查顧客（回傳 line_user_id 或 None）"""
+    if not phone:
+        return None
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT line_user_id, name FROM customers WHERE phone = ? LIMIT 1",
+        (phone,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_customer_by_line_uid(line_user_id):
+    """用 LINE userId 查顧客"""
+    if not line_user_id:
+        return None
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT phone, name FROM customers WHERE line_user_id = ? LIMIT 1",
+        (line_user_id,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+# 啟動時初始化資料庫
+init_db()
 
 # ===== 訂單記憶體儲存（重啟後消失，生產環境建議用SQLite）=====
 # 格式: order_id -> order dict
@@ -522,7 +600,16 @@ def webhook():
             user_name   = line_get_profile(user_id)
             is_group    = (source_type != "user")
 
-            # 今日菜單指令 -> 推播 Flex 卡片（群組/私人皆用 push）
+            # ===== LINE 顧客綁定：顧客傳「綁定 0912345678」或純電話號碼 =====
+            bind_match = re.match(r"^綁定\s*(.+)$", text) or re.match(r"^(09\d{8})$", text)
+            if bind_match:
+                phone = bind_match.group(1).strip()
+                upsert_customer(phone, user_id, user_name)
+                line_reply(reply_token, f"✅ LINE 帳號綁定成功！\n📞 電話：{phone}\n\n未來點餐後，廚房狀態更新時您會收到 LINE 通知。\n\n現在可以前往點餐頁面訂購餐點：\nhttps://liff.line.me/2010079227-AYQrqZ5M")
+                print(f"[BIND] userId={user_id} bound to phone={phone}")
+                continue
+
+            # ===== 今日菜單指令 -> 推播 Flex 卡片（群組/私人皆用 push）=====
             cmd_stripped = text.strip()
             if cmd_stripped.lower() in ["@order 今日菜單", "/order 今日菜單", "@今日菜單", "/今日菜單", "今日菜單", "看今日精選"]:
                 flex = build_quick_order_flex()
@@ -608,13 +695,27 @@ def order():
         items  = data.get("items", [])
         total  = data.get("total", 0)
         loc    = data.get("location", "")
-        user_id = data.get("line_user_id") or "web_user"
+        liff_uid = data.get("line_user_id") or ""  # 從 LIFF 直接取得的 userId
         user_name = name or "網頁顧客"
+
+        # 優先用 LIFF 的 userId，沒有的話用電話從資料庫查
+        user_id = liff_uid
+        if not user_id and phone:
+            customer = get_customer_by_phone(phone)
+            if customer:
+                user_id = customer['line_user_id']
+                print(f"[ORDER] phone={phone} found line_user_id={user_id}")
+            else:
+                print(f"[ORDER] phone={phone} no bound LINE account")
+
+        if not user_id:
+            user_id = "web_user"
 
         order_id = gen_order_id()
         order = {
             "id": order_id,
             "user_id": user_id,
+            "phone": phone,        # 存放電話，方便廚房通知時 lookup
             "user_name": user_name,
             "items": items,
             "total": total,
@@ -638,6 +739,7 @@ def order():
             f"📍 外送：{loc}",
             f"💰 合計：${total}",
             f"🕐 {order['created_at']}",
+            f"LINE綁定：{'✅ ' + user_id if user_id != 'web_user' else '❌ 未綁定'}",
         ]
         line_push(LINE_USER_ID, "\n".join(lines))
         # 推播確認給顧客
@@ -658,7 +760,7 @@ def order():
         ]
         if user_id != "web_user":
             line_push(user_id, "\n".join(confirm_lines))
-        return jsonify({"success": True, "order_id": order_id})
+        return jsonify({"success": True, "order_id": order_id, "line_bound": user_id != "web_user"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -816,8 +918,18 @@ def kitchen_update():
             return jsonify({"success": False, "error": "找不到訂單"})
 
         order["status"] = status
-        # Notify user
+        # Notify user - 優先用 order 的 user_id，沒有的話用電話查資料庫
         uid = order.get("user_id", "")
+        if not uid or uid == "web_user":
+            # 用電話查 LINE userId
+            phone = order.get("phone", "")
+            if phone:
+                customer = get_customer_by_phone(phone)
+                if customer:
+                    uid = customer['line_user_id']
+                    print(f"[KITCHEN] phone={phone} resolved to line_user_id={uid}")
+                else:
+                    print(f"[KITCHEN] phone={phone} not bound, cannot notify customer")
         if status == "ready" and uid:
             # 用 Quick Reply 按鈕（可靠）
             line_push_with_quickreply(uid,
@@ -839,6 +951,36 @@ def kitchen_update():
 def test_line():
     line_push(LINE_USER_ID, "✅ LINE 通知測試成功！")
     return jsonify({"status": "ok"})
+
+# ---- 顧客管理頁面 ----
+@app.route("/customers")
+def customers_page():
+    """查看所有已綁定顧客（管理用）"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        rows = conn.execute("SELECT id, phone, name, line_user_id, created_at FROM customers ORDER BY id DESC").fetchall()
+        conn.close()
+        html = """<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>LINE 顧客綁定管理</title>
+        <style>
+        body{font-family:sans-serif;padding:20px;background:#f5f5f5}
+        h1{color:#333}
+        table{width:100%;border-collapse:collapse;background:white}
+        th,td{padding:10px;border:1px solid #ddd;text-align:left}
+        th{background:#ff6b9d;color:white}
+        tr:nth-child(even){background:#fafafa}
+        .count{color:#888;margin-bottom:16px}
+        </style></head><body>
+        <h1>📋 LINE 顧客綁定列表</h1>
+        <div class="count">共 """ + str(len(rows)) + """ 位顧客已綁定</div>
+        <table><tr><th>ID</th><th>電話</th><th>姓名</th><th>LINE UserId</th><th>綁定時間</th></tr>
+        """
+        for r in rows:
+            html += f"<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td style='font-size:12px;word-break:break-all'>{r[3]}</td><td>{r[4]}</td></tr>"
+        html += "</table></body></html>"
+        return html
+    except Exception as e:
+        return "error: " + str(e), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
