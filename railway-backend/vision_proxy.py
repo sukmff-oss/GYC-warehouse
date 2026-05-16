@@ -87,6 +87,7 @@ def get_customer_by_phone(phone):
     if not phone:
         return None
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     row = conn.execute(
         "SELECT line_user_id, name FROM customers WHERE phone = ? LIMIT 1",
         (phone,)
@@ -99,6 +100,7 @@ def get_customer_by_line_uid(line_user_id):
     if not line_user_id:
         return None
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     row = conn.execute(
         "SELECT phone, name FROM customers WHERE line_user_id = ? LIMIT 1",
         (line_user_id,)
