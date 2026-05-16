@@ -511,14 +511,7 @@
     async function submitOrder() {
       if (isSubmitting) return;
 
-      // 送出前等 LIFF 完成（拿到 LINE ID）
-      if (liffReadyPromise) {
-        await liffReadyPromise;
-      }
-      // 無 LINE ID 仍可點餐（只是沒有顧客確認通知）
-      // LINE ID 由 Render 後端統一推播給管理員
-
-      // 驗證
+      // 驗證（直接檢查，不等 LIFF）
       const name = nameInput.value.trim();
       const phone = phoneInput.value.trim();
 
