@@ -545,6 +545,23 @@ def webhook():
     try:
         body = request.get_json()
         for event in body.get("events", []):
+            # ===== Member Joined（加入群組）=====
+            if event["type"] == "memberJoined":
+                joined_members = event.get("joined", {}).get("members", [])
+                for member in joined_members:
+                    uid = member.get("userId", "")
+                    if uid:
+                        # 自動建立一筆記錄（無電話，之後點餐時再對應）
+                        # upsert_customer("", uid, "")  # 暫時不用，電話才是 key
+                        print(f"[MEMBER_JOINED] userId={uid}")
+                # 不需要回覆
+                continue
+
+            # ===== Member Left（離開群組）=====
+            if event["type"] == "memberLeft":
+                print("[MEMBER_LEFT] a member left the group")
+                continue
+
             # ===== Postback（Flex Message 按鈕點擊）=====
             if event["type"] == "postback":
                 user_id     = event["source"].get("userId", "")
