@@ -564,11 +564,15 @@
       checkoutBtn.textContent = '送出中...';
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
         const res = await fetch(API_BASE + '/order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
+          body: JSON.stringify(orderData),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (res.ok) {
           showToast('✅ 訂單已送出！', 'success');
@@ -584,13 +588,16 @@
           throw new Error('HTTP ' + res.status);
         }
       } catch (err) {
-        console.error(err);
-        showToast('❌ 發送失敗，請致電 09-09-09-2299', 'error');
+        if (err.name === 'AbortError') {
+          showToast('⚠️ 連線逾時，請稍後再試或致電 09-09-09-2299', 'warn');
+        } else {
+          console.error(err);
+          showToast('❌ 發送失敗，請致電 09-09-09-2299', 'error');
+        }
       } finally {
         isSubmitting = false;
         checkoutBtn.classList.remove('loading');
         checkoutBtn.textContent = '送出訂單';
-        updateCheckoutBtn();
       }
     }
 
