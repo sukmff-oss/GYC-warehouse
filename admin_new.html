@@ -1662,6 +1662,108 @@ input[type="date"] {
 
 /* 通知鬧鐘聲音（用 Web Audio API） */
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ 報價單 modal ═══ */
+#coQuoteModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#coQuoteModal.open { display: flex; }
+.co-modal-box {
+  background: #16213e;
+  border: 1px solid rgba(67,131,64,0.5);
+  border-radius: 16px;
+  padding: 28px;
+  width: min(500px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.co-modal-box h3 {
+  color: #4fc3f7;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  border-left: 4px solid #43834093;
+  padding-left: 10px;
+}
+.co-modal-box .form-row { margin-bottom: 12px; }
+.co-modal-box label {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 4px;
+}
+.co-modal-box input, .co-modal-box select {
+  width: 100%;
+  padding: 10px 12px;
+  background: #0f3460;
+  border: 1px solid #1a4a7a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.co-modal-box input:focus, .co-modal-box select:focus {
+  outline: none;
+  border-color: #4fc3f7;
+}
+.co-modal-items {
+  background: #0f3460;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.co-modal-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.co-modal-item:last-child { border-bottom: none; }
+.co-modal-total {
+  text-align: right;
+  font-size: 1.1rem;
+  color: #ffd700;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+.co-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.co-modal-actions .btn-generate {
+  padding: 10px 24px;
+  background: #43834093;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.co-modal-actions .btn-generate:hover { background: #5bb85c; }
+.co-modal-actions .btn-cancel {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.co-modal-actions .btn-cancel:hover { background: rgba(255,255,255,0.05); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -2667,6 +2769,7 @@ function stopVoiceInput() {
       <div class="co-actions">
         <button onclick="coStartCamera()" class="primary">📷 重新拍攝</button>
         <button onclick="coClearAll()">🗑 清除</button>
+        <button onclick="coOpenQuoteModal()" style="background:rgba(67,131,64,0.3);border:1.5px solid rgba(67,131,64,0.6);color:#4fc3f7;border-radius:8px;padding:10px 16px;font-size:0.88rem;font-weight:700;cursor:pointer">📄 產生報價單</button>
       </div>
     </div>
     <!-- 通知狀態 -->
@@ -5167,8 +5270,219 @@ window.alert = function(msg) {
   }, 100);
 };
 
+// ════════════════════════════════════════════════════
+// 國研化工 報價單產生功能（客戶訂單頁整合）
+// ════════════════════════════════════════════════════
+
+// 產品價格資料庫（從真實報價單解析）
+const _coQuoteProducts = {
+  "WP-175": { name:"水性白色", pkg:"25KGS PACKAGE", price:100 },
+  "WP-271": { name:"水性黃色", pkg:"20KGS PACKAGE", price:295 },
+  "WP-374": { name:"水性紅色", pkg:"20KGS PACKAGE", price:410 },
+  "WP-532P":{ name:"綠色",     pkg:"20KGS PACKAGE", price:256 },
+  "WP-671": { name:"水性藍色", pkg:"20KGS PACKAGE", price:200 },
+  "WP-730P":{ name:"紫色",     pkg:"20KGS PACKAGE", price:384 },
+  "WP-770": { name:"水性紫色", pkg:"20KGS PACKAGE", price:320 },
+  "WP-833P":{ name:"橘色",     pkg:"20KGS PACKAGE", price:366 },
+  "WP-973": { name:"水性黑色", pkg:"20KGS PACKAGE", price:80  },
+  "CO-221": { name:"檸檬黃",   pkg:"17KGS PACKAGE", price:1300},
+  "CO-226": { name:"中黃",     pkg:"17KGS PACKAGE", price:1280},
+  "CO-824": { name:"黃橘",     pkg:"17KGS PACKAGE", price:1200},
+  "CO-508": { name:"車用色膏", pkg:"17KGS PACKAGE", price:null },
+  "CO-923": { name:"車用色膏", pkg:"17KGS PACKAGE", price:null },
+  "TU-916": { name:"高週波色膏", pkg:null, price:null },
+  "TU-205A":{ name:"色膏",     pkg:null, price:null },
+  "TU-304A":{ name:"色膏",     pkg:null, price:null },
+  "IM-6211":{ name:"鏡面銀",   pkg:null, price:null },
+};
+
+const _coQuoteGY = {
+  name:"國研化工實業股份有限公司",
+  addr:"桃園市大園區五青路70巷138號",
+  tel:"03-3813575 / 03-3815949",
+  fax:"03-3813843",
+  taxId:"43834093",
+};
+
+function coOpenQuoteModal() {
+  if (typeof _coItems === 'undefined' || !_coItems || _coItems.length === 0) {
+    alert('尚無訂單品項，請先上傳圖片或手動新增品項');
+    return;
+  }
+  let itemsDiv = document.getElementById('coQuoteItems');
+  let total = 0;
+  itemsDiv.innerHTML = '';
+  _coItems.forEach(it => {
+    let pd = _coQuoteProducts[it.name] || {};
+    let price = pd.price || 0;
+    let subtotal = price * it.qty;
+    if (price > 0) total += subtotal;
+    itemsDiv.innerHTML += `
+      <div class="co-modal-item">
+        <span style="color:#4fc3f7">${it.name}</span>
+        <span>${it.qty} KG × NT$${price || '?'}/KG = ${price ? 'NT$ '+subtotal.toLocaleString() : '待確認'}</span>
+      </div>`;
+  });
+  document.getElementById('coQuoteTotal').textContent =
+    total > 0 ? `參考總值：約 NT$ ${total.toLocaleString()}` : '（含待確認價格）';
+  document.getElementById('coQuoteModal').classList.add('open');
+}
+
+function coCloseQuoteModal() {
+  document.getElementById('coQuoteModal').classList.remove('open');
+}
+
+function coQuoteCustomerChange() {
+  let sel = document.getElementById('coQuoteCustomer');
+  let other = document.getElementById('coQuoteCustomerOther');
+  other.style.display = sel.value === '其他' ? 'block' : 'none';
+}
+
+function _loadDocxScript() {
+  return new Promise((resolve, reject) => {
+    if (window.docx) { resolve(); return; }
+    let s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function coGenerateQuoteDoc() {
+  let customer = document.getElementById('coQuoteCustomer').value;
+  if (customer === '其他') {
+    customer = document.getElementById('coQuoteCustomerOther').value.trim();
+    if (!customer) { alert('請填寫客戶名稱'); return; }
+  }
+  let contact = document.getElementById('coQuoteContact').value.trim();
+  if (!contact) { alert('請填寫聯絡人'); return; }
+  let notes = document.getElementById('coQuoteNotes').value.trim();
+  let validDays = 30;
+
+  // 載入 docx.js
+  let btn = document.querySelector('.btn-generate');
+  btn.textContent = '⏳ 產生中...';
+  btn.disabled = true;
+  try {
+    await _loadDocxScript();
+    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } = docx;
+
+    let now = new Date();
+    let rocYear = now.getFullYear() - 1911;
+    let today = `中華民國 ${rocYear} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日`;
+
+    let rows = [];
+    // 表頭
+    rows.push(new TableRow({ children: ['品名','包裝','單價','備註'].map(h => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text:h, bold:true, font:'Microsoft JhengHei' })] })],
+      shading: { fill: '1a1a2e' },
+      borders: { top:{style:BorderStyle.SINGLE, size:1}, bottom:{style:BorderStyle.SINGLE, size:1}, left:{style:BorderStyle.SINGLE, size:1}, right:{style:BorderStyle.SINGLE, size:1} },
+    }))}));
+
+    let total = 0;
+    _coItems.forEach(it => {
+      let pd = _coQuoteProducts[it.name] || {};
+      let price = pd.price || 0;
+      if (price > 0) total += price * it.qty;
+      rows.push(new TableRow({ children: [
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:`${it.name} ${pd.name||''}`, font:'Microsoft JhengHei' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:pd.pkg||'', font:'Microsoft JhengHei' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:price?price.toLocaleString():'待確認', font:'Microsoft JhengHei' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:pd.name?'NTD/KG':'', font:'Microsoft JhengHei' })] })] }),
+      ]}));
+    });
+
+    if (total > 0) {
+      rows.push(new TableRow({ children: [
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:`※ 實際金額依訂單數量調整。參考總值：NT$ ${total.toLocaleString()}`, font:'Microsoft JhengHei', italics:true, size:18 })] })],
+          columnSpan: 4,
+      })});
+    }
+
+    let fontR = { font:'Microsoft JhengHei' };
+    let paragraphs = [
+      new Paragraph({ children: [new TextRun({ text:_coQuoteGY.name, bold:true, size:36, font:'Microsoft JhengHei' })], alignment: AlignmentType.CENTER }),
+      new Paragraph({ children: [new TextRun({ text:'報  價  單', bold:true, size:32, font:'Microsoft JhengHei' }), new TextRun({ text:'  E S T I M A T E', size:20 })], alignment: AlignmentType.CENTER }),
+      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
+      new Paragraph({ children: [new TextRun({ text:`ATTN：${contact}`, ...fontR, size:22 })] }),
+      new Paragraph({ children: [new TextRun({ text:`${customer} 台照`, ...fontR, size:22 })] }),
+      new Paragraph({ children: [new TextRun({ text:`${today}  即日起生效　（有效期限：${validDays}天）`, ...fontR, size:22 })] }),
+      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
+      new Table({ rows, width: { size:100, type:WidthType.PERCENTAGE } }),
+    ];
+
+    if (notes) paragraphs.push(new Paragraph({ children: [new TextRun({ text:`備註：${notes}`, ...fontR, size:20 })] }));
+
+    paragraphs = paragraphs.concat([
+      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
+      new Paragraph({ children: [new TextRun({ text:`大 園 廠：${_coQuoteGY.addr}`, ...fontR, size:18 })] }),
+      new Paragraph({ children: [new TextRun({ text:`電  話：${_coQuoteGY.tel}`, ...fontR, size:18 })] }),
+      new Paragraph({ children: [new TextRun({ text:`傳  真：${_coQuoteGY.fax}`, ...fontR, size:18 })] }),
+      new Paragraph({ children: [new TextRun({ text:`統一編號：${_coQuoteGY.taxId}`, ...fontR, size:18 })] }),
+    ]);
+
+    const doc = new Document({ sections:[{ properties:{}, children:paragraphs }] });
+    const blob = await Packer.toBlob(doc);
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `報價單_${customer}_${now.toISOString().slice(0,10).replace(/-/g,'')}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    coCloseQuoteModal();
+  } catch(e) {
+    console.error(e);
+    alert('產生報價單失敗：' + e.message);
+  } finally {
+    btn.textContent = '⚡ 產生 Word 報價單';
+    btn.disabled = false;
+  }
+}
+
 
 </script>
+
+<!-- ═══ 報價單 modal ═══ -->
+<div id="coQuoteModal">
+  <div class="co-modal-box">
+    <h3>📋 產生報價單</h3>
+    <div id="coQuoteItems" class="co-modal-items"></div>
+    <div class="co-modal-total" id="coQuoteTotal"></div>
+    <div class="form-row">
+      <div>
+        <label>客戶名稱</label>
+        <select id="coQuoteCustomer" onchange="coQuoteCustomerChange()">
+          <option value="三芳化學工業股份有限公司">三芳化學工業(股)公司</option>
+          <option value="信立化學">信立化學</option>
+          <option value="僑國公司">僑國公司</option>
+          <option value="億錩印刷廠">億錩印刷廠</option>
+          <option value="其他">其他（請填寫）</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>自訂客戶名稱</label>
+        <input type="text" id="coQuoteCustomerOther" placeholder="請填寫客戶名稱" style="display:none">
+      </div>
+      <div>
+        <label>聯絡人</label>
+        <input type="text" id="coQuoteContact" placeholder="例：許清秀">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label>備註（選填）</label>
+        <input type="text" id="coQuoteNotes" placeholder="例：以上報價不含運費">
+      </div>
+    </div>
+    <div class="co-modal-actions">
+      <button class="btn-cancel" onclick="coCloseQuoteModal()">取消</button>
+      <button class="btn-generate" onclick="coGenerateQuoteDoc()">⚡ 產生 Word 報價單</button>
+    </div>
+  </div>
+</div>
 
 <!-- AI 浮動按鈕（已廢除，功能整合到頂部按鈕） -->
 <div id="aiAssistantFloat" onclick="toggleAIChat()" style="display:none">
