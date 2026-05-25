@@ -3024,7 +3024,15 @@ function openCustomerOrder() {
       saveData(merged); _cachedData = null;
     }
     showPage('customerOrderPage');
+  }).catch(function(e) {
+    console.warn('[openCustomerOrder] sync 失敗但不影響進入', e);
+    ov.style.display = 'none';
+    showPage('customerOrderPage');
   });
+  // 最多等8秒，超時直接進頁面
+  setTimeout(function() {
+    ov.style.display = 'none';
+  }, 8000);
 }
 
 // 直接進入實驗室頁（無需密碼）
