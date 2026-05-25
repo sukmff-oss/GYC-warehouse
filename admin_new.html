@@ -5405,7 +5405,7 @@ async function coGenerateQuoteDoc() {
       rows.push(new TableRow({ children: [
         new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:`※ 實際金額依訂單數量調整。參考總值：NT$ ${total.toLocaleString()}`, font:'Microsoft JhengHei', italics:true, size:18 })] })],
           columnSpan: 4,
-      })});
+      ]});
     }
 
     let fontR = { font:'Microsoft JhengHei' };
