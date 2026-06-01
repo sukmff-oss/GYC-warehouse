@@ -220,15 +220,23 @@ table.compare tr:last-child td{border-bottom:none;}
   align-items:center;
   gap:14px;
   box-shadow:0 4px 20px rgba(0,0,0,0.3);
+  cursor:pointer;
+  user-select:none;
+  transition:background .2s;
 }
+.voice-bar:active{background:linear-gradient(135deg,#0f1c35 0%,#1a2744 100%);}
 .voice-bar .vb-icon{
-  font-size:24px;
+  font-size:28px;
   flex-shrink:0;
-  animation:pulse-ring 2s ease-in-out infinite;
 }
-@keyframes pulse-ring{
-  0%,100%{opacity:1;}
-  50%{opacity:0.5;}
+.voice-bar .vb-play{
+  width:44px;height:44px;
+  background:var(--accent);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  flex-shrink:0;
+  box-shadow:0 2px 12px rgba(255,101,53,0.4);
 }
 .voice-bar .vb-text{
   flex:1;
@@ -518,22 +526,24 @@ table.compare tr:last-child td{border-bottom:none;}
     <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank">📦 倉儲管理</a>
     <a href="#customer">客服留言</a>
     <div class="live-dot"></div>
-    <span class="nav-clock" id="nav-clock">15:46:57</span>
+    <span class="nav-clock" id="nav-clock">16:09:10</span>
   </div>
 </nav>
 
 <!-- 語音播放條：打開報告自動朗讀 -->
-<div class="voice-bar">
+<div class="voice-bar" onclick="toggleVoice()">
   <div class="vb-icon">🔊</div>
   <div class="vb-text">
     <div class="vb-title">🎙️ 國研AI早報語音版</div>
     <div class="vb-sub">點擊播放 · 今日行情導讀</div>
   </div>
-  <audio id="voice-player" controlsList="nodownload" preload="auto">
+  <div class="vb-play" id="vbPlay">▶</div>
+  <audio id="voice-player" preload="auto" style="display:none">
     <source src="https://raw.githubusercontent.com/sukmff-oss/GYC-warehouse/main/國研化工AI報告_語音.mp3" type="audio/mpeg">
     您的瀏覽器不支援音訊播放
   </audio>
 </div>
+<script>function toggleVoice(){var a=document.getElementById('voice-player');var b=document.getElementById('vbPlay');if(a.paused){a.play();b.textContent='⏸';b.style.background='#ff6535'}else{a.pause();b.textContent='▶';b.style.background='var(--accent)'}a.onended=function(){b.textContent='▶';b.style.background='var(--accent)'}}</script>
 
 <div class="container">
   <!-- HERO -->
@@ -543,7 +553,7 @@ table.compare tr:last-child td{border-bottom:none;}
     <h1>國研<span>AI</span>報告</h1>
     <div class="hero-meta">
       <span>📅 2026-06-01</span>
-      <span>🕐 15:46:57 Asia/Taipei</span>
+      <span>🕐 16:09:10 Asia/Taipei</span>
       <span>📍 桃園市大園區</span>
       <span>🔄 每日 09:30 自動更新</span>
     </div>
@@ -601,7 +611,7 @@ table.compare tr:last-child td{border-bottom:none;}
   <div class="card" id="finance">
     <div class="section-header">
       <h2>📈 金融行情</h2>
-      <span class="badge">LIVE 2026-06-01 15:46</span>
+      <span class="badge">LIVE 2026-06-01 16:09</span>
     </div>
     <div class="metrics-grid">
       <div class="metric-card">
@@ -611,18 +621,18 @@ table.compare tr:last-child td{border-bottom:none;}
       </div>
       <div class="metric-card">
         <h3>₿ 比特幣</h3>
-        <div class="val" style="font-size:16px">72,857.00 USD</div>
-        <div class="sub c-dn">-1.24%</div>
+        <div class="val" style="font-size:16px">72,733.00 USD</div>
+        <div class="sub c-dn">-1.44%</div>
       </div>
       <div class="metric-card">
         <h3>🥇 黃金</h3>
-        <div class="val">4,536.10 USD</div>
-        <div class="sub c-dn">-0.54%</div>
+        <div class="val">4,530.50 USD</div>
+        <div class="sub c-dn">-0.66%</div>
       </div>
       <div class="metric-card">
         <h3>🛢 Brent原油</h3>
-        <div class="val" style="font-size:16px">93.93 USD</div>
-        <div class="sub c-up">+2.04%</div>
+        <div class="val" style="font-size:16px">93.95 USD</div>
+        <div class="sub c-up">+2.06%</div>
       </div>
     </div>
     <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　資料來源：Yahoo Finance（延遲15分鐘）</p>
@@ -630,7 +640,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <table class="compare">
         <thead><tr><th>項目</th><th>昨日收盤</th><th>今日報價</th><th>漲跌金額</th><th>漲跌幅</th></tr></thead>
         <tbody>
-<tr class="up-bg"><td class="lbl">🇹🇼 台股加權</td><td class="yes">44,732.94</td><td class="cur">45,337.91</td><td class="chg">▲ +604.97</td><td class="pct up">▲ +1.35%</td></tr><tr class="dn-bg"><td class="lbl">₿ BTC 比特幣</td><td class="yes">N/A</td><td class="cur">72,857.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.24%</td></tr><tr class="dn-bg"><td class="lbl">💰 ETH 以太幣</td><td class="yes">N/A</td><td class="cur">1,981.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.01%</td></tr><tr class="dn-bg"><td class="lbl">🔶 SOL Solana</td><td class="yes">N/A</td><td class="cur">81.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.83%</td></tr><tr class="dn-bg"><td class="lbl">🐕 DOGE 狗狗幣</td><td class="yes">N/A</td><td class="cur">0.10 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.78%</td></tr><tr class="dn-bg"><td class="lbl">💎 ETC 以太經典</td><td class="yes">N/A</td><td class="cur">8.05 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.81%</td></tr><tr class="dn-bg"><td class="lbl">🔷 KAS Kaspa</td><td class="yes">N/A</td><td class="cur">0.03 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.81%</td></tr><tr class="dn-bg"><td class="lbl">🥇 黃金</td><td class="yes">4,560.50 USD</td><td class="cur">4,536.10 USD</td><td class="chg">▼ -24.40 USD</td><td class="pct dn">▼ -0.54%</td></tr><tr class="up-bg"><td class="lbl">🛢 Brent 原油</td><td class="yes">92.05 USD</td><td class="cur">93.93 USD</td><td class="chg">▲ +1.88 USD</td><td class="pct up">▲ +2.04%</td></tr><tr class="up-bg"><td class="lbl">🛢 WTI 原油</td><td class="yes">87.36 USD</td><td class="cur">90.37 USD</td><td class="chg">▲ +3.01 USD</td><td class="pct up">▲ +3.45%</td></tr>
+<tr class="up-bg"><td class="lbl">🇹🇼 台股加權</td><td class="yes">44,732.94</td><td class="cur">45,337.91</td><td class="chg">▲ +604.97</td><td class="pct up">▲ +1.35%</td></tr><tr class="dn-bg"><td class="lbl">₿ BTC 比特幣</td><td class="yes">N/A</td><td class="cur">72,733.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.44%</td></tr><tr class="dn-bg"><td class="lbl">💰 ETH 以太幣</td><td class="yes">N/A</td><td class="cur">1,975.48 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.38%</td></tr><tr class="dn-bg"><td class="lbl">🔶 SOL Solana</td><td class="yes">N/A</td><td class="cur">80.68 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.35%</td></tr><tr class="dn-bg"><td class="lbl">🐕 DOGE 狗狗幣</td><td class="yes">N/A</td><td class="cur">0.10 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.31%</td></tr><tr class="dn-bg"><td class="lbl">💎 ETC 以太經典</td><td class="yes">N/A</td><td class="cur">8.04 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.04%</td></tr><tr class="dn-bg"><td class="lbl">🥇 黃金</td><td class="yes">4,560.50 USD</td><td class="cur">4,530.50 USD</td><td class="chg">▼ -30.00 USD</td><td class="pct dn">▼ -0.66%</td></tr><tr class="up-bg"><td class="lbl">🛢 Brent 原油</td><td class="yes">92.05 USD</td><td class="cur">93.95 USD</td><td class="chg">▲ +1.90 USD</td><td class="pct up">▲ +2.06%</td></tr><tr class="up-bg"><td class="lbl">🛢 WTI 原油</td><td class="yes">87.36 USD</td><td class="cur">90.38 USD</td><td class="chg">▲ +3.02 USD</td><td class="pct up">▲ +3.46%</td></tr>
         </tbody>
       </table>
     </div>
@@ -643,25 +653,25 @@ table.compare tr:last-child td{border-bottom:none;}
       <span class="badge">CoinGecko · 24h</span>
     </div>
     <div class="crypto-mini-grid">
-      <div class="crypto-mini"><h4>₿ BTC</h4><div class="val c-dn">72,857.00</div><div class="sub c-dn">-1.24%</div></div>
-      <div class="crypto-mini"><h4>💰 ETH</h4><div class="val c-dn">1,981.00</div><div class="sub c-dn">-2.01%</div></div>
-      <div class="crypto-mini"><h4>🔶 SOL</h4><div class="val c-dn">81.00</div><div class="sub c-dn">-1.83%</div></div>
-      <div class="crypto-mini"><h4>🐕 DOGE</h4><div class="val c-dn">0.10</div><div class="sub c-dn">-0.78%</div></div>
-      <div class="crypto-mini"><h4>💎 ETC</h4><div class="val c-dn">8.05</div><div class="sub c-dn">-1.81%</div></div>
-      <div class="crypto-mini"><h4>🔷 KAS</h4><div class="val c-dn">0.03</div><div class="sub c-dn">-0.81%</div></div>
+      <div class="crypto-mini"><h4>₿ BTC</h4><div class="val c-dn">72,733.00</div><div class="sub c-dn">-1.44%</div></div>
+      <div class="crypto-mini"><h4>💰 ETH</h4><div class="val c-dn">1,975.48</div><div class="sub c-dn">-2.38%</div></div>
+      <div class="crypto-mini"><h4>🔶 SOL</h4><div class="val c-dn">80.68</div><div class="sub c-dn">-2.35%</div></div>
+      <div class="crypto-mini"><h4>🐕 DOGE</h4><div class="val c-dn">0.10</div><div class="sub c-dn">-1.31%</div></div>
+      <div class="crypto-mini"><h4>💎 ETC</h4><div class="val c-dn">8.04</div><div class="sub c-dn">-2.04%</div></div>
+      <div class="crypto-mini"><h4>🔷 KAS</h4><div class="val c-flat">N/A</div><div class="sub c-flat"></div></div>
     </div>
     <div class="rank-row">
       <div class="rank-card up-rank">
         <div class="rank-label">🏆 最大漲幅</div>
         <div class="rank-name c-up">狗狗幣</div>
-        <div class="rank-pct c-up">-0.78%</div>
+        <div class="rank-pct c-up">-1.31%</div>
         <div class="rank-price">現價 0.10 USD</div>
       </div>
       <div class="rank-card dn-rank">
         <div class="rank-label">📉 最大跌幅</div>
         <div class="rank-name c-dn">以太幣</div>
-        <div class="rank-pct c-dn">-2.01%</div>
-        <div class="rank-price">現價 1,981.00 USD</div>
+        <div class="rank-pct c-dn">-2.38%</div>
+        <div class="rank-price">現價 1,975.48 USD</div>
       </div>
     </div>
   </div>
@@ -793,7 +803,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <h2>📺 台灣即時頭條</h2>
       <span class="badge">2026-06-01</span>
     </div>
-    <div class="news-grid"><a class="news-item" href="https://tw.news.yahoo.com/line-tv%E6%95%B4%E5%90%88%E5%BE%8C%E6%96%B0%E5%B8%83%E5%B1%80-%E9%BB%83%E5%9C%8B%E7%91%9C%E5%8D%87%E4%BB%BB%E5%B7%A7%E5%85%8B%E7%A7%91%E6%8A%80%E6%96%B0%E5%AA%92%E9%AB%94%E7%B8%BD%E7%B6%93%E7%90%86-073833812.html" target="_blank"><div class="emoji">📈</div><div><div class="title">LINE TV整合後新布局 黃國瑜升任巧克科技新媒體總經理</div><div class="desc">CNEWS匯流新聞網記者謝東明、李衣綸／台北報導 負責營運LINE TV品牌的巧克科技新媒體，今（1）宣布營運長黃國瑜，正式升任總經理，全面負責公司營運管理與成長策略；原董事長兼執行長陳立人，則卸下執</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E5%96%AA%E5%B1%8D%E7%85%99%E5%BD%88%E8%A1%8D%E7%94%9F%E6%AF%92%E9%A7%95%E3%80%81%E8%97%A5%E7%89%A9%E6%BF%AB%E7%94%A8%E9%A2%A8%E9%9A%AA-%E6%95%99%E9%83%A8%E6%93%AC%E7%B4%8D%E5%94%BE%E6%B6%B2%E7%AF%A9%E6%AA%A2-%E6%9C%80%E5%BF%AB9%E6%9C%88%E4%B8%8A%E8%B7%AF-073757163.html" target="_blank"><div class="emoji">📈</div><div><div class="title">喪屍煙彈衍生毒駕、藥物濫用風險 教部擬納唾液篩檢 最快9月上路</div><div class="desc">因應依托咪酯（俗稱喪屍煙彈）等新興毒品不易即時辨識的特性，加上新興毒品的代謝性較快，教育部研議納入唾液篩檢，提供學校早期風險辨識的快速輔助工具，最快115學年（今年9月）上路。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E9%87%91%E6%AD%A3%E6%81%A9%E7%82%BA%E4%BD%95%E5%BE%9E%E6%9C%AA%E8%AB%87%E5%8F%8A%E5%85%B6%E6%AF%8D%E8%A6%AA-063628762.html" target="_blank"><div class="emoji">📈</div><div><div class="title">金正恩為何從未談及其母親</div><div class="desc">[BBC] 在籠罩朝鮮領導人金正恩（Kim Jong Un）的諸多謎團中，圍繞著他母親的神秘色彩尤為引人注目。 金正恩執政15年來，從未公開提及她的名字。 朝鮮世襲獨裁政權的合法性建立在「白頭山」血統</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%A1%83%E5%9C%92%E5%B0%8F%E7%83%8F%E4%BE%86%E5%AE%87%E5%85%A7%E6%BA%AA%E6%88%B2%E6%B0%B4%E5%8D%8066%E8%B5%B7%E9%96%8B%E6%94%BE-%E4%B8%89%E5%A4%A7%E7%8E%A9%E6%B0%B4%E5%8D%80%E5%9F%9F%E3%80%81%E6%96%B0%E8%A8%AD%E5%90%B9%E9%A2%A8%E6%A9%9F%E3%80%81%E8%A6%AA%E5%AD%90%E6%88%B2%E6%B0%B4%E9%A6%96%E9%81%B8%EF%BC%81-073655610.html" target="_blank"><div class="emoji">📈</div><div><div class="title">桃園小烏來宇內溪戲水區6/6起開放 三大玩水區域、新設吹風機、親子戲水首選！</div><div class="desc">隨著炎炎夏日即將到來，桃園復興區小烏來「宇內溪戲水區」，將於6月6日～9月28日全面開放！宇內溪戲水區是熱門的戲水景點，自去年起啟用溫泉池後，便與天空步道、天空繩橋、龍鳳瀑布並列為「小烏來四寶」。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.stock.yahoo.com/news/00929%E9%85%8D%E6%81%AF%E5%8F%B2%E4%B8%8A%E6%9C%80%E9%AB%98%EF%BC%81%E5%8A%A0%E7%A2%BC%E5%88%B0026%E5%85%83-40%E8%90%AC%E4%BA%BA%E9%96%8B%E5%BF%83-073620687.html" target="_blank"><div class="emoji">📈</div><div><div class="title">00929配息史上最高！加碼到0.26元 40萬人開心</div><div class="desc">復華台灣科技優息(00929)配息金額再創新高。根據復華投信官網今(1)日公告顯示，00929最新每受益權單位預估配發金額為新台幣0.26元，較上個月的0.13元倍增，也是今年來第四度調升配息金額。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%B0%91%E9%80%B2%E9%BB%A8-%E6%96%B0%E7%AB%B9%E9%9A%8A-%E9%A6%96%E9%9D%A2%E5%90%88%E9%AB%94%E7%9C%8B%E6%9D%BF%E4%BA%AE%E7%9B%B8-%E8%8E%8A%E7%AB%B6%E7%A8%8B-%E6%9E%97%E5%A3%AB%E5%87%B1%E7%B5%84-073600082.html" target="_blank"><div class="emoji">📈</div><div><div class="title">民進黨「新竹隊」首面合體看板亮相 莊競程、林士凱組「有志之士」團隊</div><div class="desc">「民進黨新竹隊」市長、議員首面合體看板亮相！北區市議員參選人林士凱今（1）日率先公布與市長參選人莊競程聯合競選看板，兩人組成「有志之士」，並強調兩人都具有專業與執行力，盼能藉此獲得選民青睞。</div><span class="source">Yahoo News · 今日</span></div></a></div>
+    <div class="news-grid"><a class="news-item" href="https://tw.news.yahoo.com/%E6%B0%A3%E7%82%B8%E7%95%99%E8%B2%A0%E8%A9%95%E5%96%8A%E9%80%80%E5%9D%91%EF%BC%81%E7%A0%B4%E8%90%AC%E5%B0%8F%E6%99%82%E3%80%8A%E5%A4%A9%E5%91%BD2%E3%80%8B%E8%80%81%E7%8E%A9%E5%AE%B6%E8%A2%AB%E6%8A%93%E5%8C%85%E7%B9%BC%E7%BA%8C%E3%80%8C%E5%81%B7%E7%8E%A9157%E5%B0%8F%E6%99%82%E3%80%8D-080448389.html" target="_blank"><div class="emoji">📈</div><div><div class="title">氣炸留負評喊退坑！破萬小時《天命2》老玩家被抓包繼續「偷玩157小時」</div><div class="desc">《天命2》一名遊玩時數超過 10,098 小時的資深玩家 ArkaneArdvark78，不久前在 Steam 商店中留下長篇負評，痛批遊戲最近更新讓他徹底失去興趣，並在文末生氣宣告「我要跟這遊戲說再</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%BE%B3%E9%96%80%E5%8D%81%E6%AD%B2%E7%94%B7%E7%AB%A5%E8%87%B4%E5%91%BD%E4%BA%A4%E9%80%9A%E6%84%8F%E5%A4%96-%E7%82%BA%E4%BD%95%E5%BC%95%E7%99%BC%E7%A4%BE%E6%9C%83%E5%85%AC%E6%86%A4%E8%88%87%E9%9B%86%E9%AB%94%E5%93%80%E6%82%BC-080426480.html" target="_blank"><div class="emoji">📈</div><div><div class="title">澳門十歲男童致命交通意外，為何引發社會公憤與集體哀悼</div><div class="desc">這是澳門近年一宗引發全城關注，以及上升至特首回應的社會事件。有澳門網民表示，獻花除了悼念小朋友，也想向社會「發聲」。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/6%E6%9C%88%E6%96%B0%E5%88%B6-%E5%A4%96%E5%9C%8B%E4%BA%BA%E6%89%8D-%E5%8F%AF%E7%94%B3%E8%AB%8B%E9%95%B7%E7%85%A7-%E5%81%A5%E4%BF%9D%E7%B5%A6%E4%BB%98%E8%97%A5%E5%93%81%E5%86%8D%E6%93%B4%E5%A4%A7-080200675.html" target="_blank"><div class="emoji">📈</div><div><div class="title">6月新制！「外國人才」可申請長照 健保給付藥品再擴大</div><div class="desc">衛福部今（1）日公布6月新制，將擴大長照服務對象，納入失能外國專業人才及其眷屬。凡在台灣合法居留累計10年、且每年居留達183天以上者，經失能評估符合資格後，即可依需求申請長照服務，預計自今年6月30</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E9%98%BFken%E9%AC%86%E5%8F%A3%E8%AB%87-%E5%92%8C%E5%AE%89%E5%BF%83%E4%BA%9E%E7%9C%9F%E5%AF%A6%E9%97%9C%E4%BF%82-melody%E4%B8%8D%E5%BF%8D%E9%96%8B%E5%97%86-%E6%86%91%E4%BB%80%E9%BA%BC%E5%AB%8C%E4%BA%BA%E5%AE%B6-080200291.html" target="_blank"><div class="emoji">📈</div><div><div class="title">阿Ken鬆口談「和安心亞真實關係」 Melody不忍開嗆：憑什麼嫌人家</div><div class="desc">48歲男星阿Ken（林暐恆）憑藉流利的口條，主持過許多綜藝節目，而他跟女星安心亞合作多次相當有默契，不時常有網友將兩人送作堆，近日Melody現身節目時，也認不住好奇阿Ken跟安心亞的真實狀況，還開嗆</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E8%BC%9D%E9%81%94%E5%8F%B0%E7%81%A3%E7%B8%BD%E9%83%A8%E8%90%BD%E8%85%B3%E5%8F%B0%E5%8C%97-%E8%94%A3%E8%90%AC%E5%AE%89%EF%BC%9A%E4%BB%8A%E6%99%9A%E5%8F%B0%E5%8C%97101%E9%BB%9E%E7%87%88%E6%85%B6%E7%A5%9D-080137419.html" target="_blank"><div class="emoji">📈</div><div><div class="title">輝達台灣總部落腳台北 蔣萬安：今晚台北101點燈慶祝</div><div class="desc">台北市長蔣萬安今天（1日）受邀出席「NVIDIA GTC Taipei 2026 黃仁勳主題演講」，他受訪表示，今天晚上會在台北101點燈，慶祝輝達GTC大會在台北舉辦，以及輝達台灣總部落腳台北，未來</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/bgs-vs-psa-%E6%80%8E%E9%BA%BC%E9%81%B8%EF%BC%9F%E9%BB%91%E9%87%91%E6%A8%99%E6%8C%91%E6%88%B0%E8%88%87%E9%91%91%E5%AE%9A%E6%94%BB%E7%95%A5-080000508.html" target="_blank"><div class="emoji">📈</div><div><div class="title">BGS vs PSA 怎麼選？黑金標挑戰與鑑定攻略</div><div class="desc">在 2026 年的收藏市場，鑑定標籤不再只是保護殼，它更像是一張「價值支票」。如果你追求的是極速變現，PSA 10 絕對是全球通用的硬通貨；但如果你手上的卡美到不可方物，那個讓無數藏家魂牽夢縈的「BG</div><span class="source">Yahoo News · 今日</span></div></a></div>
   </div>
 
   <div class="card" id="video">
@@ -1036,7 +1046,7 @@ table.compare tr:last-child td{border-bottom:none;}
 <div class="footer">
   <div class="brand">國研<span>AI</span>報告</div>
   <p>© 2026 國研AI科技股份有限公司 · 本報告僅供內部參考，不構成投資建議。</p>
-  <p style="margin-top:4px">自動發報系統 v3.0 · 更新時間 2026-06-01 15:46:57</p>
+  <p style="margin-top:4px">自動發報系統 v3.0 · 更新時間 2026-06-01 16:09:10</p>
 </div>
 
 </div>
