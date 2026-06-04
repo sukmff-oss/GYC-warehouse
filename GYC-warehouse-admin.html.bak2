@@ -1619,151 +1619,30 @@ input[type="date"] {
 }
 .co-line-link a:hover { color: #00B900; }
 
-/* 拖曳上傳區 */
-#coDropZone {
-  border: 2px dashed rgba(255,193,7,0.3);
-  border-radius: 14px;
+/* 統一上傳區（圖片+文件） */
+.co-upload-zone {
+  width: min(680px, 98vw);
+  margin: 10px auto;
   padding: 28px 20px;
-  text-align: center;
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  border: 2px dashed rgba(255,193,7,0.3);
+  background: rgba(255,193,7,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  margin-top: 12px;
-  background: rgba(255,255,255,0.02);
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
 }
-#coDropZone.drag-over {
-  border-color: #FFC107;
-  background: rgba(255,193,7,0.08);
+.co-upload-zone.drag-over {
+  border-color: rgba(255,193,7,0.8);
+  background: rgba(255,193,7,0.1);
   transform: scale(1.01);
 }
-#coDropZone .dz-icon { font-size: 2rem; margin-bottom: 8px; }
-#coDropZone .dz-text { font-size: 0.85rem; color: rgba(255,255,255,0.45); font-weight: 500; }
-#coDropZone .dz-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 4px; }
-#coDropZone input[type=file] { display: none; }
-
-/* 步驟指示器 */
-.co-step { display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer }
-.co-step-circle {
-  width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
-  display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;
-  color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05);transition:all 0.3s;
-}
-.co-step.active .co-step-circle {
-  border-color:#FFC107;color:#FFC107;background:rgba(255,193,7,0.15);
-  box-shadow:0 0 12px rgba(255,193,7,0.3);
-}
-.co-step.completed .co-step-circle {
-  border-color:#10b981;color:#10b981;background:rgba(16,185,129,0.15);
-}
-.co-step-label { font-size:0.68rem;color:rgba(255,255,255,0.3);font-weight:500;white-space:nowrap }
-.co-step.active .co-step-label { color:rgba(255,193,7,0.8) }
-.co-step.completed .co-step-label { color:rgba(16,185,129,0.8) }
-.co-step-line { width:40px;height:2px;background:rgba(255,255,255,0.1);margin:0 4px;margin-bottom:18px }
-.co-step-line.done { background:#10b981 }
 
 /* 通知鬧鐘聲音（用 Web Audio API） */
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ═══ 報價單 modal ═══ */
-#coQuoteModal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 99999;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-}
-#coQuoteModal.open { display: flex; }
-.co-modal-box {
-  background: #16213e;
-  border: 1px solid rgba(67,131,64,0.5);
-  border-radius: 16px;
-  padding: 28px;
-  width: min(500px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.co-modal-box h3 {
-  color: #4fc3f7;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  border-left: 4px solid #43834093;
-  padding-left: 10px;
-}
-.co-modal-box .form-row { margin-bottom: 12px; }
-.co-modal-box label {
-  display: block;
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 4px;
-}
-.co-modal-box input, .co-modal-box select {
-  width: 100%;
-  padding: 10px 12px;
-  background: #0f3460;
-  border: 1px solid #1a4a7a;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 0.95rem;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-.co-modal-box input:focus, .co-modal-box select:focus {
-  outline: none;
-  border-color: #4fc3f7;
-}
-.co-modal-items {
-  background: #0f3460;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 12px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.co-modal-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 0.9rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.co-modal-item:last-child { border-bottom: none; }
-.co-modal-total {
-  text-align: right;
-  font-size: 1.1rem;
-  color: #ffd700;
-  font-weight: bold;
-  margin-bottom: 16px;
-}
-.co-modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-.co-modal-actions .btn-generate {
-  padding: 10px 24px;
-  background: #43834093;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-.co-modal-actions .btn-generate:hover { background: #5bb85c; }
-.co-modal-actions .btn-cancel {
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
-  color: rgba(255,255,255,0.6);
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-family: inherit;
-}
-.co-modal-actions .btn-cancel:hover { background: rgba(255,255,255,0.05); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -2697,42 +2576,26 @@ function stopVoiceInput() {
     <button onclick="coStartCamera()" style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;border-radius:50px;padding:8px 16px;font-size:0.8rem;font-weight:700;cursor:pointer">📷 拍照</button>
   </div>
 
-  <!-- 步驟指示器 -->
-  <div id="coStepIndicator" style="width:min(680px,98vw);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;gap:0">
-    <div id="coStep1" class="co-step active" onclick="coGoToStep(1)">
-      <div class="co-step-circle">1</div>
-      <div class="co-step-label">上傳圖片</div>
-    </div>
-    <div class="co-step-line" id="coLine12"></div>
-    <div id="coStep2" class="co-step" onclick="coGoToStep(2)">
-      <div class="co-step-circle">2</div>
-      <div class="co-step-label">AI 分析</div>
-    </div>
-    <div class="co-step-line" id="coLine23"></div>
-    <div id="coStep3" class="co-step" onclick="coGoToStep(3)">
-      <div class="co-step-circle">3</div>
-      <div class="co-step-label">庫存結果</div>
-    </div>
+  <!-- 統一上傳區：圖片+文件拖曳上傳 + 分析文字編輯區 -->
+  <div id="coUploadZone" class="co-upload-zone" ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
+    <input type="file" id="coUploadInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none" onchange="coUploadSelected(this)">
+    <div id="coUploadIcon" style="font-size:2.4rem;margin-bottom:8px">📂</div>
+    <div id="coUploadText" style="font-size:0.88rem;color:rgba(255,255,255,0.5);font-weight:500">拖曳圖片或文件到此處</div>
+    <div id="coUploadHint" style="font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:4px">支援：PNG / JPG / WEBP / PDF / Word / TXT</div>
+    <label for="coUploadInput" style="margin-top:10px;padding:7px 16px;border-radius:8px;background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.4);color:#FFC107;font-size:0.78rem;font-weight:700;cursor:pointer">📁 選擇檔案</label>
   </div>
 
-  <!-- 拖曳上傳區 -->
-  <div id="coDropZone" style="width:min(680px,98vw);margin:0 auto;position:relative"
-       ondragover="coDragOver(event)" ondragleave="coDragLeave(event)" ondrop="coDrop(event)">
-    <label for="coDropZoneInput" style="display:block;cursor:pointer">
-      <div class="dz-icon">📂</div>
-      <div class="dz-text">拖曳客戶訂單圖片到此處</div>
-      <div class="dz-hint">支援圖片 / PDF / WORD 檔案上傳</div>
-    </label>
-    <input type="file" id="coDropZoneInput" accept="image/*,.pdf,.doc,.docx" style="display:none"
-           onchange="coDropZoneFile(this)">
-  </div>
-
-  <!-- 檔案預覽區 -->
-  <div id="coFilePreview" style="display:none;width:min(680px,98vw);margin:16px auto 0">
-    <div style="font-size:0.8rem;color:rgba(255,193,7,0.8);margin-bottom:10px;display:flex;align-items:center;gap:8px">
-      <span>📄</span><span id="coFileCount">已選擇 0 個檔案</span>
+  <!-- 文件文字提取 + 編輯區（文件專用，圖片不留存） -->
+  <div id="coDocPanel" style="display:none;width:min(680px,98vw);margin-top:8px">
+    <div class="co-section">
+      <div class="co-section-title">📝 請確認 / 修正提取的文字</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:10px">AI 會分析以下文字來抓品名 × 數量，紅字為偵測到的關鍵數值</div>
+      <textarea id="coDocText" style="width:100%;min-height:140px;padding:14px;border-radius:12px;border:2px solid rgba(255,193,7,0.25);background:rgba(0,0,0,0.3);color:#fff;font-size:0.9rem;line-height:1.7;resize:vertical;font-family:var(--font-family)" placeholder="從文件提取的文字會顯示在這裡，請確認或修正後再分析..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="coAnalyzeDocText()" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,193,7,0.25);border:2px solid rgba(255,193,7,0.6);color:#FFC107;font-weight:700;cursor:pointer;font-size:0.9rem">🔍 送出分析</button>
+        <button onclick="coDocClose()" style="padding:12px 18px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem">✕ 取消</button>
+      </div>
     </div>
-    <div id="coFileList" style="display:flex;flex-wrap:wrap;gap:10px"></div>
   </div>
 
   <!-- 客戶查詢區 -->
@@ -2745,14 +2608,6 @@ function stopVoiceInput() {
     </div>
     <div style="font-size:0.72rem;color:rgba(255,255,255,0.22);margin-top:10px;line-height:1.7">
       支援格式：CO-508 × 185　｜　CO-508 * 185　｜　CO-508 185　｜　CO-508,185
-    </div>
-  </div>
-
-  <!-- 等待解析 loading -->
-  <div id="coLoading" style="display:none;width:min(680px,98vw);margin:0 auto">
-    <div style="text-align:center;padding:32px;color:#64b5f6">
-      <div style="width:48px;height:48px;border:4px solid rgba(100,181,246,0.2);border-top-color:#64b5f6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px"></div>
-      <div style="font-size:0.9rem;font-weight:500;letter-spacing:1px;color:rgba(255,255,255,0.7)">AI 解析中，請稍候...</div>
     </div>
   </div>
 
@@ -2769,7 +2624,6 @@ function stopVoiceInput() {
       <div class="co-actions">
         <button onclick="coStartCamera()" class="primary">📷 重新拍攝</button>
         <button onclick="coClearAll()">🗑 清除</button>
-        <button onclick="coOpenQuoteModal()" style="background:rgba(67,131,64,0.3);border:1.5px solid rgba(67,131,64,0.6);color:#4fc3f7;border-radius:8px;padding:10px 16px;font-size:0.88rem;font-weight:700;cursor:pointer">📄 產生報價單</button>
       </div>
     </div>
     <!-- 通知狀態 -->
@@ -2804,7 +2658,7 @@ function stopVoiceInput() {
   <div style="margin-top:14px;text-align:center">
     <label style="color:rgba(255,255,255,0.5);font-size:0.8rem;cursor:pointer">
       📁 或者選擇相簿圖片
-      <input type="file" accept="image/*,.pdf,.doc,.docx" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
+      <input type="file" accept="image/*" id="coFileInput" style="display:none" onchange="coFileSelected(this)">
     </label>
   </div>
 </div>
@@ -3024,15 +2878,7 @@ function openCustomerOrder() {
       saveData(merged); _cachedData = null;
     }
     showPage('customerOrderPage');
-  }).catch(function(e) {
-    console.warn('[openCustomerOrder] sync 失敗但不影響進入', e);
-    ov.style.display = 'none';
-    showPage('customerOrderPage');
   });
-  // 最多等8秒，超時直接進頁面
-  setTimeout(function() {
-    ov.style.display = 'none';
-  }, 8000);
 }
 
 // 直接進入實驗室頁（無需密碼）
@@ -3211,9 +3057,6 @@ function coReset() {
   document.getElementById('coNotifyBar').style.display = 'none';
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coManualInput').value = '';
-  coUpdateStep(1);
-  document.getElementById('coFilePreview').style.display = 'none';
-  document.getElementById('coFileList').innerHTML = '';
 }
 
 // 開啟相機
@@ -3267,212 +3110,129 @@ function coSnapPhoto() {
   tryCapture();
 }
 
-// 從相簿選擇圖片（Camera Overlay 內）
-function coFileSelected(input) {
+// 統一上傳處理：圖片直接分析，文件提取文字
+function coUploadSelected(input) {
   if (!input.files || !input.files[0]) return;
   coStopCamera();
-  // 統一由 coDropZoneFile 處理
-  coDropZoneFile(input);
-}
-
-// 拖曳區：點擊選擇檔案
-async function coDropZoneFile(input) {
-  console.log('[coDropZoneFile] called, files:', input.files);
-  if (!input.files || !input.files[0]) {
-    console.warn('[coDropZoneFile] 沒有選擇檔案');
-    return;
-  }
   let file = input.files[0];
-  console.log('[coDropZoneFile] 選擇:', file.name, file.type, file.size);
+  coProcessUploadFile(file);
+}
 
-  // 顯示檔案預覽
-  coShowFilePreview(input.files);
-  // 進入步驟 1（已選擇檔案）
-  coUpdateStep(1);
-
-  // 圖片：直接處理
-  if (file.type.startsWith('image/')) {
-    coReadFileAsDataURL(file, function(dataUrl) {
-      let img = new Image();
-      img.onload = function() {
-        let canvas = document.getElementById('coCanvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        let ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        console.log('[coDropZoneFile] 圖片尺寸:', canvas.width, 'x', canvas.height);
-        coUpdateStep(2); // 進入步驟 2：AI 分析中
-        coAnalyzeImage(canvas);
-      };
-      img.src = dataUrl;
-    });
-    return;
-  }
-
-  // PDF：使用 PDF.js 轉成圖片
-  if (file.type === 'application/pdf') {
-    coUpdateStep(2); // 進入步驟 2
-    document.getElementById('coLoading').style.display = 'block';
-    document.getElementById('coLoading').innerHTML =
-      '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.6)">' +
-      '<div style="font-size:2rem;margin-bottom:10px">📄</div>' +
-      '<div style="font-size:0.9rem">PDF 轉檔中，請稍候...</div>' +
-      '</div>';
-    try {
-      let arrayBuffer = await file.arrayBuffer();
-      // 動態載入 PDF.js
-      if (!window.pdfjsLib) {
-        console.log('[coDropZoneFile] 載入 PDF.js...');
-        await new Promise((resolve, reject) => {
-          let script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-          script.onload = () => {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-              'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            resolve();
-          };
-          script.onerror = () => reject(new Error('PDF.js CDN 載入失敗'));
-          document.head.appendChild(script);
-        });
-      }
-      await renderPdfPage(arrayBuffer);
-    } catch(e) {
-      console.error('[coDropZoneFile] PDF 處理失敗:', e);
-      document.getElementById('coLoading').style.display = 'none';
-      alert('PDF 處理失敗：' + e.message + '\n請將 PDF 截圖成圖片後再上傳，謝謝！');
+function coProcessUploadFile(file) {
+  let mime = file.type;
+  let isImage = mime.startsWith('image/');
+// 從相簿選擇圖片（橋接到 coUploadSelected）
+function coFileSelected(input) {
+  coUploadSelected(input);
+}
+    // 文件：提取文字後顯示編輯區
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      let text = e.target.result;
+      // 簡單清理控制字元
+      text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
+      if (!text) { alert('無法從此文件提取文字，請確認是文字型PDF或Word'); return; }
+      document.getElementById('coDocText').value = text;
+      document.getElementById('coDocPanel').style.display = 'block';
+      document.getElementById('coUploadZone').style.display = 'none';
+    };
+    if (isTxt) {
+      reader.readAsText(file, 'utf-8');
+    } else {
+      // PDF/Word 用 text/plain 嘗試讀取（純文字PDF可用）
+      reader.readAsText(file, 'utf-8');
     }
-    return;
-  }
-
-  // DOC/DOCX：提示用戶轉圖片
-  alert('WORD 檔案（.doc/.docx）請先截圖成圖片再上傳，謝謝！');
-}
-
-async function renderPdfPage(arrayBuffer) {
-  console.log('[renderPdfPage] 開始渲染 PDF');
-  let pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  console.log('[renderPdfPage] PDF 已載入，頁數:', pdf.numPages);
-  let page = await pdf.getPage(1);
-  let viewport = page.getViewport({ scale: 2.0 });
-  let canvas = document.getElementById('coCanvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-  console.log('[renderPdfPage] 渲染中...');
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-  console.log('[renderPdfPage] 完成');
-  document.getElementById('coLoading').style.display = 'none';
-  coAnalyzeImage(canvas);
-}
-
-function coReadFileAsDataURL(file, callback) {
-  let reader = new FileReader();
-  reader.onload = function(e) { callback(e.target.result); };
-  reader.readAsDataURL(file);
-}
-
-// ==================== 步驟指示器 ====================
-function coUpdateStep(step) {
-  let steps = [1, 2, 3];
-  steps.forEach(s => {
-    let el = document.getElementById('coStep' + s);
-    if (!el) return;
-    el.classList.remove('active', 'completed');
-    if (s < step) el.classList.add('completed');
-    else if (s === step) el.classList.add('active');
-  });
-  // 線條狀態
-  let line12 = document.getElementById('coLine12');
-  let line23 = document.getElementById('coLine23');
-  if (line12) {
-    line12.classList.toggle('done', step > 1);
-    line12.style.background = step > 1 ? '#10b981' : 'rgba(255,255,255,0.1)';
-  }
-  if (line23) {
-    line23.classList.toggle('done', step > 2);
-    line23.style.background = step > 2 ? '#10b981' : 'rgba(255,255,255,0.1)';
-  }
-  console.log('[coUpdateStep] 目前步驟:', step);
-}
-
-function coGoToStep(step) {
-  // 根據目前狀態允許跳轉（僅允許回上一步或當前步）
-  // 這裡可扩展为根据实际状态限制跳转
-  let currentStep = 1;
-  if (document.getElementById('coStep3').classList.contains('completed')) currentStep = 3;
-  else if (document.getElementById('coStep2').classList.contains('active') ||
-           document.getElementById('coStep2').classList.contains('completed')) currentStep = 2;
-  if (step <= currentStep) {
-    coUpdateStep(step);
+  } else {
+    alert('不支援的檔案格式，請上傳 PNG / JPG / WEBP / PDF / Word / TXT');
   }
 }
 
-// ==================== 檔案預覽 ====================
-function coShowFilePreview(files) {
-  let preview = document.getElementById('coFilePreview');
-  let fileList = document.getElementById('coFileList');
-  let fileCount = document.getElementById('coFileCount');
-
-  if (!files || files.length === 0) {
-    preview.style.display = 'none';
-    return;
-  }
-
-  preview.style.display = 'block';
-  fileCount.textContent = `已選擇 ${files.length} 個檔案`;
-
-  let html = '';
-  for (let i = 0; i < files.length; i++) {
-    let file = files[i];
-    let isImage = file.type.startsWith('image/');
-    let icon = isImage ? '🖼' : (file.type === 'application/pdf' ? '📕' : '📄');
-    let name = file.name.length > 20 ? file.name.substring(0, 18) + '...' : file.name;
-    let size = (file.size / 1024).toFixed(0) + ' KB';
-
-    html += `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;font-size:0.75rem;color:rgba(255,255,255,0.7)">
-      <span style="font-size:1.2rem">${icon}</span>
-      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
-      <span style="color:rgba(255,255,255,0.3)">${size}</span>
-    </div>`;
-  }
-  fileList.innerHTML = html;
-}
-
-// 拖曳事件
+// 拖曳事件（已绑定到 coUploadZone 的 ondragover/ondragleave/ondrop）
 function coDragOver(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.add('drag-over');
+  document.getElementById('coUploadZone').classList.add('drag-over');
 }
 function coDragLeave(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.remove('drag-over');
+  document.getElementById('coUploadZone').classList.remove('drag-over');
 }
 function coDrop(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('coDropZone').classList.remove('drag-over');
+  document.getElementById('coUploadZone').classList.remove('drag-over');
   let files = e.dataTransfer.files;
   if (files.length === 0) return;
-  let file = files[0];
-  // 支援圖片與 PDF
-  let allowed = file.type.startsWith('image/') || file.type === 'application/pdf';
-  if (!allowed) {
-    alert('請拖曳圖片或 PDF 檔案（PNG / JPG / WEBP / PDF）');
-    return;
+  coProcessUploadFile(files[0]);
+}
+
+// 送出文件文字分析
+async function coAnalyzeDocText() {
+  let text = document.getElementById('coDocText').value.trim();
+  if (!text) { alert('請先上傳文件'); return; }
+  document.getElementById('coDocPanel').style.display = 'none';
+  document.getElementById('coUploadZone').style.display = 'flex';
+  // 用本地 AI 解析文字中的品名×數量
+  let prompt = '你是國研化工的庫存管理助手。以下是從客戶訂單文件中提取的文字，請找出所有「品名 代號」和「數量（公斤）」的組合，用「品名 數量」的格式一行一行列出。只列出明確的組合，跳過猜測。如果品名只有代號（如CO-508、WP-175），直接用代號作為品名。\n\n文字內容：\n' + text;
+  try {
+    let res = await fetch('http://localhost:5000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: null, text: prompt })
+    });
+    let json = await res.json();
+    let answer = json.answer || json.response || '';
+    coParseAnswerToItems(answer);
+  } catch(e) {
+    // fallback：正則抓品名×數量
+    coParseByRegex(text);
   }
-  coStopCamera();
-  // 統一由 coDropZoneFile 處理（圖片/PDF分流）
-  coDropZoneFile({ files: [file] });
 }
 
-// ==================== 分析圖片：base64 → vision API（含超時保護）=================
-// 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
-function getVisionProxyUrl() {
-  // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
-  return 'https://pointing-mustang-const-largest.trycloudflare.com/analyze';
+// 關閉文件面板
+function coDocClose() {
+  document.getElementById('coDocPanel').style.display = 'none';
+  document.getElementById('coUploadZone').style.display = 'flex';
 }
 
+// 從AI回覆解析品名×數量
+function coParseAnswerToItems(answer) {
+  let lines = answer.split('\n').filter(l => l.trim());
+  let items = [];
+  lines.forEach(l => {
+    l = l.trim().replace(/^[●◆■○◆✅❌\-\*\#]+\s*/, '');
+    // 抓「品名 數量」或「品名×數量」
+    let m = l.match(/([A-Za-z0-9_\-]{2,})\s*[\*×xX]\s*(\d+(?:\.\d+)?)/);
+    if (!m) m = l.match(/([A-Za-z0-9_\-]{2,})\s+(\d+(?:\.\d+)?)\s*(?:KG|公斤|kg)?/);
+    if (!m) m = l.match(/(\d+(?:\.\d+)?)\s*[\*×xX]\s*([A-Za-z0-9_\-]{2,})/);
+    if (m) {
+      let name = m[2].toUpperCase().replace(/\s+/g, '-');
+      let qty = parseFloat(m[1]);
+      if (isNaN(qty)) { qty = parseFloat(m[2]); name = m[1].toUpperCase().replace(/\s+/g, '-'); }
+      if (!isNaN(qty) && qty > 0) items.push({ name: name.trim(), qty: qty });
+    }
+  });
+  if (items.length > 0) {
+    items.forEach(it => coAddItem(it.name, it.qty));
+  } else {
+    coParseByRegex(document.getElementById('coDocText').value);
+  }
+}
+
+// fallback：正則直接抓品名×數量
+function coParseByRegex(text) {
+  let items = [];
+  let matches = text.matchAll(/([A-Za-z]{2,}[\-]?\d+)\s*[\*×xX\-,]\s*(\d+(?:\.\d+)?)\s*(?:KG|公斤|kg)?/gi);
+  for (let m of matches) items.push({ name: m[1].toUpperCase(), qty: parseFloat(m[2]) });
+  if (items.length > 0) {
+    items.forEach(it => coAddItem(it.name, it.qty));
+  } else {
+    alert('找不到品名和數量的組合，請直接在手動輸入區填寫');
+  }
+}
+
+// 分析圖片：base64 → vision API（含超時保護）
 async function coAnalyzeImage(canvas) {
   console.log('[coAnalyzeImage] 開始，尺寸:', canvas.width, 'x', canvas.height);
   document.getElementById('coLoading').style.display = 'block';
@@ -3489,10 +3249,9 @@ async function coAnalyzeImage(canvas) {
   }, 20000); // 20秒超時（proxy 端 30秒）
 
   try {
-    // 自動偵測 proxy URL（同機器用 localhost，外部設備用 WSL IP）
-    let proxyUrl = getVisionProxyUrl();
-    console.log('[coAnalyzeImage] 呼叫 proxy:', proxyUrl);
-    let res = await fetch(proxyUrl, {
+    // 走本地 vision_proxy（NVIDIA/Groq API key 在 WSL 端，不會暴露）
+    console.log('[coAnalyzeImage] 呼叫本地 proxy http://localhost:5000/analyze');
+    let res = await fetch('http://localhost:5000/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: base64 })
@@ -3600,7 +3359,6 @@ function coParseAnswer(text) {
 
 // 比對庫存，顯示結果（業務友善版）
 function coDisplayResults(items) {
-  coUpdateStep(3); // 進入步驟 3：庫存結果
   let data = getData();
   _coItems = items.map(it => {
     let p = data.products.find(x => x.name === it.name);
@@ -3728,9 +3486,6 @@ function coClearAll() {
   document.getElementById('coResultItems').innerHTML = '';
   document.getElementById('coResultSection').style.display = 'none';
   document.getElementById('coNotifyBar').style.display = 'none';
-  coUpdateStep(1);
-  document.getElementById('coFilePreview').style.display = 'none';
-  document.getElementById('coFileList').innerHTML = '';
 }
 
 // ==================== SVG 圖示顏色切換（黃=正常/紅=警示/藍=待回報）====================
@@ -5278,218 +5033,8 @@ window.alert = function(msg) {
   }, 100);
 };
 
-// ════════════════════════════════════════════════════
-// 國研化工 報價單產生功能（客戶訂單頁整合）
-// ════════════════════════════════════════════════════
-
-// 產品價格資料庫（從真實報價單解析）
-const _coQuoteProducts = {
-  "WP-175": { name:"水性白色", pkg:"25KGS PACKAGE", price:100 },
-  "WP-271": { name:"水性黃色", pkg:"20KGS PACKAGE", price:295 },
-  "WP-374": { name:"水性紅色", pkg:"20KGS PACKAGE", price:410 },
-  "WP-532P":{ name:"綠色",     pkg:"20KGS PACKAGE", price:256 },
-  "WP-671": { name:"水性藍色", pkg:"20KGS PACKAGE", price:200 },
-  "WP-730P":{ name:"紫色",     pkg:"20KGS PACKAGE", price:384 },
-  "WP-770": { name:"水性紫色", pkg:"20KGS PACKAGE", price:320 },
-  "WP-833P":{ name:"橘色",     pkg:"20KGS PACKAGE", price:366 },
-  "WP-973": { name:"水性黑色", pkg:"20KGS PACKAGE", price:80  },
-  "CO-221": { name:"檸檬黃",   pkg:"17KGS PACKAGE", price:1300},
-  "CO-226": { name:"中黃",     pkg:"17KGS PACKAGE", price:1280},
-  "CO-824": { name:"黃橘",     pkg:"17KGS PACKAGE", price:1200},
-  "CO-508": { name:"車用色膏", pkg:"17KGS PACKAGE", price:null },
-  "CO-923": { name:"車用色膏", pkg:"17KGS PACKAGE", price:null },
-  "TU-916": { name:"高週波色膏", pkg:null, price:null },
-  "TU-205A":{ name:"色膏",     pkg:null, price:null },
-  "TU-304A":{ name:"色膏",     pkg:null, price:null },
-  "IM-6211":{ name:"鏡面銀",   pkg:null, price:null },
-};
-
-const _coQuoteGY = {
-  name:"國研化工實業股份有限公司",
-  addr:"桃園市大園區五青路70巷138號",
-  tel:"03-3813575 / 03-3815949",
-  fax:"03-3813843",
-  taxId:"43834093",
-};
-
-function coOpenQuoteModal() {
-  if (typeof _coItems === 'undefined' || !_coItems || _coItems.length === 0) {
-    alert('尚無訂單品項，請先上傳圖片或手動新增品項');
-    return;
-  }
-  let itemsDiv = document.getElementById('coQuoteItems');
-  let total = 0;
-  itemsDiv.innerHTML = '';
-  _coItems.forEach(it => {
-    let pd = _coQuoteProducts[it.name] || {};
-    let price = pd.price || 0;
-    let subtotal = price * it.qty;
-    if (price > 0) total += subtotal;
-    itemsDiv.innerHTML += `
-      <div class="co-modal-item">
-        <span style="color:#4fc3f7">${it.name}</span>
-        <span>${it.qty} KG × NT$${price || '?'}/KG = ${price ? 'NT$ '+subtotal.toLocaleString() : '待確認'}</span>
-      </div>`;
-  });
-  document.getElementById('coQuoteTotal').textContent =
-    total > 0 ? `參考總值：約 NT$ ${total.toLocaleString()}` : '（含待確認價格）';
-  document.getElementById('coQuoteModal').classList.add('open');
-}
-
-function coCloseQuoteModal() {
-  document.getElementById('coQuoteModal').classList.remove('open');
-}
-
-function coQuoteCustomerChange() {
-  let sel = document.getElementById('coQuoteCustomer');
-  let other = document.getElementById('coQuoteCustomerOther');
-  other.style.display = sel.value === '其他' ? 'block' : 'none';
-}
-
-function _loadDocxScript() {
-  return new Promise((resolve, reject) => {
-    if (window.docx) { resolve(); return; }
-    let s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-async function coGenerateQuoteDoc() {
-  let customer = document.getElementById('coQuoteCustomer').value;
-  if (customer === '其他') {
-    customer = document.getElementById('coQuoteCustomerOther').value.trim();
-    if (!customer) { alert('請填寫客戶名稱'); return; }
-  }
-  let contact = document.getElementById('coQuoteContact').value.trim();
-  if (!contact) { alert('請填寫聯絡人'); return; }
-  let notes = document.getElementById('coQuoteNotes').value.trim();
-  let validDays = 30;
-
-  // 載入 docx.js
-  let btn = document.querySelector('.btn-generate');
-  btn.textContent = '⏳ 產生中...';
-  btn.disabled = true;
-  try {
-    await _loadDocxScript();
-    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } = docx;
-
-    let now = new Date();
-    let rocYear = now.getFullYear() - 1911;
-    let today = `中華民國 ${rocYear} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日`;
-
-    let rows = [];
-    // 表頭
-    rows.push(new TableRow({ children: ['品名','包裝','單價','備註'].map(h => new TableCell({
-      children: [new Paragraph({ children: [new TextRun({ text:h, bold:true, font:'Microsoft JhengHei' })] })],
-      shading: { fill: '1a1a2e' },
-      borders: { top:{style:BorderStyle.SINGLE, size:1}, bottom:{style:BorderStyle.SINGLE, size:1}, left:{style:BorderStyle.SINGLE, size:1}, right:{style:BorderStyle.SINGLE, size:1} },
-    }))}));
-
-    let total = 0;
-    _coItems.forEach(it => {
-      let pd = _coQuoteProducts[it.name] || {};
-      let price = pd.price || 0;
-      if (price > 0) total += price * it.qty;
-      rows.push(new TableRow({ children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:`${it.name} ${pd.name||''}`, font:'Microsoft JhengHei' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:pd.pkg||'', font:'Microsoft JhengHei' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:price?price.toLocaleString():'待確認', font:'Microsoft JhengHei' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:pd.name?'NTD/KG':'', font:'Microsoft JhengHei' })] })] }),
-      ]}));
-    });
-
-    if (total > 0) {
-      rows.push(new TableRow({ children: [
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text:`※ 實際金額依訂單數量調整。參考總值：NT$ ${total.toLocaleString()}`, font:'Microsoft JhengHei', italics:true, size:18 })] })], columnSpan: 4 }),
-      ]})
-    }
-
-    let fontR = { font:'Microsoft JhengHei' };
-    let paragraphs = [
-      new Paragraph({ children: [new TextRun({ text:_coQuoteGY.name, bold:true, size:36, font:'Microsoft JhengHei' })], alignment: AlignmentType.CENTER }),
-      new Paragraph({ children: [new TextRun({ text:'報  價  單', bold:true, size:32, font:'Microsoft JhengHei' }), new TextRun({ text:'  E S T I M A T E', size:20 })], alignment: AlignmentType.CENTER }),
-      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
-      new Paragraph({ children: [new TextRun({ text:`ATTN：${contact}`, ...fontR, size:22 })] }),
-      new Paragraph({ children: [new TextRun({ text:`${customer} 台照`, ...fontR, size:22 })] }),
-      new Paragraph({ children: [new TextRun({ text:`${today}  即日起生效　（有效期限：${validDays}天）`, ...fontR, size:22 })] }),
-      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
-      new Table({ rows, width: { size:100, type:WidthType.PERCENTAGE } }),
-    ];
-
-    if (notes) paragraphs.push(new Paragraph({ children: [new TextRun({ text:`備註：${notes}`, ...fontR, size:20 })] }));
-
-    paragraphs = paragraphs.concat([
-      new Paragraph({ children: [new TextRun({ text:'', size:16 })] }),
-      new Paragraph({ children: [new TextRun({ text:`大 園 廠：${_coQuoteGY.addr}`, ...fontR, size:18 })] }),
-      new Paragraph({ children: [new TextRun({ text:`電  話：${_coQuoteGY.tel}`, ...fontR, size:18 })] }),
-      new Paragraph({ children: [new TextRun({ text:`傳  真：${_coQuoteGY.fax}`, ...fontR, size:18 })] }),
-      new Paragraph({ children: [new TextRun({ text:`統一編號：${_coQuoteGY.taxId}`, ...fontR, size:18 })] }),
-    ]);
-
-    const doc = new Document({ sections:[{ properties:{}, children:paragraphs }] });
-    const blob = await Packer.toBlob(doc);
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = `報價單_${customer}_${now.toISOString().slice(0,10).replace(/-/g,'')}.docx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    coCloseQuoteModal();
-  } catch(e) {
-    console.error(e);
-    alert('產生報價單失敗：' + e.message);
-  } finally {
-    btn.textContent = '⚡ 產生 Word 報價單';
-    btn.disabled = false;
-  }
-}
-
 
 </script>
-
-<!-- ═══ 報價單 modal ═══ -->
-<div id="coQuoteModal">
-  <div class="co-modal-box">
-    <h3>📋 產生報價單</h3>
-    <div id="coQuoteItems" class="co-modal-items"></div>
-    <div class="co-modal-total" id="coQuoteTotal"></div>
-    <div class="form-row">
-      <div>
-        <label>客戶名稱</label>
-        <select id="coQuoteCustomer" onchange="coQuoteCustomerChange()">
-          <option value="三芳化學工業股份有限公司">三芳化學工業(股)公司</option>
-          <option value="信立化學">信立化學</option>
-          <option value="僑國公司">僑國公司</option>
-          <option value="億錩印刷廠">億錩印刷廠</option>
-          <option value="其他">其他（請填寫）</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div>
-        <label>自訂客戶名稱</label>
-        <input type="text" id="coQuoteCustomerOther" placeholder="請填寫客戶名稱" style="display:none">
-      </div>
-      <div>
-        <label>聯絡人</label>
-        <input type="text" id="coQuoteContact" placeholder="例：許清秀">
-      </div>
-    </div>
-    <div class="form-row">
-      <div>
-        <label>備註（選填）</label>
-        <input type="text" id="coQuoteNotes" placeholder="例：以上報價不含運費">
-      </div>
-    </div>
-    <div class="co-modal-actions">
-      <button class="btn-cancel" onclick="coCloseQuoteModal()">取消</button>
-      <button class="btn-generate" onclick="coGenerateQuoteDoc()">⚡ 產生 Word 報價單</button>
-    </div>
-  </div>
-</div>
 
 <!-- AI 浮動按鈕（已廢除，功能整合到頂部按鈕） -->
 <div id="aiAssistantFloat" onclick="toggleAIChat()" style="display:none">

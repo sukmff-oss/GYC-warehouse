@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🚗 粉紅超跑點餐服務</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fff0f3;
+      min-height: 100vh;
+      padding-bottom: 160px;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(255, 107, 157, 0.3);
+    }
+    .header-title { color: white; font-size: 22px; font-weight: 700; text-align: center; }
+    .header-subtitle { color: rgba(255,255,255,0.9); font-size: 12px; text-align: center; margin-top: 4px; }
+
+    /* ===== 顧客資料區 ===== */
+    .customer-section {
+      background: white;
+      margin: 16px;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .input-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #888;
+    }
+
+    .input-field {
+      border: 2px solid #ffd9e8;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fffafc;
+      color: #333;
+      transition: border-color 0.3s;
+      width: 100%;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #ff6b9d;
+    }
+
+    .input-field::placeholder { color: #ccc; }
+
+    /* ===== 外送地區 ===== */
+    .location-section {
+      margin-top: 4px;
+    }
+
+    .location-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .location-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .location-btn {
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid #ffd9e8;
+      background: white;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .location-btn.selected {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+    }
+
+    /* ===== Category Tabs ===== */
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      background: #fff0f3;
+      position: sticky;
+      top: 88px;
+      z-index: 90;
+      padding-top: 12px;
+    }
+    .category-tabs::-webkit-scrollbar { display: none; }
+
+    .category-tab {
+      flex-shrink: 0;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      background: white;
+      color: #666;
+      border: 2px solid #ffd9e8;
+      cursor: pointer;
+      transition: all 0.3s;
+      user-select: none;
+    }
+    .category-tab.active {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+    }
+
+    /* ===== Menu Container ===== */
+    .menu-container {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ===== Menu Card ===== */
+    .menu-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(255, 107, 157, 0.15);
+    }
+    .card-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #ffe4ec;
+      display: block;
+    }
+    .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .card-name { font-size: 18px; font-weight: 700; color: #333; line-height: 1.3; }
+    .card-tag { background: #fff0f3; color: #ff6b9d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
+    .card-desc { font-size: 13px; color: #888; margin-bottom: 12px; line-height: 1.4; flex: 1; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .card-price { font-size: 22px; font-weight: 700; color: #ff6b9d; }
+    .card-price small { font-size: 14px; font-weight: 500; }
+
+    /* ===== Qty Control ===== */
+    .qty-control { display: flex; align-items: center; gap: 12px; background: #fff0f3; border-radius: 25px; padding: 6px; }
+    .qty-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      color: white; font-size: 20px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s; font-family: system-ui; line-height: 1;
+    }
+    .qty-btn:active { transform: scale(0.9); }
+    .qty-btn.disabled { background: #ddd; cursor: not-allowed; }
+    .qty-num { font-size: 18px; font-weight: 700; color: #333; min-width: 24px; text-align: center; }
+
+    /* ===== Cart Bar ===== */
+    .cart-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white;
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 200;
+    }
+    .cart-info { display: flex; align-items: center; gap: 12px; }
+    .cart-icon-wrap { position: relative; }
+    .cart-icon {
+      width: 50px; height: 50px;
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;
+      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+    }
+    .cart-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ff4444; color: white; font-size: 12px; font-weight: 700;
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-badge.hidden { display: none; }
+    .cart-text { display: flex; flex-direction: column; }
+    .cart-label { font-size: 13px; color: #888; }
+    .cart-total { font-size: 22px; font-weight: 700; color: #333; }
+    .checkout-btn {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      color: white; border: none; padding: 14px 28px;
+      border-radius: 25px; font-size: 16px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+      transition: transform 0.2s; font-family: 'Noto Sans TC', sans-serif;
+    }
+    .checkout-btn:active { transform: scale(0.95); }
+    .checkout-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+    .checkout-btn.loading { opacity: 0.7; pointer-events: none; }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed; top: 100px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(0,0,0,0.8); color: white;
+      padding: 12px 24px; border-radius: 25px;
+      font-size: 14px; font-weight: 500;
+      opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 300; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #4caf50; }
+    .toast.error { background: #f44336; }
+
+    .cat-icon { margin-right: 4px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+    .empty-icon { font-size: 60px; margin-bottom: 16px; }
+    .empty-text { font-size: 16px; }
+
+    /* ===== 驗證錯誤 ===== */
+    .input-field.error { border-color: #ff4444; }
+    .error-msg { font-size: 11px; color: #ff4444; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">🚗 粉紅超跑點餐服務</div>
+    <div class="header-subtitle">外送專線：09-09-09-2299</div>
+  </div>
+
+  <!-- 顧客資料 -->
+  <div class="customer-section">
+    <div class="section-title">👤 訂購人資料</div>
+    <div class="input-row">
+      <div class="input-group">
+        <span class="input-label">姓名</span>
+        <input class="input-field" type="text" id="nameInput" placeholder="請輸入姓名" maxlength="20">
+      </div>
+      <div class="input-group">
+        <span class="input-label">電話</span>
+        <input class="input-field" type="tel" id="phoneInput" placeholder="09xx-xxx-xxx" maxlength="15">
+      </div>
+    </div>
+
+    <!-- 外送地區 -->
+    <div class="location-section">
+      <div class="location-title">📍 選擇外送地區（必填）</div>
+      <div class="location-grid">
+        <button class="location-btn" onclick="selectLocation('蘆竹區', this)">1️⃣ 蘆竹區</button>
+        <button class="location-btn" onclick="selectLocation('大園區', this)">2️⃣ 大園區</button>
+        <button class="location-btn" onclick="selectLocation('大湳區', this)">3️⃣ 大湳區</button>
+        <button class="location-btn" onclick="selectLocation('中壢區', this)">4️⃣ 中壢區</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="category-tabs" id="categoryTabs">
+    <div class="category-tab active" data-cat="all"><span class="cat-icon">🍽️</span>全部</div>
+    <div class="category-tab" data-cat="麵食"><span class="cat-icon">🍜</span>麵食</div>
+    <div class="category-tab" data-cat="飯類"><span class="cat-icon">🍚</span>飯類</div>
+    <div class="category-tab" data-cat="炸物"><span class="cat-icon">🍗</span>炸物</div>
+    <div class="category-tab" data-cat="滷味"><span class="cat-icon">🥢</span>滷味</div>
+    <div class="category-tab" data-cat="飲料"><span class="cat-icon">🧋</span>飲料</div>
+    <div class="category-tab" data-cat="其他"><span class="cat-icon">📦</span>其他</div>
+  </div>
+
+  <!-- Menu Container -->
+  <div class="menu-container" id="menuContainer"></div>
+
+  <!-- Cart Bar -->
+  <div class="cart-bar">
+    <div class="cart-info">
+      <div class="cart-icon-wrap">
+        <div class="cart-icon">🛒</div>
+        <div class="cart-badge hidden" id="cartBadge">0</div>
+      </div>
+      <div class="cart-text">
+        <span class="cart-label">已選購</span>
+        <span class="cart-total" id="cartTotal">$0</span>
+      </div>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" disabled onclick="submitOrder()">送出訂單</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://d.line-scdn.net/liff/initialization.js"></script>
+  <script>
+    const API_BASE = 'https://gyc-warehouse.onrender.com';
+    let liffUserId = ''; // LINE userId for order binding
+    let liffReadyPromise = null; // 用來確保 LIFF 初始化完成
+
+    // Initialize LINE LIFF 並等待完成（最長等15秒，避免永遠卡住）
+    let liffBindFailed = false; // 綁定失敗標記
+    let liffBindFailedToastShown = false; // 失敗toast只顯示一次
+
+    async function initLiff() {
+      try {
+        const initWithTimeout = Promise.race([
+          liff.init({ liffId: '2010079227-AYQrqZ5M' }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('init timeout')), 15000))
+        ]);
+        await initWithTimeout;
+        console.log('LIFF init OK');
+
+        // 方式1：從 context 直接拿 userId（不需要額外API call）
+        try {
+          const ctx = liff.context;
+          if (ctx && ctx.userId) {
+            liffUserId = ctx.userId;
+            console.log('LINE UserID from context:', liffUserId);
+          }
+        } catch(e3) {
+          console.log('getContext failed:', e3.message);
+        }
+
+        // 方式2：如果 context 沒拿到，再試 getProfile
+        if (!liffUserId) {
+          try {
+            const profile = await liff.getProfile();
+            liffUserId = profile.userId;
+            console.log('LINE UserID from getProfile:', liffUserId);
+          } catch(e2) {
+            console.log('getProfile failed:', e2.message);
+          }
+        }
+
+      } catch(e) {
+        console.log('LIFF init timeout/fail:', e.message);
+      }
+
+      // 即使 LINE 綁定失敗，只要填完表單就可以送出訂單
+    // 只是沒有顧客確認通知，但管理員會收到訂單
+    updateCheckoutBtn();
+    }
+    liffReadyPromise = initLiff(); // 啟動非同步初始化
+
+    const menuData = [
+      { id: 1,  name: '泡麵',      price: 60,  category: '麵食', desc: '調理簡單，香氣四溢',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_01.jpg' },
+      { id: 2,  name: '涼麵',      price: 50,  category: '麵食', desc: '清爽開胃，夏日首選',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_02.jpg' },
+      { id: 3,  name: '排骨便當',  price: 100, category: '飯類', desc: '傳統美味，肉質軟嫩',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_03.jpg' },
+      { id: 4,  name: '雞腿便當',  price: 100, category: '飯類', desc: '酥脆外皮，肉汁豐富',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_04.jpg' },
+      { id: 5,  name: '炸雞排',    price: 70,  category: '炸物', desc: '金黃酥脆，份量十足',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_05.jpg' },
+      { id: 6,  name: '薯條',      price: 40,  category: '炸物', desc: '外酥內軟，人氣小食',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_06.jpg' },
+      { id: 7,  name: '炸雞翅',    price: 40,  category: '炸物', desc: '吮指回味，聚會必備',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_07.jpg' },
+      { id: 8,  name: '滷蛋',      price: 15,  category: '滷味', desc: '入味三分，蛋白Q彈',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_08.jpg' },
+      { id: 9,  name: '豆干',      price: 15,  category: '滷味', desc: '豆香濃郁，軟嫩多汁',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_09.jpg' },
+      { id: 10, name: '鴨頭',      price: 30,  category: '滷味', desc: '經典滷味，香氣撲鼻',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_10.jpg' },
+      { id: 11, name: '冰飲',      price: 35,  category: '飲料', desc: '清涼解渴，消暑聖品',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_11.jpg' },
+      { id: 12, name: '咖啡',      price: 40,  category: '飲料', desc: '香醇濃郁，提神醒腦',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_12.jpg' },
+      { id: 13, name: '手工搖飲',  price: 50,  category: '飲料', desc: '現點現搖，新鮮好喝',               img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_13.jpg' },
+      { id: 14, name: '香菸',      price: 100, category: '其他', desc: '請攜帶證件',                     img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_14.jpg' },
+      { id: 15, name: '檳榔',      price: 50,  category: '其他', desc: '提神好幫手',                     img: 'https://sukmff-oss.github.io/GYC-warehouse/pink-run-order/food_15.jpg' },
+    ];
+
+    const cart = {};
+    let currentCategory = 'all';
+    let selectedLocation = '';
+    let isSubmitting = false;
+
+    // DOM
+    const menuContainer = document.getElementById('menuContainer');
+    const cartBadge     = document.getElementById('cartBadge');
+    const cartTotal     = document.getElementById('cartTotal');
+    const checkoutBtn   = document.getElementById('checkoutBtn');
+    const toast         = document.getElementById('toast');
+    const categoryTabs  = document.querySelectorAll('.category-tab');
+    const nameInput     = document.getElementById('nameInput');
+    const phoneInput    = document.getElementById('phoneInput');
+
+    function showToast(msg, type = '') {
+      toast.textContent = msg;
+      toast.className = 'toast show' + (type ? ' ' + type : '');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function selectLocation(loc, btn) {
+      selectedLocation = loc;
+      document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      updateCheckoutBtn();
+    }
+
+    function renderMenu() {
+      const filtered = currentCategory === 'all'
+        ? menuData
+        : menuData.filter(item => item.category === currentCategory);
+
+      if (filtered.length === 0) {
+        menuContainer.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-text">此分類尚無商品</div></div>`;
+        return;
+      }
+
+      menuContainer.innerHTML = filtered.map(item => {
+        const qty = cart[item.id] || 0;
+        return `<div class="menu-card">
+          <img class="card-image" src="${item.img}" alt="${item.name}" loading="lazy">
+          <div class="card-content">
+            <div class="card-header">
+              <div class="card-name">${item.name}</div>
+              <div class="card-tag">${item.category}</div>
+            </div>
+            <div class="card-desc">${item.desc}</div>
+            <div class="card-footer">
+              <div class="card-price"><small>$</small>${item.price}</div>
+              <div class="qty-control">
+                <button class="qty-btn ${qty === 0 ? 'disabled' : ''}" onclick="event.stopPropagation(); changeQty(${item.id}, -1)">−</button>
+                <span class="qty-num">${qty}</span>
+                <button class="qty-btn" onclick="event.stopPropagation(); changeQty(${item.id}, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function changeQty(id, delta) {
+      const item = menuData.find(m => m.id === id);
+      if (!item) return;
+      const newQty = Math.max(0, (cart[id] || 0) + delta);
+      if (newQty === 0) { delete cart[id]; } else { cart[id] = newQty; }
+      updateCart();
+      renderMenu();
+      if (delta > 0) showToast(`已加入 ${item.name}`);
+    }
+
+    function updateCart() {
+      const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+      const totalPrice = Object.entries(cart).reduce((sum, [id, qty]) => {
+        const item = menuData.find(m => m.id === parseInt(id));
+        return sum + (item ? item.price * qty : 0);
+      }, 0);
+      cartBadge.textContent = totalItems;
+      cartBadge.classList.toggle('hidden', totalItems === 0);
+      cartTotal.textContent = `$${totalPrice}`;
+      updateCheckoutBtn();
+    }
+
+    function updateCheckoutBtn() {
+      const hasItems = Object.keys(cart).length > 0;
+      const hasCustomer = nameInput.value.trim().length > 0 && phoneInput.value.trim().length > 0;
+      const hasLocation = selectedLocation !== '';
+      const hasLiffId = !!liffUserId; // 有LINE ID會推顧客確認，沒有也能點餐
+      checkoutBtn.disabled = !(hasItems && hasCustomer && hasLocation);
+
+      if (!hasLiffId && !checkoutBtn.disabled) {
+        checkoutBtn.textContent = '⚠️ 送出（無LINE通知）';
+        checkoutBtn.style.background = '#ff9800';
+        if (!liffBindFailedToastShown) {
+          liffBindFailedToastShown = true;
+          showToast('LINE綁定失敗，仍可點餐，管理員會收到通知', 'warn');
+        }
+      } else if (!hasLiffId) {
+        checkoutBtn.textContent = 'LINE綁定中...';
+        checkoutBtn.style.background = '';
+      } else {
+        checkoutBtn.textContent = '送出訂單';
+        checkoutBtn.style.background = '';
+      }
+    }
+
+    async function submitOrder() {
+      if (isSubmitting) return;
+
+      // 驗證（直接檢查，不等 LIFF）
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+
+      if (!name) {
+        nameInput.classList.add('error');
+        showToast('請填寫姓名', 'error');
+        nameInput.focus();
+        return;
+      }
+      nameInput.classList.remove('error');
+
+      if (!phone) {
+        phoneInput.classList.add('error');
+        showToast('請填寫電話', 'error');
+        phoneInput.focus();
+        return;
+      }
+      phoneInput.classList.remove('error');
+
+      if (!selectedLocation) {
+        showToast('請選擇外送地區', 'error');
+        return;
+      }
+
+      if (Object.keys(cart).length === 0) {
+        showToast('請先選擇餐點', 'error');
+        return;
+      }
+
+      // 組成訂單
+      const orderItems = Object.entries(cart).map(([id, qty]) => {
+        const item = menuData.find(m => m.id === parseInt(id));
+        return { name: item.name, price: item.price, qty: qty };
+      });
+
+      const total = orderItems.reduce((sum, i) => sum + i.price * i.qty, 0);
+      const orderData = {
+        name: name,
+        phone: phone,
+        items: orderItems,
+        total: total,
+        location: selectedLocation,
+        time: new Date().toLocaleString('zh-TW'),
+        line_user_id: liffUserId  // 綁定 LINE 用戶
+      };
+
+      // 顯示 loading
+      isSubmitting = true;
+      checkoutBtn.classList.add('loading');
+      checkoutBtn.textContent = '送出中...';
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+        const res = await fetch(API_BASE + '/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          showToast('✅ 訂單已送出！', 'success');
+          // 清空購物車
+          Object.keys(cart).forEach(k => delete cart[k]);
+          updateCart();
+          renderMenu();
+          nameInput.value = '';
+          phoneInput.value = '';
+          selectedLocation = '';
+          document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('selected'));
+        } else {
+          throw new Error('HTTP ' + res.status);
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          showToast('⚠️ 連線逾時，請稍後再試或致電 09-09-09-2299', 'warn');
+        } else {
+          console.error(err);
+          showToast('❌ 發送失敗，請致電 09-09-09-2299', 'error');
+        }
+      } finally {
+        isSubmitting = false;
+        checkoutBtn.classList.remove('loading');
+        checkoutBtn.textContent = '送出訂單';
+      }
+    }
+
+    // 監聽輸入即時更新送出按鈕
+    nameInput.addEventListener('input', updateCheckoutBtn);
+    phoneInput.addEventListener('input', updateCheckoutBtn);
+
+    // 類別切換
+    categoryTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        categoryTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentCategory = tab.dataset.cat;
+        renderMenu();
+      });
+    });
+
+    renderMenu();
+    updateCart();
+  </script>
+</body>
+</html>

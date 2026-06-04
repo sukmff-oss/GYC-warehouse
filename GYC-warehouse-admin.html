@@ -2247,6 +2247,11 @@ function stopVoiceInput() {
 </svg></span></span>
       <span class="menu-label">類別管理</span>
     </button>
+    <!-- 第4排：蘇董專用（限蘇董和管理員） -->
+    <button class="menu-btn" id="btnSuPage" onclick="showPage('stockPageSu')">
+      <span class="role-icon-wrap stock"><span class="role-icon">👁️</span></span>
+      <span class="menu-label">蘇董專用</span>
+    </button>
     <!-- 登出系統（獨立一列） -->
     <button class="menu-btn wide" onclick="doLogout()">
       <span class="icon">🚪</span>
@@ -3010,6 +3015,11 @@ function applyRolePermissions() {
     btn.style.opacity = allowed ? '1' : '0.35';
     btn.style.pointerEvents = allowed ? 'auto' : 'none';
   });
+  // 蘇董專用按鈕：只有 su 和 admin 角色可見
+  let suBtn = document.getElementById('btnSuPage');
+  if (suBtn) {
+    suBtn.style.display = (_currentRole === 'su' || _currentRole === 'admin') ? 'block' : 'none';
+  }
 // 採購：禁用出貨作業的數量編輯（只能看網格提示）
   if (_currentRole === 'purchase') {
     let sec = document.getElementById('outQtySection');
@@ -3033,7 +3043,9 @@ function applyRolePermissions() {
 
 // ==================== 頁面切換 ====================
 function doLogout() {
-  if (!confirm('確定要登出？')) return;
+  // 清除所有登入資訊，直接重載
+  localStorage.removeItem('_savedRole');
+  localStorage.removeItem('_savedPwd');
   location.reload();
 }
 
@@ -3355,11 +3367,11 @@ function coDrop(e) {
   coDropZoneFile({ files: [file] });
 }
 
-// ==================== 分析圖片：base64 → vision API（含超時保護）=================
-// 自動偵測：同機器的瀏覽器用 localhost，外部設備用 Cloudflare Tunnel HTTPS URL
+// ==================== 分析圖片：base64 → vision API（Windows MiniMax Proxy）=================
+// 使用 Windows 本機 Flask + Cloudflare Tunnel，支援外部手機連線上傳圖片分析
 function getVisionProxyUrl() {
-  // 優先使用 Cloudflare Tunnel（支援 HTTPS，從 GitHub Pages 也能呼叫）
-  return 'https://excess-medal-noble-pursue.trycloudflare.com/analyze';
+  // Windows Flask vision_proxy.py，cloudflared tunnel 轉發
+  return 'https://taught-restored-webshots-takes.trycloudflare.com/analyze';
 }
 
 async function coAnalyzeImage(canvas) {

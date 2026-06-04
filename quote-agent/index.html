@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>國研化工 - 智能報價系統</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", Arial, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 30px 0 20px;
+    border-bottom: 2px solid #43834093;
+    margin-bottom: 30px;
+  }
+  .header h1 {
+    font-size: 28px;
+    color: #4fc3f7;
+    letter-spacing: 3px;
+  }
+  .header p { color: #888; margin-top: 5px; font-size: 13px; }
+
+  /* Card */
+  .card {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: 1px solid #0f3460;
+  }
+  .card h2 {
+    font-size: 16px;
+    color: #4fc3f7;
+    margin-bottom: 15px;
+    border-left: 4px solid #43834093;
+    padding-left: 10px;
+  }
+
+  /* Form */
+  .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  .form-group {
+    flex: 1;
+    min-width: 200px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 5px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #4fc3f7;
+  }
+
+  /* Product List */
+  .product-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #0f3460;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #1a4a7a;
+  }
+  .product-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #43834093;
+  }
+  .product-info { flex: 1; }
+  .product-name { font-size: 14px; color: #4fc3f7; }
+  .product-spec { font-size: 12px; color: #888; }
+  .product-price { font-size: 13px; color: #ffd700; }
+  .product-qty {
+    width: 80px;
+    padding: 6px 8px;
+    background: #1a1a2e;
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    color: #fff;
+    text-align: center;
+    font-family: inherit;
+  }
+  .product-qty:disabled {
+    opacity: 0.4;
+  }
+  .remove-btn {
+    background: #c62828;
+    border: none;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .remove-btn:hover { background: #e53935; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-primary {
+    background: #43834093;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #5bb85c; }
+  .btn-secondary {
+    background: #1565c0;
+    color: #fff;
+  }
+  .btn-secondary:hover { background: #1e88e5; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid #43834093;
+    color: #43834093;
+  }
+  .btn-outline:hover { background: #43834093; color: #fff; }
+
+  /* Add product */
+  .add-product-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .add-product-form select, .add-product-form input {
+    padding: 8px 10px;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    color: #fff;
+    font-family: inherit;
+  }
+  .add-product-form select { flex: 2; }
+  .add-product-form input { width: 100px; text-align: center; }
+  .add-product-form button {
+    padding: 8px 16px;
+    background: #1565c0;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .add-product-form button:hover { background: #1e88e5; }
+
+  /* Preview */
+  .preview-box {
+    background: #0f3460;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .preview-box .label { color: #888; }
+  .preview-box .value { color: #4fc3f7; }
+  .preview-total {
+    font-size: 18px;
+    color: #ffd700;
+    text-align: right;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  /* Status */
+  .status {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 14px;
+    display: none;
+  }
+  .status.loading { background: #1565c0; display: block; }
+  .status.success { background: #2e7d32; display: block; }
+  .status.error { background: #c62828; display: block; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 12px;
+    padding: 20px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>🧪 國研化工 智能報價系統</h1>
+    <p>國研化工實業股份有限公司 ｜ GYC Industrial Co., Ltd.</p>
+  </div>
+
+  <!-- 基本資料 -->
+  <div class="card">
+    <h2>📋 基本資料</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>客戶名稱</label>
+        <select id="customer">
+          <option value="三芳化學工業股份有限公司">三芳化學工業(股)公司</option>
+          <option value="信立化學">信立化學</option>
+          <option value="僑國公司">僑國公司</option>
+          <option value="億錩印刷廠">億錩印刷廠</option>
+          <option value="加雍公司">加雍公司</option>
+          <option value="勝宏公司">勝宏公司</option>
+          <option value="千主公司">千主公司</option>
+          <option value="升賀有限公司">升賀有限公司</option>
+          <option value="協太實業">協太實業(股)公司</option>
+          <option value="厚生公司">厚生公司</option>
+          <option value="友嘉公司">友嘉公司</option>
+          <option value="啟暉公司">啟暉公司</option>
+          <option value="其他">其他（請填寫）</option>
+        </select>
+      </div>
+      <div class="form-group" id="otherCustomerGroup" style="display:none;">
+        <label>客戶名稱（自行填寫）</label>
+        <input type="text" id="otherCustomer" placeholder="輸入客戶名稱">
+      </div>
+      <div class="form-group">
+        <label>聯絡人</label>
+        <input type="text" id="contact" placeholder="例：許清秀">
+      </div>
+      <div class="form-group">
+        <label>有效天數</label>
+        <input type="number" id="validDays" value="30" min="1" max="365">
+      </div>
+    </div>
+  </div>
+
+  <!-- 產品選擇 -->
+  <div class="card">
+    <h2>📦 選擇產品</h2>
+    <div id="productList"></div>
+    <div class="add-product-form">
+      <select id="addProductSelect"></select>
+      <input type="number" id="addQty" value="20" min="1" placeholder="數量(KG)">
+      <button onclick="addProduct()">＋ 加入</button>
+      <button onclick="clearAll()">🗑 清空</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="loadProducts()">🔄 重整產品資料</button>
+    </div>
+  </div>
+
+  <!-- 預覽 -->
+  <div class="card">
+    <h2>👁 報價預覽</h2>
+    <div class="preview-box" id="previewBox">
+      <p style="color:#555;text-align:center;">選擇產品後即時預覽報價內容</p>
+    </div>
+    <div class="preview-total" id="totalEstimate"></div>
+  </div>
+
+  <!-- 產生 -->
+  <div class="card">
+    <h2>📄 產生報價單</h2>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;">
+        <label>備註（選填）</label>
+        <input type="text" id="notes" placeholder="例：以上報價不含運費">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateQuote()">⚡ 產生 Word 報價單</button>
+      <button class="btn btn-outline" onclick="downloadJSON()">💾 匯出資料(JSON)</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="footer">
+    © 國研化工實業股份有限公司 ｜ WWW.GYC.COM.TW ｜ 03-3813575
+  </div>
+</div>
+
+<script>
+// ===== 產品資料庫（從 product_db.py 同步） =====
+const PRODUCTS = [
+  {型號:"WP-175", 品名:"水性白色", 包裝:"25KGS PACKAGE", 單價:100, 備註:"水性印刷色漿"},
+  {型號:"WP-271", 品名:"水性黃色", 包裝:"20KGS PACKAGE", 單價:295, 備註:"水性印刷色漿"},
+  {型號:"WP-374", 品名:"水性紅色", 包裝:"20KGS PACKAGE", 單價:410, 備註:"水性印刷色漿"},
+  {型號:"WP-532P", 品名:"綠色", 包裝:"20KGS PACKAGE", 單價:256, 備註:"水性印刷色漿"},
+  {型號:"WP-671", 品名:"水性藍色", 包裝:"20KGS PACKAGE", 單價:200, 備註:"水性印刷色漿"},
+  {型號:"WP-730P", 品名:"紫色", 包裝:"20KGS PACKAGE", 單價:384, 備註:"水性印刷色漿"},
+  {型號:"WP-770", 品名:"水性紫色", 包裝:"20KGS PACKAGE", 單價:320, 備註:"水性印刷色漿"},
+  {型號:"WP-833P", 品名:"橘色", 包裝:"20KGS PACKAGE", 單價:366, 備註:"水性印刷色漿"},
+  {型號:"WP-973", 品名:"水性黑色", 包裝:"20KGS PACKAGE", 單價:80, 備註:"水性印刷色漿"},
+  {型號:"CO-221", 品名:"檸檬黃", 包裝:"17KGS PACKAGE", 單價:1300, 備註:"車用色膏"},
+  {型號:"CO-226", 品名:"中黃", 包裝:"17KGS PACKAGE", 單價:1280, 備註:"車用色膏"},
+  {型號:"CO-824", 品名:"黃橘", 包裝:"17KGS PACKAGE", 單價:1200, 備註:"車用色膏"},
+];
+
+let selectedProducts = []; // {model, qty}
+
+function loadProducts() {
+  const select = document.getElementById('addProductSelect');
+  select.innerHTML = PRODUCTS.map(p =>
+    `<option value="${p.型號}">${p.型號} ${p.品名} (NT$ ${p.單價}/KG)</option>`
+  ).join('');
+
+  // 預設選一些
+  if (selectedProducts.length === 0) {
+    selectedProducts = [
+      {model: "WP-532P", qty: 20},
+      {model: "WP-730P", qty: 20},
+    ];
+    renderProductList();
+  }
+}
+
+function addProduct() {
+  const select = document.getElementById('addProductSelect');
+  const qtyInput = document.getElementById('addQty');
+  const model = select.value;
+  const qty = parseInt(qtyInput.value) || 20;
+
+  if (selectedProducts.find(p => p.model === model)) {
+    alert('這個產品已經選過了');
+    return;
+  }
+  selectedProducts.push({model, qty});
+  renderProductList();
+}
+
+function removeProduct(model) {
+  selectedProducts = selectedProducts.filter(p => p.model !== model);
+  renderProductList();
+}
+
+function clearAll() {
+  selectedProducts = [];
+  renderProductList();
+}
+
+function renderProductList() {
+  const list = document.getElementById('productList');
+  if (selectedProducts.length === 0) {
+    list.innerHTML = '<p style="color:#555;text-align:center;padding:20px;">尚未選擇任何產品</p>';
+    updatePreview();
+    return;
+  }
+  list.innerHTML = selectedProducts.map(({model, qty}) => {
+    const p = PRODUCTS.find(x => x.型號 === model) || {};
+    return `
+      <div class="product-item">
+        <div class="product-info">
+          <div class="product-name">${p.型號 || model} ${p.品名 || ''}</div>
+          <div class="product-spec">${p.包裝 || ''}　｜　NT$ ${p.單價 || '?'}/KG</div>
+          <div class="product-spec">${p.備註 || ''}</div>
+        </div>
+        <input type="number" class="product-qty" value="${qty}" min="1"
+          onchange="updateQty('${model}', this.value)">
+        <button class="remove-btn" onclick="removeProduct('${model}')">移除</button>
+      </div>
+    `;
+  }).join('');
+  updatePreview();
+}
+
+function updateQty(model, qty) {
+  const item = selectedProducts.find(p => p.model === model);
+  if (item) item.qty = parseInt(qty) || 1;
+  updatePreview();
+}
+
+function updatePreview() {
+  const box = document.getElementById('previewBox');
+  const totalEl = document.getElementById('totalEstimate');
+  const custSelect = document.getElementById('customer');
+  const contact = document.getElementById('contact').value;
+  const validDays = document.getElementById('validDays').value;
+
+  if (selectedProducts.length === 0) {
+    box.innerHTML = '<p style="color:#555;text-align:center;">選擇產品後即時預覽報價內容</p>';
+    totalEl.textContent = '';
+    return;
+  }
+
+  const now = new Date();
+  const rocYear = now.getFullYear() - 1911;
+  const dateStr = `中華民國 ${rocYear} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日`;
+
+  let html = `<div style="margin-bottom:10px;">
+    <span class="label">客戶：</span><span class="value">${custSelect.value} 台照</span>
+    &nbsp;&nbsp;
+    <span class="label">ATTN：</span><span class="value">${contact || '待填寫'}</span>
+    &nbsp;&nbsp;
+    <span class="label">日期：</span><span class="value">${dateStr}</span>
+    &nbsp;&nbsp;
+    <span class="label">效期：</span><span class="value">${validDays}天</span>
+  </div>
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+  <tr style="background:#1a1a2e;">
+    <th style="padding:6px 8px;text-align:left;border:1px solid #333;">品名</th>
+    <th style="padding:6px 8px;text-align:center;border:1px solid #333;">包裝</th>
+    <th style="padding:6px 8px;text-align:center;border:1px solid #333;">單價</th>
+    <th style="padding:6px 8px;text-align:center;border:1px solid #333;">數量</th>
+    <th style="padding:6px 8px;text-align:right;border:1px solid #333;">小計</th>
+  </tr>`;
+
+  let grandTotal = 0;
+  selectedProducts.forEach(({model, qty}) => {
+    const p = PRODUCTS.find(x => x.型號 === model) || {};
+    const price = p.單價 || 0;
+    const subtotal = price * qty;
+    if (price > 0) grandTotal += subtotal;
+    html += `<tr>
+      <td style="padding:6px 8px;border:1px solid #333;">${p.型號||model} ${p.品名||''}</td>
+      <td style="padding:6px 8px;text-align:center;border:1px solid #333;">${p.包裝||''}</td>
+      <td style="padding:6px 8px;text-align:center;border:1px solid #333;">${price ? 'NT$ '+price.toLocaleString() : '待確認'}</td>
+      <td style="padding:6px 8px;text-align:center;border:1px solid #333;">${qty} KG</td>
+      <td style="padding:6px 8px;text-align:right;border:1px solid #333;">${price ? 'NT$ '+subtotal.toLocaleString() : '待確認'}</td>
+    </tr>`;
+  });
+
+  html += `</table>
+    <p style="margin-top:8px;font-size:12px;color:#888;">※ 實際金額依訂單數量與規格調整</p>
+    <p style="margin-top:4px;font-size:12px;color:#888;">NTD/KG｜大園廠：桃園市大園區五青路70巷138號｜統一編號：43834093</p>`;
+
+  box.innerHTML = html;
+  totalEl.textContent = grandTotal > 0 ? `參考總值：約 NT$ ${grandTotal.toLocaleString()}` : '';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+  el.style.display = 'block';
+}
+
+async function generateQuote() {
+  const cust = document.getElementById('customer').value === '其他'
+    ? document.getElementById('otherCustomer').value
+    : document.getElementById('customer').value;
+  const contact = document.getElementById('contact').value;
+  const validDays = parseInt(document.getElementById('validDays').value) || 30;
+  const notes = document.getElementById('notes').value;
+
+  if (!cust) { alert('請填寫客戶名稱'); return; }
+  if (!contact) { alert('請填寫聯絡人'); return; }
+  if (selectedProducts.length === 0) { alert('請至少選擇一項產品'); return; }
+
+  showStatus('⏳ 正在產生報價單...', 'loading');
+
+  const payload = {
+    customer: cust,
+    contact: contact,
+    valid_days: validDays,
+    notes: notes,
+    products: selectedProducts.map(p => ({model: p.model, qty: p.qty}))
+  };
+
+  try {
+    const resp = await fetch('http://localhost:5000/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (resp.ok) {
+      // 下載檔案
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `報價單_${cust}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showStatus('✅ 報價單已產生並下載！', 'success');
+    } else {
+      showStatus('❌ 錯誤：' + resp.statusText, 'error');
+    }
+  } catch(e) {
+    // 如果後端不在，跑前端純預覽模式
+    showStatus('⚠️ 後端未啟動，已複製預覽資料，請手動執行 quote_agent.py', 'error');
+    console.log('Payload:', JSON.stringify(payload, null, 2));
+    alert('後端伺服器未啟動。\n\npayload 已複製到主控台。\n\n請先在終端機執行：\npython quote_agent.py\n\n或我幫你啟動後端？');
+  }
+}
+
+function downloadJSON() {
+  const cust = document.getElementById('customer').value;
+  const contact = document.getElementById('contact').value;
+  const validDays = document.getElementById('validDays').value;
+  const notes = document.getElementById('notes').value;
+  const payload = {
+    customer: cust,
+    contact: contact,
+    valid_days: parseInt(validDays),
+    notes: notes,
+    products: selectedProducts
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `報價資料_${cust}_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.json`;
+  a.click();
+}
+
+// 事件監聽
+document.getElementById('customer').addEventListener('change', function() {
+  document.getElementById('otherCustomerGroup').style.display =
+    this.value === '其他' ? 'block' : 'none';
+  updatePreview();
+});
+document.getElementById('contact').addEventListener('input', updatePreview);
+document.getElementById('validDays').addEventListener('input', updatePreview);
+
+// init
+loadProducts();
+renderProductList();
+</script>
+</body>
+</html>
