@@ -512,6 +512,12 @@ table.compare tr:last-child td{border-bottom:none;}
         .nav-btn:hover,.nav-btn.active{background:rgba(255,101,53,0.14);color:var(--accent);}
         .nav-btn.active{font-weight:700;}
         .page{display:none}.page.active{display:block}
+
+        [data-section] { display: none; }
+        [data-section].section-on { display: block; }
+        .nav-tab-btn { background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s; }
+        .nav-tab-btn:hover { background:rgba(255,101,53,0.14);color:var(--accent); }
+        .nav-tab-btn.section-on { background:rgba(255,101,53,0.14);color:var(--accent);font-weight:700; }
 </style>
 </head>
 <body>
@@ -614,7 +620,7 @@ table.compare tr:last-child td{border-bottom:none;}
 
   <!-- 1. 金融行情 -->
   <div class="page active" id="page_finance">
-<div class="card" id="finance">
+<div class="section-on" data-section="finance" class="card" id="finance">
     <div class="section-header">
       <h2>📈 金融行情</h2>
       <span class="badge">LIVE 2026-06-21 00:45</span>
@@ -656,7 +662,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_crypto">
-<div class="card" id="crypto">
+<div data-section="crypto" class="card" id="crypto">
     <div class="section-header">
       <h2>🪙 熱門虛擬貨幣</h2>
       <span class="badge">CoinGecko · 24h</span>
@@ -689,7 +695,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_stocks">
-<div class="card" id="stocks">
+<div data-section="stocks" class="card" id="stocks">
     <div class="section-header">
       <h2>📊 台股熱門股 Top 10</h2>
       <span class="badge">Yahoo Finance</span>
@@ -722,7 +728,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_materials">
-<div class="card" id="materials">
+<div data-section="materials" class="card" id="materials">
     <div class="section-header">
       <h2>🛢️ 國際原料樹酯溶劑成本</h2>
       <span class="badge">2026-06-21</span>
@@ -751,7 +757,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_products">
-<div class="card" id="products">
+<div data-section="products" class="card" id="products">
     <div class="section-header">
       <h2>🎨 GYC系列產品色卡</h2>
     </div>
@@ -819,7 +825,7 @@ table.compare tr:last-child td{border-bottom:none;}
 <!-- 新聞（滿寬）-->
 <div class="container" style="padding-top:0">
   <div class="page active" id="page_news">
-<div class="card" id="news">
+<div data-section="news" class="card" id="news">
     <div class="section-header">
       <h2>📺 台灣即時頭條</h2>
       <span class="badge">2026-06-21</span>
@@ -830,7 +836,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_video">
-<div class="card" id="video">
+<div data-section="video" class="card" id="video">
     <div class="section-header">
       <h2>🎬 三立影音新聞</h2>
       <span class="badge">YouTube · 即時</span>
@@ -841,7 +847,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_ai-research">
-<div class="card" id="ai-research">
+<div data-section="ai-research" class="card" id="ai-research">
     <div class="section-header">
       <h2>🤖 AI 研究 &amp; OpenClaw / Hermes 動態</h2>
       <span class="badge">Hacker News</span>
@@ -854,7 +860,7 @@ table.compare tr:last-child td{border-bottom:none;}
   
 </div>
 <div class="page active" id="page_dept">
-<div class="card" id="dept">
+<div data-section="dept" class="card" id="dept">
     <div class="section-header"><h2>🏢 部門動態</h2></div>
     <div class="two-col">
       <div>
@@ -1048,7 +1054,7 @@ table.compare tr:last-child td{border-bottom:none;}
 
   <!-- 客服 -->
   <div class="page" id="page_customer">
-    <div class="card" id="customer">
+    <div data-section="customer" class="card" id="customer">
     <div class="section-header"><h2>💬 智能客服留言板</h2><span class="badge">聯絡我們</span></div>
     <div class="alert-g mb12">歡迎留言！我們重視每一位客戶的意見。</div>
     <div class="guest-form">
@@ -1227,6 +1233,36 @@ window.addEventListener('load',function(){
   var btn=document.querySelector('.nav-btn');
   if(btn)btn.classList.add('active');
 });
+</script>
+
+<script>
+(function(){
+  var ACTIVE = 'section-on';
+  var btns = document.querySelectorAll('[data-goto]');
+  var secs = document.querySelectorAll('[data-section]');
+
+  function activate(id){
+    secs.forEach(function(s){ s.classList.remove(ACTIVE); });
+    btns.forEach(function(b){ b.classList.remove(ACTIVE); });
+    var target = document.querySelector('[data-section="'+id+'"]');
+    if(target) target.classList.add(ACTIVE);
+    btns.forEach(function(b){
+      if(b.getAttribute('data-goto')===id) b.classList.add(ACTIVE);
+    });
+    window.scrollTo(0,0);
+  }
+
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      activate(this.getAttribute('data-goto'));
+    });
+  });
+
+  // URL hash support
+  var h = window.location.hash.replace('#','');
+  var map = {finance:1,crypto:1,stocks:1,materials:1,products:1,news:1,video:1,'ai-research':1,dept:1,'rd-center':1,customer:1};
+  if(h && map[h]) activate(h);
+})();
 </script>
 </body>
 </html>
