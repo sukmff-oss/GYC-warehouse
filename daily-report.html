@@ -519,7 +519,7 @@ table.compare tr:last-child td{border-bottom:none;}
         .nav-tab-btn:hover { background:rgba(255,101,53,0.14);color:var(--accent); }
         .nav-tab-btn.section-on { background:rgba(255,101,53,0.14);color:var(--accent);font-weight:700; }
 
-        .nav-scroll-btn{background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s;}
+        
         .nav-scroll-btn:hover,.nav-scroll-btn.active{background:rgba(255,101,53,0.14);color:var(--accent);}
         .nav-scroll-btn.active{font-weight:700;}
         /* Highlight active section in nav */
@@ -1307,6 +1307,48 @@ if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();}
   // URL hash on load
   var h=window.location.hash.replace('#','');
   if(h && sections[h]) sections[h].scrollIntoView({behavior:'smooth',block:'start'});
+})();
+</script>
+
+<script>
+(function(){
+  var btns = document.querySelectorAll('.nav-scroll-btn');
+  var sections = {
+    finance:'page_finance', crypto:'page_crypto', stocks:'page_stocks',
+    materials:'page_materials', products:'page_products',
+    news:'page_news', video:'page_video', 'ai-research':'page_ai-research',
+    dept:'page_dept', 'rd-center':'page_rd-center', customer:'page_customer'
+  };
+  // Resolve to actual elements
+  Object.keys(sections).forEach(function(k){
+    sections[k] = document.getElementById(sections[k]);
+  });
+
+  btns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = this.getAttribute('data-scroll');
+      var el = sections[id];
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  // Highlight active nav on scroll
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        btns.forEach(function(b){ b.classList.remove('active'); });
+        var rid = entry.target.id.replace('page_','');
+        var btn = document.querySelector('.nav-scroll-btn[data-scroll="'+rid+'"]');
+        if(btn) btn.classList.add('active');
+      }
+    });
+  }, {threshold:0.15});
+
+  Object.values(sections).forEach(function(el){ if(el) observer.observe(el); });
+
+  // Scroll to hash section on load
+  var h = window.location.hash.replace('#','');
+  if(h && sections[h]) sections[h].scrollIntoView({behavior:'smooth', block:'start'});
 })();
 </script>
 </body>
