@@ -1208,8 +1208,20 @@ function switchPage(id){
     }
   }
   window.scrollTo(0,0);
+  // Update URL hash
+  var pageId=id.replace('page_','');
+  history.replaceState(null,'',window.location.pathname+'#'+pageId);
 }
 window.addEventListener('load',function(){
+  // If URL has a hash like #rd-center, switch to that page
+  var hash=window.location.hash;
+  if(hash){
+    var target=hash.replace('#','page_');
+    var el=document.getElementById(target);
+    if(el&&el.classList.contains('page')){
+      switchPage(target);return;
+    }
+  }
   var first=document.querySelector('.page');
   if(first)first.classList.add('active');
   var btn=document.querySelector('.nav-btn');
