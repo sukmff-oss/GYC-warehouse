@@ -507,43 +507,25 @@ table.compare tr:last-child td{border-bottom:none;}
   .rd-grid{grid-template-columns:1fr;}
   .rd-stats{gap:20px;}
 }
-
-        .nav-scroll-btn{background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s;}
-        .nav-btn:hover,.nav-btn.active{background:rgba(255,101,53,0.14);color:var(--accent);}
-        .nav-btn.active{font-weight:700;}
-        .page{display:none}.page.active{display:block}
-
-        [data-section] { display: none; }
-        [data-section].section-on { display: block; }
-        .nav-tab-btn { background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s; }
-        .nav-tab-btn:hover { background:rgba(255,101,53,0.14);color:var(--accent); }
-        .nav-tab-btn.section-on { background:rgba(255,101,53,0.14);color:var(--accent);font-weight:700; }
-
-        
-        .nav-scroll-btn:hover,.nav-scroll-btn.active{background:rgba(255,101,53,0.14);color:var(--accent);}
-        .nav-scroll-btn.active{font-weight:700;}
-        /* Highlight active section in nav */
 </style>
 </head>
 <body>
 <nav>
   <div class="nav-inner">
     <a href="#" class="nav-logo">國研<span>AI</span></a>
-    <button class="nav-scroll-btn" data-scroll="finance">金融行情</button>
-    <button class="nav-scroll-btn" data-scroll="crypto">熱門虛擬貨幣</button>
-    <button class="nav-scroll-btn" data-scroll="stocks">台股熱門股</button>
-    <button class="nav-scroll-btn" data-scroll="materials">原料成本</button>
-    <button class="nav-scroll-btn" data-scroll="products">產品色卡</button>
-    <button class="nav-scroll-btn" data-scroll="news">📺 台灣新聞</button>
-    <button class="nav-scroll-btn" data-scroll="video">🎬 影音新聞</button>
-    <button class="nav-scroll-btn" data-scroll="ai-research">🤖 AI研究</button>
-    <button class="nav-scroll-btn" data-scroll="dept">部門動態</button>
-    <button class="nav-scroll-btn" data-scroll="rd-center">💡 研發中心</button>
+    <a href="#finance">金融行情</a>
+    <a href="#crypto">熱門虛擬貨幣</a>
+    <a href="#stocks">台股熱門股</a>
+    <a href="#materials">原料成本</a>
+    <a href="#products">產品色卡</a>
+    <a href="#news">📺 台灣新聞</a>
+    <a href="#video">🎬 影音新聞</a>
+    <a href="#ai-research">🤖 AI研究</a>
+    <a href="#dept">部門動態</a>
+    <a href="#rd-center">💡 研發中心</a>
     <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank">📦 倉儲管理</a>
-    <button class="nav-scroll-btn" data-scroll="customer">客服留言</button>
+    <a href="#customer">客服留言</a>
     <div class="live-dot"></div>
-    <span class="nav-clock" id="nav-clock"></span>
-  </div>
     <span class="nav-clock" id="nav-clock">00:45:36</span>
   </div>
 </nav>
@@ -626,8 +608,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 1. 金融行情 -->
-  <div class="page active" id="page_finance">
-<div class="section-on" data-section="finance" class="card" id="finance">
+  <div class="card" id="finance">
     <div class="section-header">
       <h2>📈 金融行情</h2>
       <span class="badge">LIVE 2026-06-21 00:45</span>
@@ -666,10 +647,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 2. 熱門虛擬貨幣 -->
-  
-</div>
-<div class="page active" id="page_crypto">
-<div data-section="crypto" class="card" id="crypto">
+  <div class="card" id="crypto">
     <div class="section-header">
       <h2>🪙 熱門虛擬貨幣</h2>
       <span class="badge">CoinGecko · 24h</span>
@@ -699,10 +677,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 3. 台股熱門股 -->
-  
-</div>
-<div class="page active" id="page_stocks">
-<div data-section="stocks" class="card" id="stocks">
+  <div class="card" id="stocks">
     <div class="section-header">
       <h2>📊 台股熱門股 Top 10</h2>
       <span class="badge">Yahoo Finance</span>
@@ -732,16 +707,13 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 4. 原料行情 -->
-  
-</div>
-<div class="page active" id="page_materials">
-<div data-section="materials" class="card" id="materials">
+  <div class="card" id="materials">
     <div class="section-header">
       <h2>🛢️ 國際原料樹酯溶劑成本</h2>
       <span class="badge">2026-06-21</span>
     </div>
     <div class="alert-o mb12">⚠️ 原料行情為參考評估，精準報價請聯絡業務窗口。<br>採購建議：小批分單為主，優先確認高周轉料號安全庫存。</div>
-    <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　<button class="nav-btn" onclick="switchPage('page_')">✏️ 更新原料報價</button></p>
+    <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　<a href="#" onclick="toggleMaterials();return false;" style="color:var(--accent)">✏️ 更新原料報價</a></p>
     <div class="compare-wrap">
       <table class="compare" id="mat-table">
         <thead><tr><th>原料</th><th>昨日參考</th><th>今日參考</th><th>漲跌</th><th>備註</th></tr></thead>
@@ -761,10 +733,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 5. 產品色卡 -->
-  
-</div>
-<div class="page active" id="page_products">
-<div data-section="products" class="card" id="products">
+  <div class="card" id="products">
     <div class="section-header">
       <h2>🎨 GYC系列產品色卡</h2>
     </div>
@@ -783,9 +752,7 @@ table.compare tr:last-child td{border-bottom:none;}
 
   <!-- 天氣 + 實驗室 -->
   <div class="two-col">
-    
-</div>
-<div class="card">
+    <div class="card">
       <div class="section-header">
         <h2>🌤️ 桃園市天氣</h2>
         <span class="badge">大園區</span>
@@ -831,8 +798,7 @@ table.compare tr:last-child td{border-bottom:none;}
 
 <!-- 新聞（滿寬）-->
 <div class="container" style="padding-top:0">
-  <div class="page active" id="page_news">
-<div data-section="news" class="card" id="news">
+  <div class="card" id="news">
     <div class="section-header">
       <h2>📺 台灣即時頭條</h2>
       <span class="badge">2026-06-21</span>
@@ -840,10 +806,7 @@ table.compare tr:last-child td{border-bottom:none;}
     <div class="news-grid"><a class="news-item" href="https://tw.news.yahoo.com/%E6%83%B9%E6%80%92%E7%BE%A9%E5%A4%A7%E5%88%A9-%E5%B7%9D%E6%99%AE%E5%A0%85%E7%A8%B1%E6%A2%85%E6%B4%9B%E5%B0%BCg7%E6%B1%82%E5%90%88%E7%85%A7-%E5%86%8D%E7%99%BC%E6%96%87%E7%A8%B1-%E6%83%B3%E6%8B%89%E6%8A%AC%E6%B0%91%E8%AA%BF-%E5%85%8D%E4%BA%86-163353683.html" target="_blank"><div class="emoji">📈</div><div><div class="title">惹怒義大利! 川普堅稱梅洛尼G7求合照 再發文稱：想拉抬民調？免了！</div><div class="desc">[Newtalk新聞] 川普日前聲稱，梅洛尼在法國舉行的七大工業國集團（G7）峰會期間「求他合照」，遭梅洛尼反擊根本是「捏造」後，川普不但沒有收手，今天又在自家社群平台「真實社群」（Truth Soc</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/584%E6%97%85%E7%AB%AF%E5%8D%88%E7%AF%80%E6%87%87%E8%A6%AA%E6%9C%83-%E6%BA%AB%E9%A6%A8%E5%90%8C%E6%A8%82%E5%87%9D%E8%81%9A%E5%90%91%E5%BF%83-163300525.html" target="_blank"><div class="emoji">📈</div><div><div class="title">584旅端午節懇親會 溫馨同樂凝聚向心</div><div class="desc">記者謝承宏／綜合報導 為弘揚傳統節慶文化，增進官兵與眷屬情感交流，陸軍聯兵584旅日前舉辦端節懇親會，透過一系列寓教於樂的活動，在歡樂溫馨的氛圍中提前歡度佳節。 活動規劃官兵及眷屬一同體驗包粽子、製作</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E7%A0%B2%E8%A8%93%E9%83%A8%E5%81%A5%E8%B5%B0%E6%B4%BB%E5%8B%95-%E5%AE%98%E5%85%B5%E5%90%8C%E5%BF%83%E5%B1%95%E6%9C%9D%E6%B0%A3-163200636.html" target="_blank"><div class="emoji">📈</div><div><div class="title">砲訓部健走活動 官兵同心展朝氣</div><div class="desc">記者謝承宏／綜合報導 為提倡健康生活風氣，增進官兵身心健康與團隊凝聚，陸軍砲兵訓練指揮部日前參與關廟區山西宮舉辦的健走活動，鼓勵官兵利用戶外運動調劑身心、培養規律運動習慣。活動中，官兵依規劃路線完成健</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E5%BF%97%E5%B7%A5%E9%BD%8A%E8%81%9A%E7%B2%BE%E9%80%B2%E6%9C%8D%E5%8B%99%E8%83%BD%E9%87%8F-%E6%88%90%E5%8A%9F%E8%AD%A6%E5%88%86%E5%B1%80%E8%BE%A6%E7%90%86%E5%BF%97%E5%B7%A5%E8%A8%93%E7%B7%B4%E6%9A%A8%E4%BA%A4%E9%80%9A%E5%AE%89%E5%85%A8-%E5%8F%8D%E8%A9%90%E9%A8%99%E5%AE%A3%E5%B0%8E-163200048.html" target="_blank"><div class="emoji">📈</div><div><div class="title">志工齊聚精進服務能量 成功警分局辦理志工訓練暨交通安全、反詐騙宣導</div><div class="desc">為提升志工夥伴服務知能與協勤效能，臺東縣警察局成功分局於日前辦理志工訓練課程，由第一組精心規劃相關課程內容，邀集分局志工爸爸、志工媽媽們共同參與。現場除進行志工服務理念、協勤技巧及警政業務介紹外，也透</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/104%E6%97%85%E8%BB%8D%E5%AE%98%E5%9C%98%E6%95%99%E8%82%B2-%E5%A2%9E%E9%80%B2%E5%9C%98%E9%9A%8A%E5%85%B1%E8%AD%98-163100917.html" target="_blank"><div class="emoji">📈</div><div><div class="title">104旅軍官團教育 增進團隊共識</div><div class="desc">記者簡廷哲／綜合報導 為提升幹部領導統御能力及凝聚團隊向心力，陸軍步兵104旅日前於大坑6號步道辦理軍官團教育活動，由旅長林上校主持，透過健行與經驗交流，增進彼此情誼，厚植部隊團結精神。 活動期間，參</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/6%E6%9C%8821%E6%97%A5-%E7%9C%8B%E8%BB%8D%E8%81%9E%E5%AD%B8%E8%8B%B1%E8%AA%9E-163000001.html" target="_blank"><div class="emoji">📈</div><div><div class="title">【6月21日】看軍聞學英語</div><div class="desc">■林國賓 原文： Located down a dirt road that traverses spring-green fields, the white-washed, blue-shutter</div><span class="source">Yahoo News · 今日</span></div></a></div>
   </div>
 
-  
-</div>
-<div class="page active" id="page_video">
-<div data-section="video" class="card" id="video">
+  <div class="card" id="video">
     <div class="section-header">
       <h2>🎬 三立影音新聞</h2>
       <span class="badge">YouTube · 即時</span>
@@ -851,10 +814,7 @@ table.compare tr:last-child td{border-bottom:none;}
     <div class="news-grid"></div>
   </div>
 
-  
-</div>
-<div class="page active" id="page_ai-research">
-<div data-section="ai-research" class="card" id="ai-research">
+  <div class="card" id="ai-research">
     <div class="section-header">
       <h2>🤖 AI 研究 &amp; OpenClaw / Hermes 動態</h2>
       <span class="badge">Hacker News</span>
@@ -864,10 +824,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 部門 -->
-  
-</div>
-<div class="page active" id="page_dept">
-<div data-section="dept" class="card" id="dept">
+  <div class="card" id="dept">
     <div class="section-header"><h2>🏢 部門動態</h2></div>
     <div class="two-col">
       <div>
@@ -885,8 +842,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 研發中心 -->
-  <div class="page" id="page_rd-center">
-  <div class="rd-center">
+  <div class="rd-center" id="rd-center">
     <div class="rd-hero">
       <div class="rd-badge">永不中斷</div>
       <h1 class="rd-title">研發中心</h1>
@@ -1017,9 +973,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- 公司資訊 -->
-  
-</div>
-<div class="card">
+  <div class="card">
     <div class="section-header"><h2>🏢 公司基本資訊</h2></div>
     <div class="org-row">
       <div class="org-node org-gold"><div style="font-size:20px">👑</div><div>董事長</div><div style="font-size:11px">蘇錦全</div></div>
@@ -1060,8 +1014,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </script>
 
   <!-- 客服 -->
-  <div class="page" id="page_customer">
-    <div data-section="customer" class="card" id="customer">
+  <div class="card" id="customer">
     <div class="section-header"><h2>💬 智能客服留言板</h2><span class="badge">聯絡我們</span></div>
     <div class="alert-g mb12">歡迎留言！我們重視每一位客戶的意見。</div>
     <div class="guest-form">
@@ -1078,9 +1031,7 @@ table.compare tr:last-child td{border-bottom:none;}
   </div>
 
   <!-- AI 客服 -->
-  
-</div>
-<div class="card" id="ai-chat">
+  <div class="card" id="ai-chat">
     <div class="section-header">
       <h2>🤖 GYC-AI 即時客服</h2>
       <span class="badge">示範模式</span>
@@ -1103,7 +1054,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <button class="guest-btn" onclick="sendChat()">送出</button>
     </div>
   </div>
-</div><!-- end page_rd-center -->
+</div>
 
 <div class="footer">
   <div class="brand">國研<span>AI</span>報告</div>
@@ -1206,150 +1157,6 @@ function sendChat(){
 function aiQuery(q){document.getElementById('chat-input').value=q;sendChat();}
 var ci=document.getElementById('chat-input');
 if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();});
-</script>
-
-<script>
-
-</script>
-
-<script>
-(function(){
-  var ACTIVE = 'section-on';
-  var btns = document.querySelectorAll('[data-goto]');
-  var secs = document.querySelectorAll('[data-section]');
-
-  function activate(id){
-    secs.forEach(function(s){ s.classList.remove(ACTIVE); });
-    btns.forEach(function(b){ b.classList.remove(ACTIVE); });
-    var target = document.querySelector('[data-section="'+id+'"]');
-    if(target) target.classList.add(ACTIVE);
-    btns.forEach(function(b){
-      if(b.getAttribute('data-goto')===id) b.classList.add(ACTIVE);
-    });
-    window.scrollTo(0,0);
-  }
-
-  btns.forEach(function(b){
-    b.addEventListener('click', function(){
-      activate(this.getAttribute('data-goto'));
-    });
-  });
-
-  // URL hash support
-  var h = window.location.hash.replace('#','');
-  var map = {finance:1,crypto:1,stocks:1,materials:1,products:1,news:1,video:1,'ai-research':1,dept:1,'rd-center':1,customer:1};
-  if(h && map[h]) activate(h);
-})();
-</script>
-
-<script>
-(function(){
-  var btns = document.querySelectorAll('.nav-scroll-btn');
-  var sections = {finance:null,crypto:null,stocks:null,materials:null,products:null,
-                   news:null,video:null,'ai-research':null,dept:null,'rd-center':null,customer:null};
-  Object.keys(sections).forEach(function(k){
-    sections[k] = document.getElementById(k);
-  });
-
-  btns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = this.getAttribute('data-scroll');
-      var el = sections[id];
-      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    });
-  });
-
-  // Highlight nav on scroll
-  var observer = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        btns.forEach(function(b){ b.classList.remove('active'); });
-        var btn = document.querySelector('.nav-scroll-btn[data-scroll="'+entry.target.id+'"]');
-        if(btn) btn.classList.add('active');
-      }
-    });
-  }, {threshold:0.1});
-
-  Object.values(sections).forEach(function(el){ if(el) observer.observe(el); });
-})();
-</script>
-
-<script>
-(function(){
-  var btns = document.querySelectorAll('.nav-scroll-btn');
-  var sections = {finance:'page_finance',crypto:'page_crypto',stocks:'page_stocks',
-                   materials:'page_materials',products:'page_products',
-                   news:'page_news',video:'page_video','ai-research':'page_ai-research',
-                   dept:'page_dept','rd-center':'page_rd-center',customer:'page_customer'};
-  Object.keys(sections).forEach(function(k){ sections[k]=document.getElementById(sections[k]); });
-
-  btns.forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var id=this.getAttribute('data-scroll');
-      var el=sections[id];
-      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-    });
-  });
-
-  // Scroll-based nav highlight
-  var observer=new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        btns.forEach(function(b){ b.classList.remove('active'); });
-        var rid = entry.target.id.replace('page_','');
-        var btn=document.querySelector('.nav-scroll-btn[data-scroll="'+rid+'"]');
-        if(btn) btn.classList.add('active');
-      }
-    });
-  },{threshold:0.15});
-  Object.values(sections).forEach(function(el){ if(el) observer.observe(el); });
-
-  // URL hash on load
-  var h=window.location.hash.replace('#','');
-  if(h && sections[h]) sections[h].scrollIntoView({behavior:'smooth',block:'start'});
-})();
-</script>
-
-<script>
-(function(){
-  var btns = document.querySelectorAll('.nav-scroll-btn');
-  var sections = {
-    finance:'page_finance', crypto:'page_crypto', stocks:'page_stocks',
-    materials:'page_materials', products:'page_products',
-    news:'page_news', video:'page_video', 'ai-research':'page_ai-research',
-    dept:'page_dept', 'rd-center':'page_rd-center', customer:'page_customer'
-  };
-  // Resolve to actual elements
-  Object.keys(sections).forEach(function(k){
-    sections[k] = document.getElementById(sections[k]);
-  });
-
-  btns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var id = this.getAttribute('data-scroll');
-      var el = sections[id];
-      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    });
-  });
-
-  // Highlight active nav on scroll
-  var observer = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry){
-      if(entry.isIntersecting){
-        btns.forEach(function(b){ b.classList.remove('active'); });
-        var rid = entry.target.id.replace('page_','');
-        var btn = document.querySelector('.nav-scroll-btn[data-scroll="'+rid+'"]');
-        if(btn) btn.classList.add('active');
-      }
-    });
-  }, {threshold:0.15});
-
-  Object.values(sections).forEach(function(el){ if(el) observer.observe(el); });
-
-  // Scroll to hash section on load
-  var h = window.location.hash.replace('#','');
-  if(h && sections[h]) sections[h].scrollIntoView({behavior:'smooth', block:'start'});
-})();
 </script>
 </body>
 </html>
