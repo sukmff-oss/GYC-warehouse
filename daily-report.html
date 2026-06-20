@@ -518,6 +518,11 @@ table.compare tr:last-child td{border-bottom:none;}
         .nav-tab-btn { background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s; }
         .nav-tab-btn:hover { background:rgba(255,101,53,0.14);color:var(--accent); }
         .nav-tab-btn.section-on { background:rgba(255,101,53,0.14);color:var(--accent);font-weight:700; }
+
+        .nav-scroll-btn{background:none;border:none;color:var(--text);font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:all 0.2s;}
+        .nav-scroll-btn:hover,.nav-scroll-btn.active{background:rgba(255,101,53,0.14);color:var(--accent);}
+        .nav-scroll-btn.active{font-weight:700;}
+        /* Highlight active section in nav */
 </style>
 </head>
 <body>
@@ -1262,6 +1267,38 @@ window.addEventListener('load',function(){
   var h = window.location.hash.replace('#','');
   var map = {finance:1,crypto:1,stocks:1,materials:1,products:1,news:1,video:1,'ai-research':1,dept:1,'rd-center':1,customer:1};
   if(h && map[h]) activate(h);
+})();
+</script>
+
+<script>
+(function(){
+  var btns = document.querySelectorAll('.nav-scroll-btn');
+  var sections = {finance:null,crypto:null,stocks:null,materials:null,products:null,
+                   news:null,video:null,'ai-research':null,dept:null,'rd-center':null,customer:null};
+  Object.keys(sections).forEach(function(k){
+    sections[k] = document.getElementById(k);
+  });
+
+  btns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var id = this.getAttribute('data-scroll');
+      var el = sections[id];
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  // Highlight nav on scroll
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        btns.forEach(function(b){ b.classList.remove('active'); });
+        var btn = document.querySelector('.nav-scroll-btn[data-scroll="'+entry.target.id+'"]');
+        if(btn) btn.classList.add('active');
+      }
+    });
+  }, {threshold:0.1});
+
+  Object.values(sections).forEach(function(el){ if(el) observer.observe(el); });
 })();
 </script>
 </body>
