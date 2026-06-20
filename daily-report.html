@@ -1161,18 +1161,14 @@ function aiQuery(q){document.getElementById('chat-input').value=q;sendChat();}
 var ci=document.getElementById('chat-input');
 if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();});
 
-// ── 三立影音 YouTube RSS fetch ──────────────────────────────────────────
+// ── 三立影音 YouTube RSS fetch (via rss2json CORS proxy) ───────────────
 (function(){
   var videoGrid = document.querySelector('#video .news-grid');
   if(!videoGrid) return;
 
   var channelId = 'UCIU8ha-NHmLjtUwU7dFiXUA';
-  var feedUrl   = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + channelId;
-
-  function parseXML(text) {
-    var parser = new DOMParser();
-    return parser.parseFromString(text, 'application/xml');
-  }
+  var feedUrl   = encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=' + channelId);
+  var apiUrl    = 'https://api.rss2json.com/v1/api.json?rss_url=' + feedUrl;
 
   function esc(s) {
     return String(s||'')
@@ -1183,18 +1179,19 @@ if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();}
   }
 
   function fetchVideos() {
-    fetch(feedUrl)
-      .then(function(r){ return r.text(); })
-      .then(parseXML)
-      .then(function(doc){
-        var entries = doc.querySelectorAll('entry');
+    fetch(apiUrl)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data.status !== 'ok' || !data.items || data.items.length === 0){
+          throw new Error('invalid response');
+        }
         var html = '';
-        for(var i=0; i<Math.min(6, entries.length); i++){
-          var e    = entries[i];
-          var vid  = e.querySelector('videoId').textContent;
-          var title= esc(e.querySelector('title').textContent);
-          var thumb= 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg';
-          var ytUrl= 'https://www.youtube.com/watch?v=' + vid;
+        for(var i=0; i<Math.min(6, data.items.length); i++){
+          var item  = data.items[i];
+          var vid   = item.link.split('v=')[1] || item.guid.split('/').pop();
+          var title = esc(item.title);
+          var thumb = 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg';
+          var ytUrl = 'https://www.youtube.com/watch?v=' + vid;
           html +=
             '<a class="news-item video-item" href="'+ytUrl+'" target="_blank">'+
               '<div class="video-thumb" style="background-image:url('+thumb+')">'+
