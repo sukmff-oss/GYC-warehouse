@@ -1277,9 +1277,11 @@ if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();}
 <script>
 (function(){
   var btns = document.querySelectorAll('.nav-scroll-btn');
-  var sections = {finance:null,crypto:null,stocks:null,materials:null,products:null,
-                   news:null,video:null,'ai-research':null,dept:null,'rd-center':null,customer:null};
-  Object.keys(sections).forEach(function(k){ sections[k]=document.getElementById(k); });
+  var sections = {finance:'page_finance',crypto:'page_crypto',stocks:'page_stocks',
+                   materials:'page_materials',products:'page_products',
+                   news:'page_news',video:'page_video','ai-research':'page_ai-research',
+                   dept:'page_dept','rd-center':'page_rd-center',customer:'page_customer'};
+  Object.keys(sections).forEach(function(k){ sections[k]=document.getElementById(sections[k]); });
 
   btns.forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -1294,7 +1296,8 @@ if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();}
     entries.forEach(function(entry){
       if(entry.isIntersecting){
         btns.forEach(function(b){ b.classList.remove('active'); });
-        var btn=document.querySelector('.nav-scroll-btn[data-scroll="'+entry.target.id+'"]');
+        var rid = entry.target.id.replace('page_','');
+        var btn=document.querySelector('.nav-scroll-btn[data-scroll="'+rid+'"]');
         if(btn) btn.classList.add('active');
       }
     });
