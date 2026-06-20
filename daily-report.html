@@ -134,12 +134,14 @@ table.compare tr:last-child td{border-bottom:none;}
 
 /* video news embedded */
 .news-item.video-item{flex-direction:column;gap:0;padding:0;overflow:hidden;border-radius:10px;}
-.news-item.video-item .video-thumb{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:10px 10px 0 0;}
-.news-item.video-item .video-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-.news-item.video-item .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.3);transition:background .2s;border-radius:10px 10px 0 0;}
-.news-item.video-item:hover .play-overlay{background:rgba(0,0,0,0.5);}
-.news-item.video-item .play-btn{width:48px;height:48px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#000;}
-.news-item.video-item .video-info{padding:10px 12px;}
+.news-item.video-item .video-thumb,
+.news-item.video-item .video-embed{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:10px 10px 0 0;background-size:cover;background-position:center;}
+.news-item.video-item .video-thumb img,
+.news-item.video-item .video-embed img{width:100%;height:100%;object-fit:cover;display:block;}
+.news-item.video-item .play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.3);transition:background .2s;border-radius:10px 10px 0 0;}
+.news-item.video-item:hover .play-btn{background:rgba(0,0,0,0.5);}
+.news-item.video-item .video-title,
+.news-item.video-item .video-info{padding:10px 12px;font-size:13px;line-height:1.4;}
 .news-item.video-item .title{font-size:13px;line-height:1.4;}
 #video .news-grid,#video-grid{grid-template-columns:repeat(2,1fr);}
 
@@ -1158,6 +1160,59 @@ function sendChat(){
 function aiQuery(q){document.getElementById('chat-input').value=q;sendChat();}
 var ci=document.getElementById('chat-input');
 if(ci)ci.addEventListener('keypress',function(e){if(e.key==='Enter')sendChat();});
+
+// ── 三立影音 YouTube RSS fetch ──────────────────────────────────────────
+(function(){
+  var videoGrid = document.querySelector('#video .news-grid');
+  if(!videoGrid) return;
+
+  var channelId = 'UCIU8ha-NHmLjtUwU7dFiXUA';
+  var feedUrl   = 'https://www.youtube.com/feeds/videos.xml?channel_id=' + channelId;
+
+  function parseXML(text) {
+    var parser = new DOMParser();
+    return parser.parseFromString(text, 'application/xml');
+  }
+
+  function esc(s) {
+    return String(s||'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function fetchVideos() {
+    fetch(feedUrl)
+      .then(function(r){ return r.text(); })
+      .then(parseXML)
+      .then(function(doc){
+        var entries = doc.querySelectorAll('entry');
+        var html = '';
+        for(var i=0; i<Math.min(6, entries.length); i++){
+          var e    = entries[i];
+          var vid  = e.querySelector('videoId').textContent;
+          var title= esc(e.querySelector('title').textContent);
+          var thumb= 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg';
+          var ytUrl= 'https://www.youtube.com/watch?v=' + vid;
+          html +=
+            '<a class="news-item video-item" href="'+ytUrl+'" target="_blank">'+
+              '<div class="video-thumb" style="background-image:url('+thumb+')">'+
+                '<div class="play-btn">▶</div>'+
+              '</div>'+
+              '<div class="video-title">'+title+'</div>'+
+            '</a>';
+        }
+        videoGrid.innerHTML = html;
+      })
+      .catch(function(){
+        videoGrid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">載入失敗，請稍後刷新頁面。</div>';
+      });
+  }
+
+  // Run once
+  fetchVideos();
+})();
 </script>
 // ========== 三立影音新聞 fetch ==========
 (function(){
