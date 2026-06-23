@@ -132,15 +132,19 @@ table.compare tr:last-child td{border-bottom:none;}
 .news-item .desc{font-size:11px;color:var(--muted);line-height:1.4;}
 .news-item .source{font-size:10px;color:var(--muted);margin-top:6px;display:block;letter-spacing:.4px;}
 
-/* video news embedded */
-.news-item.video-item{flex-direction:column;gap:0;padding:0;overflow:hidden;border-radius:10px;}
-.news-item.video-item .video-embed{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000;border-radius:10px 10px 0 0;}
-.news-item.video-item .video-embed img{width:100%;height:100%;object-fit:cover;display:block;}
-.news-item.video-item .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.3);transition:background .2s;border-radius:10px 10px 0 0;}
-.news-item.video-item:hover .play-overlay{background:rgba(0,0,0,0.5);}
-.news-item.video-item>div:last-child{padding:10px 12px;}
-.news-item.video-item .title{font-size:13px;line-height:1.4;}
-#video .news-grid{grid-template-columns:repeat(2,1fr);}
+/* video news */
+.video-item{display:flex;flex-direction:column;gap:0;padding:0;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);transition:all .2s}
+.video-item:hover{border-color:rgba(80,120,255,0.3)}
+.video-thumb-link{display:block;text-decoration:none}
+.video-embed{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#000}
+.video-embed img{width:100%;height:100%;object-fit:cover;display:block}
+.play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.3);transition:background .2s;cursor:pointer}
+.video-item:hover .play-overlay{background:rgba(0,0,0,0.55)}
+.video-meta{padding:10px 12px}
+.video-meta .title{font-size:12px;font-weight:600;line-height:1.4;margin-bottom:3px}
+.video-meta .title a{color:#c8d8f0;text-decoration:none}
+.video-meta .title a:hover{color:#4af}
+.video-meta .desc{font-size:10px;color:#556688}
 
 /* alerts */
 .alert{padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.6;}
@@ -526,7 +530,7 @@ table.compare tr:last-child td{border-bottom:none;}
     <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank">📦 倉儲管理</a>
     <a href="#customer">客服留言</a>
     <div class="live-dot"></div>
-    <span class="nav-clock" id="nav-clock">10:50:05</span>
+    <span class="nav-clock" id="nav-clock">11:20:19</span>
   </div>
 </nav>
 
@@ -553,7 +557,7 @@ table.compare tr:last-child td{border-bottom:none;}
     <h1>國研<span>AI</span>報告</h1>
     <div class="hero-meta">
       <span>📅 2026-06-23</span>
-      <span>🕐 10:50:05 Asia/Taipei</span>
+      <span>🕐 11:20:19 Asia/Taipei</span>
       <span>📍 桃園市大園區</span>
       <span>🔄 每日 09:30 自動更新</span>
     </div>
@@ -611,28 +615,28 @@ table.compare tr:last-child td{border-bottom:none;}
   <div class="card" id="finance">
     <div class="section-header">
       <h2>📈 金融行情</h2>
-      <span class="badge">LIVE 2026-06-23 10:50</span>
+      <span class="badge">LIVE 2026-06-23 11:20</span>
     </div>
     <div class="metrics-grid">
       <div class="metric-card">
         <h3>🇹🇼 台股加權</h3>
-        <div class="val">47,657.72</div>
-        <div class="sub c-dn">-0.18%</div>
+        <div class="val">47,535.05</div>
+        <div class="sub c-dn">-0.43%</div>
       </div>
       <div class="metric-card">
         <h3>₿ 比特幣</h3>
-        <div class="val" style="font-size:16px">64,106.00 USD</div>
-        <div class="sub c-dn">-0.38%</div>
+        <div class="val" style="font-size:16px">63,980.00 USD</div>
+        <div class="sub c-dn">-0.29%</div>
       </div>
       <div class="metric-card">
         <h3>🥇 黃金</h3>
-        <div class="val">4,175.90 USD</div>
-        <div class="sub c-dn">-1.14%</div>
+        <div class="val">4,159.00 USD</div>
+        <div class="sub c-dn">-0.55%</div>
       </div>
       <div class="metric-card">
         <h3>🛢 Brent原油</h3>
-        <div class="val" style="font-size:16px">78.11 USD</div>
-        <div class="sub c-dn">-2.18%</div>
+        <div class="val" style="font-size:16px">77.66 USD</div>
+        <div class="sub c-dn">-0.31%</div>
       </div>
     </div>
     <p class="legend">▲ 漲 / ▼ 跌 / ─ 持平　　資料來源：Yahoo Finance（延遲15分鐘）</p>
@@ -640,7 +644,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <table class="compare">
         <thead><tr><th>項目</th><th>昨日收盤</th><th>今日報價</th><th>漲跌金額</th><th>漲跌幅</th></tr></thead>
         <tbody>
-<tr class="dn-bg"><td class="lbl">🇹🇼 台股加權</td><td class="yes">47,741.51</td><td class="cur">47,657.72</td><td class="chg">▼ -83.79</td><td class="pct dn">▼ -0.18%</td></tr><tr class="dn-bg"><td class="lbl">₿ BTC 比特幣</td><td class="yes">N/A</td><td class="cur">64,106.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.38%</td></tr><tr class="dn-bg"><td class="lbl">💰 ETH 以太幣</td><td class="yes">N/A</td><td class="cur">1,729.93 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.54%</td></tr><tr class="dn-bg"><td class="lbl">🔶 SOL Solana</td><td class="yes">N/A</td><td class="cur">71.84 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.84%</td></tr><tr class="dn-bg"><td class="lbl">🐕 DOGE 狗狗幣</td><td class="yes">N/A</td><td class="cur">0.08 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.64%</td></tr><tr class="dn-bg"><td class="lbl">💎 ETC 以太經典</td><td class="yes">N/A</td><td class="cur">7.15 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.94%</td></tr><tr class="dn-bg"><td class="lbl">🥇 黃金</td><td class="yes">4,224.10 USD</td><td class="cur">4,175.90 USD</td><td class="chg">▼ -48.20 USD</td><td class="pct dn">▼ -1.14%</td></tr><tr class="dn-bg"><td class="lbl">🛢 Brent 原油</td><td class="yes">79.85 USD</td><td class="cur">78.11 USD</td><td class="chg">▼ -1.74 USD</td><td class="pct dn">▼ -2.18%</td></tr><tr class="dn-bg"><td class="lbl">🛢 WTI 原油</td><td class="yes">76.60 USD</td><td class="cur">74.16 USD</td><td class="chg">▼ -2.44 USD</td><td class="pct dn">▼ -3.19%</td></tr>
+<tr class="dn-bg"><td class="lbl">🇹🇼 台股加權</td><td class="yes">47,741.51</td><td class="cur">47,535.05</td><td class="chg">▼ -206.46</td><td class="pct dn">▼ -0.43%</td></tr><tr class="dn-bg"><td class="lbl">₿ BTC 比特幣</td><td class="yes">N/A</td><td class="cur">63,980.00 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.29%</td></tr><tr class="dn-bg"><td class="lbl">💰 ETH 以太幣</td><td class="yes">N/A</td><td class="cur">1,727.66 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -0.37%</td></tr><tr class="dn-bg"><td class="lbl">🔶 SOL Solana</td><td class="yes">N/A</td><td class="cur">71.75 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.59%</td></tr><tr class="dn-bg"><td class="lbl">🐕 DOGE 狗狗幣</td><td class="yes">N/A</td><td class="cur">0.08 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -1.46%</td></tr><tr class="dn-bg"><td class="lbl">💎 ETC 以太經典</td><td class="yes">N/A</td><td class="cur">7.15 USD</td><td class="chg">▼ N/A</td><td class="pct dn">▼ -2.91%</td></tr><tr class="dn-bg"><td class="lbl">🥇 黃金</td><td class="yes">4,181.90 USD</td><td class="cur">4,159.00 USD</td><td class="chg">▼ -22.90 USD</td><td class="pct dn">▼ -0.55%</td></tr><tr class="dn-bg"><td class="lbl">🛢 Brent 原油</td><td class="yes">77.90 USD</td><td class="cur">77.66 USD</td><td class="chg">▼ -0.24 USD</td><td class="pct dn">▼ -0.31%</td></tr><tr class="dn-bg"><td class="lbl">🛢 WTI 原油</td><td class="yes">74.82 USD</td><td class="cur">73.75 USD</td><td class="chg">▼ -1.07 USD</td><td class="pct dn">▼ -1.43%</td></tr>
         </tbody>
       </table>
     </div>
@@ -670,24 +674,24 @@ table.compare tr:last-child td{border-bottom:none;}
       <span class="badge">CoinGecko · 24h</span>
     </div>
     <div class="crypto-mini-grid">
-      <div class="crypto-mini"><h4>₿ BTC</h4><div class="val c-dn">64,106.00</div><div class="sub c-dn">-0.38%</div></div>
-      <div class="crypto-mini"><h4>💰 ETH</h4><div class="val c-dn">1,729.93</div><div class="sub c-dn">-0.54%</div></div>
-      <div class="crypto-mini"><h4>🔶 SOL</h4><div class="val c-dn">71.84</div><div class="sub c-dn">-2.84%</div></div>
-      <div class="crypto-mini"><h4>🐕 DOGE</h4><div class="val c-dn">0.08</div><div class="sub c-dn">-1.64%</div></div>
-      <div class="crypto-mini"><h4>💎 ETC</h4><div class="val c-dn">7.15</div><div class="sub c-dn">-2.94%</div></div>
+      <div class="crypto-mini"><h4>₿ BTC</h4><div class="val c-dn">63,980.00</div><div class="sub c-dn">-0.29%</div></div>
+      <div class="crypto-mini"><h4>💰 ETH</h4><div class="val c-dn">1,727.66</div><div class="sub c-dn">-0.37%</div></div>
+      <div class="crypto-mini"><h4>🔶 SOL</h4><div class="val c-dn">71.75</div><div class="sub c-dn">-2.59%</div></div>
+      <div class="crypto-mini"><h4>🐕 DOGE</h4><div class="val c-dn">0.08</div><div class="sub c-dn">-1.46%</div></div>
+      <div class="crypto-mini"><h4>💎 ETC</h4><div class="val c-dn">7.15</div><div class="sub c-dn">-2.91%</div></div>
       <div class="crypto-mini"><h4>🔷 KAS</h4><div class="val c-flat">N/A</div><div class="sub c-flat"></div></div>
     </div>
     <div class="rank-row">
       <div class="rank-card up-rank">
         <div class="rank-label">🏆 最大漲幅</div>
         <div class="rank-name c-up">比特幣</div>
-        <div class="rank-pct c-up">-0.38%</div>
-        <div class="rank-price">現價 64,106.00 USD</div>
+        <div class="rank-pct c-up">-0.29%</div>
+        <div class="rank-price">現價 63,980.00 USD</div>
       </div>
       <div class="rank-card dn-rank">
         <div class="rank-label">📉 最大跌幅</div>
         <div class="rank-name c-dn">以太經典</div>
-        <div class="rank-pct c-dn">-2.94%</div>
+        <div class="rank-pct c-dn">-2.91%</div>
         <div class="rank-price">現價 7.15 USD</div>
       </div>
     </div>
@@ -703,7 +707,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <table class="compare">
         <thead><tr><th>股票</th><th>昨日收盤</th><th>今日報價</th><th>漲跌金額</th><th>漲跌幅</th></tr></thead>
         <tbody>
-<tr class="flat-bg"><td class="lbl">台積電</td><td class="yes">2,510.00 元</td><td class="cur">2,510.00 元</td><td class="chg">─ N/A</td><td class="pct flat">─ +0.00%</td></tr><tr class="dn-bg"><td class="lbl">鴻海</td><td class="yes">268.50 元</td><td class="cur">263.50 元</td><td class="chg">▼ -5.00 元</td><td class="pct dn">▼ -1.86%</td></tr><tr class="up-bg"><td class="lbl">富邦金</td><td class="yes">138.50 元</td><td class="cur">139.50 元</td><td class="chg">▲ +1.00 元</td><td class="pct up">▲ +0.72%</td></tr><tr class="up-bg"><td class="lbl">國泰金</td><td class="yes">113.00 元</td><td class="cur">115.00 元</td><td class="chg">▲ +2.00 元</td><td class="pct up">▲ +1.77%</td></tr><tr class="dn-bg"><td class="lbl">中鋼</td><td class="yes">19.50 元</td><td class="cur">19.30 元</td><td class="chg">▼ -0.20 元</td><td class="pct dn">▼ -1.03%</td></tr><tr class="dn-bg"><td class="lbl">台塑</td><td class="yes">52.40 元</td><td class="cur">50.70 元</td><td class="chg">▼ -1.70 元</td><td class="pct dn">▼ -3.24%</td></tr><tr class="dn-bg"><td class="lbl">台化</td><td class="yes">56.20 元</td><td class="cur">54.80 元</td><td class="chg">▼ -1.40 元</td><td class="pct dn">▼ -2.49%</td></tr><tr class="up-bg"><td class="lbl">統一</td><td class="yes">74.30 元</td><td class="cur">75.00 元</td><td class="chg">▲ +0.70 元</td><td class="pct up">▲ +0.94%</td></tr><tr class="dn-bg"><td class="lbl">大立光</td><td class="yes">5,185.00 元</td><td class="cur">5,040.00 元</td><td class="chg">▼ -145.00 元</td><td class="pct dn">▼ -2.80%</td></tr>
+<tr class="dn-bg"><td class="lbl">台積電</td><td class="yes">2,510.00 元</td><td class="cur">2,500.00 元</td><td class="chg">▼ -10.00 元</td><td class="pct dn">▼ -0.40%</td></tr><tr class="dn-bg"><td class="lbl">鴻海</td><td class="yes">268.50 元</td><td class="cur">263.00 元</td><td class="chg">▼ -5.50 元</td><td class="pct dn">▼ -2.05%</td></tr><tr class="up-bg"><td class="lbl">富邦金</td><td class="yes">138.50 元</td><td class="cur">141.00 元</td><td class="chg">▲ +2.50 元</td><td class="pct up">▲ +1.81%</td></tr><tr class="up-bg"><td class="lbl">國泰金</td><td class="yes">113.00 元</td><td class="cur">116.50 元</td><td class="chg">▲ +3.50 元</td><td class="pct up">▲ +3.10%</td></tr><tr class="dn-bg"><td class="lbl">中鋼</td><td class="yes">19.50 元</td><td class="cur">19.25 元</td><td class="chg">▼ -0.25 元</td><td class="pct dn">▼ -1.28%</td></tr><tr class="dn-bg"><td class="lbl">台塑</td><td class="yes">52.40 元</td><td class="cur">50.40 元</td><td class="chg">▼ -2.00 元</td><td class="pct dn">▼ -3.82%</td></tr><tr class="dn-bg"><td class="lbl">台化</td><td class="yes">56.20 元</td><td class="cur">54.20 元</td><td class="chg">▼ -2.00 元</td><td class="pct dn">▼ -3.56%</td></tr><tr class="up-bg"><td class="lbl">統一</td><td class="yes">74.30 元</td><td class="cur">75.10 元</td><td class="chg">▲ +0.80 元</td><td class="pct up">▲ +1.08%</td></tr><tr class="dn-bg"><td class="lbl">大立光</td><td class="yes">5,185.00 元</td><td class="cur">5,035.00 元</td><td class="chg">▼ -150.00 元</td><td class="pct dn">▼ -2.89%</td></tr>
         </tbody>
       </table>
     </div>
@@ -711,14 +715,14 @@ table.compare tr:last-child td{border-bottom:none;}
       <div class="rank-card up-rank">
         <div class="rank-label">🏆 最大漲幅</div>
         <div class="rank-name c-up">國泰金</div>
-        <div class="rank-pct c-up">+1.77%</div>
-        <div class="rank-price">現價 115.00 元</div>
+        <div class="rank-pct c-up">+3.10%</div>
+        <div class="rank-price">現價 116.50 元</div>
       </div>
       <div class="rank-card dn-rank">
         <div class="rank-label">📉 最大跌幅</div>
         <div class="rank-name c-dn">台塑</div>
-        <div class="rank-pct c-dn">-3.24%</div>
-        <div class="rank-price">現價 50.70 元</div>
+        <div class="rank-pct c-dn">-3.82%</div>
+        <div class="rank-price">現價 50.40 元</div>
       </div>
     </div>
   </div>
@@ -782,7 +786,7 @@ table.compare tr:last-child td{border-bottom:none;}
         </div>
         <div class="weather-card">
           <h3>溫度</h3>
-          <div class="val">33.4°C</div>
+          <div class="val">33.7°C</div>
           <div class="sub">體感溫度</div>
         </div>
         <div class="weather-card">
@@ -820,7 +824,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <h2>📺 台灣即時頭條</h2>
       <span class="badge">2026-06-23</span>
     </div>
-    <div class="news-grid"><a class="news-item" href="https://tw.stock.yahoo.com/news/spacex%E9%87%8D%E6%91%9416-43-%E4%BD%8E%E8%BB%8C%E8%A1%9B%E6%98%9F%E6%97%8F%E7%BE%A4%E6%87%89%E8%81%B2%E7%96%B2%E8%BB%9F-%E6%98%87%E9%81%94%E7%A7%91-%E5%95%9F%E7%A2%81-024000331.html" target="_blank"><div class="emoji">📈</div><div><div class="title">SpaceX重摔16.43%！低軌衛星族群應聲疲軟「昇達科、啟碁、台燿摔半根」 太空ETF跌4%</div><div class="desc">[FTNN新聞網]記者陳宣穎／綜合報導馬斯克（ElonMusk）旗下太空探索科技公司（SpaceX）首次發行債券，消息一出重創股價，昨日終場收154.6美元、大跌16.43%；今...</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/6%E7%90%83%E5%9C%98%E6%85%B0%E7%95%99%E7%84%A1%E6%95%88-%E8%94%A1%E5%85%B6%E6%98%8C%E6%98%8E%E5%B9%B43%E6%9C%88%E5%8D%B8%E4%BB%BB%E4%B8%AD%E8%81%B7%E6%9C%83%E9%95%B7-023513740.html" target="_blank"><div class="emoji">📈</div><div><div class="title">6球團慰留無效 蔡其昌明年3月卸任中職會長</div><div class="desc">(記者洪承恩／台北報導）中華職棒會長蔡其昌22日再次公開表示，自己絕對會在明年3月任期屆滿時卸任，不論外界如何 […]</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%AF%8D%E6%95%99%E7%9A%84%E5%BD%B1%E9%9F%BF%E5%8A%9B-%E9%BB%83%E4%BB%81%E5%8B%B3%E7%9A%84%E6%88%90%E9%95%B7%E6%95%85%E4%BA%8B-023454206.html" target="_blank"><div class="emoji">📈</div><div><div class="title">母教的影響力 ——黃仁勳的成長故事</div><div class="desc">許多人認識AI教父黃仁勳，是因為他帶領 NVIDIA（輝達）成為全球人工智慧產業的重要推手。然而，在他成功的背後，有一段關於母愛與教育的故事，深深感動了無數的人們。黃仁勳九歲那年，與哥哥被父母送往美國</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E8%B1%8E%E8%B5%B7%E5%BC%B5%E5%96%84%E6%94%BF-%E8%94%A3%E8%90%AC%E5%AE%89-%E6%9C%B1%E7%AB%8B%E5%80%AB%E5%90%88%E9%AB%94%E7%9C%8B%E6%9D%BF-%E5%87%8C%E6%BF%A4-%E7%B6%93%E5%9C%8B%E8%B7%AF%E4%B8%8A%E6%9E%B6%E8%B5%B0%E7%B6%93%E5%9C%8B%E5%85%88%E7%94%9F%E8%B7%AF%E7%B7%9A-023358290.html" target="_blank"><div class="emoji">📈</div><div><div class="title">豎起張善政、蔣萬安、朱立倫合體看板 凌濤：經國路上架走經國先生路線</div><div class="desc">競選連任的桃園市議員凌濤，今（23）日在桃園區經國路上架與張善政、蔣萬安、朱立倫合體的大型看板，他表示，選戰以來他的看板一直不多，今天在桃園的經國路上架了1面大看板，由桃園市張善政、台北市長蔣萬安、前</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E4%BC%81%E6%A5%AD%E5%B7%A5%E6%9C%83%E8%A6%81%E6%B1%82%E8%A3%9C%E6%8F%90%E9%80%80%E4%BC%91%E9%87%91-%E5%8D%97%E5%B1%B1%E4%BA%BA%E5%A3%BD%E7%9B%BC%E5%8D%94%E5%95%86%E5%BB%BA%E7%AB%8B%E6%B0%B8%E7%BA%8C%E5%85%B1%E8%AD%98-023354970.html" target="_blank"><div class="emoji">📈</div><div><div class="title">企業工會要求補提退休金 南山人壽盼協商建立永續共識</div><div class="desc">南山人壽今召開股東常會，企業工會因不滿資方對延宕高達15年的勞資爭議消極應對，於股東會場外拉起布條強烈抗議，高喊「上市要祝福，協商共解決」，要求南山人壽履行當初收購時應負的責任。對此，南山人壽表示，持</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%96%B0%E5%8C%97%E5%95%86%E5%9C%88%E5%A4%9C%E5%B8%82%E6%8E%A8%E6%B8%9B%E5%A1%91%E4%B8%89%E9%87%8D%E5%A5%8F-%E8%87%AA%E5%82%99%E5%AE%B9%E5%99%A8%E6%9C%80%E9%AB%98%E9%80%8160%E5%85%83-023316943.html" target="_blank"><div class="emoji">📈</div><div><div class="title">新北商圈夜市推減塑三重奏 自備容器最高送60元</div><div class="desc">記者蔡琇惠／新北報導 為落實源頭減塑並鼓勵民眾減少一次性產品的使用，新北市環保局推出「來新北逛商圈˙迺夜市 不塑消費好康三重奏」系列活動。本次活動結合新北知名老街商圈及夜市推出環保容器租借體驗，自即日</div><span class="source">Yahoo News · 今日</span></div></a></div>
+    <div class="news-grid"><a class="news-item" href="https://tw.news.yahoo.com/%E7%94%B7%E8%87%89%E6%9B%B8%E7%82%AB%E8%80%80%E6%8D%95%E6%8D%89%E9%87%8E%E7%94%9F%E5%8B%95%E7%89%A9-%E5%8F%B0%E7%81%A3%E7%8D%BC%E7%8C%B4%E6%A0%93%E6%B5%B4%E5%AE%A4%E3%80%81%E9%A0%98%E8%A7%92%E9%B4%9E%E5%9B%B0%E7%B1%A0%E4%B8%AD-%E9%81%95%E9%87%8E%E4%BF%9D%E6%B3%95%E9%80%81%E8%BE%A6-031454875.html" target="_blank"><div class="emoji">📈</div><div><div class="title">男臉書炫耀捕捉野生動物 台灣獼猴栓浴室、領角鴞困籠中 違野保法送辦</div><div class="desc">新北市鐘姓男子違法捕捉豢養野生動物，還在臉書（Facebook）張貼捕捉保育類野生動物影片，警方接獲檢舉前往鐘男家中查緝，赫見台灣獼猴以狗鍊栓綁在浴室、保育類台灣領角鴞困在狹小籠中以及其他野生鳥類，全</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.stock.yahoo.com/news/%E3%80%90hot%E5%8F%B0%E8%82%A1%E3%80%91%E5%8D%97%E4%BA%9E%E7%A7%91%E9%87%8D%E6%8C%AB8%E5%A4%B1%E5%AE%88500%E5%85%83%E9%97%9C%E7%B6%B2%E5%96%8A%E3%80%8C%E5%8D%97%E4%B8%8B%E8%BC%89%E5%AE%A2%E5%BF%AB%E4%B8%8A%E8%BB%8A%E3%80%8D-%E5%B0%88%E5%AE%B6%EF%BC%9A%E5%85%88%E7%AD%89%E7%AD%89-031324200.html" target="_blank"><div class="emoji">🇹🇼</div><div><div class="title">【Hot台股】南亞科重挫8%失守500元關...網喊「南下載客快上車」 專家：先等等</div><div class="desc">「南亞科躲處置要壓到470左右的樣子」「南亞科怎麼了？？美光不是要開財報了嗎？？」「牙科不怪啊，主力不喜歡被關的樣子，每次都在閃」「牙科今天衝好快！（俯衝）」「南亞科南下載客，還沒上車的趕快上車」。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%96%B0%E7%AB%B9%E7%A9%BA%E8%BB%8D%E5%9F%BA%E5%9C%B0%E9%A9%9A%E5%82%B3%E7%88%86%E7%82%B8%E7%81%AB%E8%AD%A6%EF%BC%81%E3%80%8C%E6%B6%88%E9%98%B2%E7%9B%B4%E5%A5%94%E8%BB%8D%E7%87%9F%E3%80%8D%E7%9B%B4%E6%93%8A-023911948.html" target="_blank"><div class="emoji">📈</div><div><div class="title">影/新竹空軍基地驚傳爆炸火警！「消防直奔軍營」直擊</div><div class="desc">最新消息，根據「記者爆料網」群友提供的影片，新竹空軍基地今（23日）上午疑似發生爆炸火警，巨量黑煙竄上高空，新竹市消防局已派人車趕往基地，目前傷亡狀況、事發原因暫時都不明，狀態釐清中。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E6%9C%80%E8%B2%B4%E8%BF%915%E8%90%AC%E5%8F%B0%E5%B9%A3%EF%BC%81steam-machine%E8%AE%93%E7%8E%A9%E5%AE%B6%E5%82%BB%E7%9C%BC%E9%85%B8%EF%BC%9A%E8%B2%B7ps5-pro%E5%8A%A0switch-2%E9%82%84%E6%9C%89%E5%89%A9-031055496.html" target="_blank"><div class="emoji">📈</div><div><div class="title">最貴近5萬台幣！Steam Machine讓玩家傻眼酸：買PS5 Pro加Switch 2還有剩</div><div class="desc">Valve 旗下首款自家主機 Steam Machine 正式公開售價！然而基礎 512GB 版本不含手把定價竟然高達 36,888 元（台灣官方定價），搭配手把的 2TB 豪華版更是衝上 49,88</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E5%B1%B1%E9%A0%82%E7%BA%9C%E8%BB%8A%E5%91%88%E7%8D%BB%E5%85%A8%E9%A6%99%E6%B8%AF%E6%9C%80%E9%AB%98%E7%AB%8B%E9%AB%94%E5%85%89%E5%BD%B1%E7%9B%9B%E5%AE%B4-031047515.html" target="_blank"><div class="emoji">📈</div><div><div class="title">山頂纜車呈獻全香港最高立體光影盛宴</div><div class="desc">「滙映山頂」光影匯演，已於6月13日正式登場，地點就在山頂道花園（凌霄閣外），為香港帶來全新的地標級夜間景點。</div><span class="source">Yahoo News · 今日</span></div></a><a class="news-item" href="https://tw.news.yahoo.com/%E5%B4%A9%E5%A1%8C%E9%9D%A2%E7%A9%8D45%E5%85%AC%E9%A0%83-%E8%8A%B1%E8%93%AE%E8%90%AC%E9%87%8C%E6%BA%AA%E9%A9%9A%E8%A6%8B%E5%A0%B0%E5%A1%9E%E6%B9%96-%E8%8B%A5%E6%BA%A2%E6%B5%81-4%E6%9D%91%E9%87%8C-%E6%81%90%E5%8D%B1%E9%9A%AA%E4%BA%86-031000725.html" target="_blank"><div class="emoji">📈</div><div><div class="title">崩塌面積45公頃！花蓮萬里溪驚見堰塞湖 若溢流「4村里」恐危險了</div><div class="desc">花蓮萬里溪上游出現堰塞湖！林業及自然保育署花蓮分署於昨（22）日接獲通報後，隨即成立應變小組，並於今日上午搭乘空勤總隊直升機完成空中勘查。初步研判該堰塞湖崩塌面積高達45公頃，最大蓄水量恐達600萬立</div><span class="source">Yahoo News · 今日</span></div></a></div>
   </div>
 
   <div class="card" id="video">
@@ -828,7 +832,43 @@ table.compare tr:last-child td{border-bottom:none;}
       <h2>🎬 三立影音新聞</h2>
       <span class="badge">YouTube · 即時</span>
     </div>
-    <div class="news-grid"></div>
+    <div class="news-grid"><div class="video-item" data-vid="M0hQY6rs4Vg">
+<a class="video-thumb-link" href="https://youtu.be/M0hQY6rs4Vg" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/M0hQY6rs4Vg/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/M0hQY6rs4Vg" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div><div class="video-item" data-vid="_eRzQpDB9AI">
+<a class="video-thumb-link" href="https://youtu.be/_eRzQpDB9AI" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/_eRzQpDB9AI/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/_eRzQpDB9AI" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div><div class="video-item" data-vid="fIUtas-QuC4">
+<a class="video-thumb-link" href="https://youtu.be/fIUtas-QuC4" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/fIUtas-QuC4/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/fIUtas-QuC4" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div><div class="video-item" data-vid="toayfFZosdU">
+<a class="video-thumb-link" href="https://youtu.be/toayfFZosdU" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/toayfFZosdU/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/toayfFZosdU" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div><div class="video-item" data-vid="CD3L6JY7AIk">
+<a class="video-thumb-link" href="https://youtu.be/CD3L6JY7AIk" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/CD3L6JY7AIk/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/CD3L6JY7AIk" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div><div class="video-item" data-vid="8swDByLVPZE">
+<a class="video-thumb-link" href="https://youtu.be/8swDByLVPZE" target="_blank">
+<div class="video-embed"><img src="https://img.youtube.com/vi/8swDByLVPZE/mqdefault.jpg" alt="thumbnail" loading="lazy">
+<div class="play-overlay">▶</div></div>
+</a>
+<div class="video-meta"><div class="title"><a href="https://youtu.be/8swDByLVPZE" target="_blank">三立LIVE新聞</a></div><div class="desc">三立LIVE新聞 · YouTube</div></div>
+</div></div>
   </div>
 
   <div class="card" id="ai-research">
@@ -837,7 +877,7 @@ table.compare tr:last-child td{border-bottom:none;}
       <span class="badge">Hacker News</span>
     </div>
     <div class="alert-b mb12">🔬 本區追蹤 AI Agents、OpenClaw、本地 LLM、Claude Code、Coding Agents 等前沿研究。</div>
-    <div class="news-grid"><a class="news-item" href="https://support.claude.com/en/articles/14328960-identity-verification-on-claude" target="_blank"><div class="emoji">🧬</div><div><div class="title">Identity verification on Claude</div><div class="desc">HN · bathory · 845 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://patrickmccanna.net/the-text-in-claude-codes-extended-thinking-output-is-not-authentic/" target="_blank"><div class="emoji">🏛</div><div><div class="title">The text in Claude Code’s “Extended Thinking” output</div><div class="desc">HN · 0o_MrPatrick_o0 · 285 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://www.teachmecoolstuff.com/viewarticle/fine-tuning-a-local-llm-to-categorize-questions" target="_blank"><div class="emoji">🖥️</div><div><div class="title">Good results fine tuning a local LLM like Qwen 3:0.6B to categorize questions</div><div class="desc">HN · dev-experiments · 203 pts</div><span class="source">Hacker News · 今日</span></div></a></div>
+    <div class="news-grid"><a class="news-item" href="https://support.claude.com/en/articles/14328960-identity-verification-on-claude" target="_blank"><div class="emoji">🧬</div><div><div class="title">Identity verification on Claude</div><div class="desc">HN · bathory · 845 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://patrickmccanna.net/the-text-in-claude-codes-extended-thinking-output-is-not-authentic/" target="_blank"><div class="emoji">🏛</div><div><div class="title">The text in Claude Code’s “Extended Thinking” output</div><div class="desc">HN · 0o_MrPatrick_o0 · 287 pts</div><span class="source">Hacker News · 今日</span></div></a><a class="news-item" href="https://www.teachmecoolstuff.com/viewarticle/fine-tuning-a-local-llm-to-categorize-questions" target="_blank"><div class="emoji">🖥️</div><div><div class="title">Good results fine tuning a local LLM like Qwen 3:0.6B to categorize questions</div><div class="desc">HN · dev-experiments · 204 pts</div><span class="source">Hacker News · 今日</span></div></a></div>
   </div>
 
   <!-- 部門 -->
@@ -1076,7 +1116,7 @@ table.compare tr:last-child td{border-bottom:none;}
 <div class="footer">
   <div class="brand">國研<span>AI</span>報告</div>
   <p>© 2026 國研AI科技股份有限公司 · 本報告僅供內部參考，不構成投資建議。</p>
-  <p style="margin-top:4px">自動發報系統 v3.0 · 更新時間 2026-06-23 10:50:05</p>
+  <p style="margin-top:4px">自動發報系統 v3.0 · 更新時間 2026-06-23 11:20:19</p>
 </div>
 
 </div>
