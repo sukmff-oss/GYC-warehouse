@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台股晨報歷史存檔</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;background:#0a0f1e;color:#e8edf5;min-height:100vh}
+header{background:linear-gradient(135deg,#0f1c35,#1a2744);padding:20px 24px;border-bottom:1px solid rgba(80,120,255,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+header h1{font-size:18px;font-weight:700;color:#4af;letter-spacing:1px}
+header p{font-size:12px;color:#6b8cba;margin-top:2px}
+.date-bar{background:#0d1525;padding:14px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(80,120,255,.1)}
+.date-bar label{font-size:13px;color:#8899bb}
+input[type="date"]{background:#1a2744;color:#e8edf5;border:1px solid rgba(80,120,255,.3);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer}
+input[type="date"]:focus{outline:none;border-color:#4af}
+.btn{background:linear-gradient(135deg,#1a3a6b,#2a5abf);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.main{padding:24px;max-width:900px;margin:0 auto;width:100%}
+.day-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.day-nav button{background:#1a2744;border:1px solid rgba(80,120,255,.25);color:#8899bb;font-size:12px;padding:5px 11px;border-radius:6px;cursor:pointer;transition:all .15s}
+.day-nav button:hover,.day-nav button.active{background:#2a5abf;color:#fff;border-color:#4af}
+.card{background:#111827;border-radius:14px;border:1px solid rgba(80,120,255,.15);padding:20px 24px;margin-bottom:16px}
+.card h2{font-size:15px;color:#6b8cba;margin-bottom:14px;letter-spacing:1px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.m{background:#0d1a30;border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(80,120,255,.1)}
+.m .l{font-size:11px;color:#556688;margin-bottom:6px}
+.m .v{font-size:20px;font-weight:700;margin-bottom:3px}
+.m .p{font-size:12px}
+.up{color:#4af}
+.dn{color:#f55}
+.flat{color:#8899bb}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{text-align:left;font-size:11px;color:#4a6080;padding:6px 10px;border-bottom:1px solid rgba(80,120,255,.1);letter-spacing:1px}
+td{padding:9px 10px;font-size:13px;border-bottom:1px solid rgba(80,120,255,.06)}
+tr:hover td{background:rgba(80,120,255,.04)}
+.sentiment{margin-top:14px;padding:10px 14px;background:rgba(74,175,255,.06);border-radius:8px;font-size:13px;color:#7a9cc8;border:1px solid rgba(74,175,255,.15)}
+.sentiment span{font-weight:700;color:#4af}
+.empty{text-align:center;padding:60px 20px;color:#4a6080;font-size:14px}
+footer{text-align:center;padding:20px;font-size:11px;color:#3a5070;border-top:1px solid rgba(80,120,255,.08);margin-top:30px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>📊 台股晨報歷史存檔</h1>
+    <p>自動每日 05:30 更新　美股夜盤 + 台指期夜盤</p>
+  </div>
+  <div style="font-size:11px;color:#4a6080">資料來源：Hermes Cron Job</div>
+</header>
+<div class="date-bar">
+  <label for="dateInput">選擇日期：</label>
+  <input type="date" id="dateInput">
+  <button class="btn" onclick="goDate()">查詢</button>
+  <button class="btn" onclick="goPrev()">← 前一天</button>
+  <button class="btn" onclick="goNext()">後一天 →</button>
+</div>
+<div class="day-nav" id="dayNav"></div>
+<div class="main" id="main">
+  <div class="empty">請選擇日期載入資料</div>
+</div>
+<footer>台股晨報 cron（job_id: 3e6a6126f1aa）自動蒐集　國研化工智能系統</footer>
+
+<script>
+const BASE = 'https://sukmff-oss.github.io/GYC-warehouse/twse_archive.json';
+let archive = null;
+let dates = [];
+
+async function init() {
+  try {
+    const r = await fetch(BASE);
+    archive = await r.json();
+    dates = archive.dates || Object.keys(archive).filter(k => k !== 'lastUpdated' && k !== 'dates');
+    dates.sort().reverse();
+    buildDayNav();
+    // 預設今天
+    const today = new Date().toISOString().split('T')[0];
+    const el = document.getElementById('dateInput');
+    el.max = today;
+    el.value = dates[0] || today;
+    load(dates[0] || today);
+  } catch(e) {
+    document.getElementById('main').innerHTML = '<div class="empty">載入失敗，請稍後重試<br><br><small style="color:#3a5070">'+e.message+'</small></div>';
+  }
+}
+
+function buildDayNav() {
+  const nav = document.getElementById('dayNav');
+  nav.innerHTML = '';
+  // 最近30天
+  dates.slice(0,30).forEach(d => {
+    const b = document.createElement('button');
+    b.textContent = d.slice(5).replace('-','/');
+    b.onclick = () => { document.getElementById('dateInput').value = d; load(d); };
+    if (d === dates[0]) b.className = 'active';
+    nav.appendChild(b);
+  });
+}
+
+function goDate() { load(document.getElementById('dateInput').value); }
+function goPrev() {
+  const i = dates.indexOf(document.getElementById('dateInput').value);
+  if (i < dates.length-1) { document.getElementById('dateInput').value = dates[i+1]; load(dates[i+1]); }
+}
+function goNext() {
+  const i = dates.indexOf(document.getElementById('dateInput').value);
+  if (i > 0) { document.getElementById('dateInput').value = dates[i-1]; load(dates[i-1]); }
+}
+
+function ud(cls) { return cls === 'up' ? 'up' : cls === 'dn' ? 'dn' : 'flat'; }
+function arrow(v) { return v > 0 ? '▲' : v < 0 ? '▼' : '─'; }
+
+function load(date) {
+  const d = archive[date];
+  if (!d) {
+    document.getElementById('main').innerHTML = '<div class="empty">查無 ' + date + ' 資料</div>';
+    return;
+  }
+  // 找前一日收盤用於計算台指期夜盤
+  const prevIdx = dates.indexOf(date);
+  const prevDay = prevIdx < dates.length - 1 ? archive[dates[prevIdx+1]] : null;
+  const prevClose = prevDay && prevDay.twf ? prevDay.twf.close : null;
+  const twfPrevClose = (prevClose && d.twf && d.twf.close) ? (d.twf.close - prevClose).toFixed(0) : null;
+
+  const m = d.market || d;
+  const rows = [
+    ['S&P 500', m.sp500],
+    ['道瓊', m.dow],
+    ['NASDAQ', m.nasdaq],
+    ['費城半導體 SOX', m.sox],
+  ];
+  let html = '';
+  rows.forEach(([name, v]) => {
+    if (!v) return;
+    const pct = parseFloat(v.pct);
+    const ud = pct > 0 ? 'up' : pct < 0 ? 'dn' : 'flat';
+    html += `<tr>
+      <td>${name}</td>
+      <td>${parseFloat(v.close).toLocaleString()}</td>
+      <td class="${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</td>
+    </tr>`;
+  });
+
+  // 台指期
+  let twfHtml = '<div class="g">';
+  if (m.twf) {
+    const pct = parseFloat(m.twf.pct);
+    const ud = pct > 0 ? 'up' : pct < 0 ? 'dn' : 'flat';
+    twfHtml += `<div class="m"><div class="l">台指期夜盤</div><div class="v ${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</div><div class="p ${ud}">${parseFloat(m.twf.close).toLocaleString()} 點</div></div>`;
+  }
+  twfHtml += '</div>';
+
+  // 法人情緒
+  let sentHtml = '';
+  if (d.sentiment) {
+    sentHtml = `<div class="sentiment">📊 市場情緒：<span>${d.sentiment}</span>`;
+    if (d.sentimentReason) sentHtml += `　${d.sentimentReason}`;
+    sentHtml += '</div>';
+  }
+
+  document.getElementById('main').innerHTML = `
+  <div class="card">
+    <h2>🌙 美股昨夜收盤（${date}）</h2>
+    <table>
+      <th>指數</th><th>收盤</th><th>漲跌幅</th>
+      <tbody>${html}</tbody>
+    </table>
+    ${sentHtml}
+  </div>
+  <div class="card">
+    <h2>📈 台指期夜盤</h2>
+    ${twfHtml}
+  </div>
+  `;
+
+  // update nav highlight
+  document.querySelectorAll('.day-nav button').forEach(b => {
+    b.classList.toggle('active', b.textContent === date.slice(5).replace('-','/'));
+  });
+}
+
+init();
+</script>
+</body>
+</html>
