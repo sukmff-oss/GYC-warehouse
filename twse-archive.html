@@ -7,176 +7,352 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;background:#0a0f1e;color:#e8edf5;min-height:100vh}
-header{background:linear-gradient(135deg,#0f1c35,#1a2744);padding:20px 24px;border-bottom:1px solid rgba(80,120,255,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-header h1{font-size:18px;font-weight:700;color:#4af;letter-spacing:1px}
+header{background:linear-gradient(135deg,#0f1c35,#1a2744);padding:18px 24px;border-bottom:1px solid rgba(80,120,255,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+header h1{font-size:17px;font-weight:700;color:#4af;letter-spacing:1px}
 header p{font-size:12px;color:#6b8cba;margin-top:2px}
-.date-bar{background:#0d1525;padding:14px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid rgba(80,120,255,.1)}
+.date-bar{background:#0d1525;padding:12px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid rgba(80,120,255,.1)}
 .date-bar label{font-size:13px;color:#8899bb}
 input[type="date"]{background:#1a2744;color:#e8edf5;border:1px solid rgba(80,120,255,.3);border-radius:8px;padding:7px 14px;font-size:14px;cursor:pointer}
 input[type="date"]:focus{outline:none;border-color:#4af}
-.btn{background:linear-gradient(135deg,#1a3a6b,#2a5abf);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;transition:opacity .2s}
+input[type="number"]{background:#1a2744;color:#e8edf5;border:1px solid rgba(80,120,255,.3);border-radius:8px;padding:7px 12px;font-size:14px;width:80px}
+.btn{background:linear-gradient(135deg,#1a3a6b,#2a5abf);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;transition:opacity .2s}
 .btn:hover{opacity:.85}
-.main{padding:24px;max-width:900px;margin:0 auto;width:100%}
-.day-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.day-nav button{background:#1a2744;border:1px solid rgba(80,120,255,.25);color:#8899bb;font-size:12px;padding:5px 11px;border-radius:6px;cursor:pointer;transition:all .15s}
-.day-nav button:hover,.day-nav button.active{background:#2a5abf;color:#fff;border-color:#4af}
-.card{background:#111827;border-radius:14px;border:1px solid rgba(80,120,255,.15);padding:20px 24px;margin-bottom:16px}
-.card h2{font-size:15px;color:#6b8cba;margin-bottom:14px;letter-spacing:1px}
-.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.m{background:#0d1a30;border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(80,120,255,.1)}
-.m .l{font-size:11px;color:#556688;margin-bottom:6px}
-.m .v{font-size:20px;font-weight:700;margin-bottom:3px}
-.m .p{font-size:12px}
+.main{padding:20px 24px;max-width:960px;margin:0 auto;width:100%}
+.card{background:#111827;border-radius:14px;border:1px solid rgba(80,120,255,.15);padding:18px 22px;margin-bottom:14px}
+.card h2{font-size:13px;color:#6b8cba;margin-bottom:12px;letter-spacing:1px;font-weight:600}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.m{background:#0d1a30;border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(80,120,255,.1)}
+.m .l{font-size:10px;color:#556688;margin-bottom:5px}
+.m .v{font-size:18px;font-weight:700;margin-bottom:3px}
+.m .p{font-size:11px}
 .up{color:#4af}
 .dn{color:#f55}
 .flat{color:#8899bb}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th{text-align:left;font-size:11px;color:#4a6080;padding:6px 10px;border-bottom:1px solid rgba(80,120,255,.1);letter-spacing:1px}
-td{padding:9px 10px;font-size:13px;border-bottom:1px solid rgba(80,120,255,.06)}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th{text-align:left;font-size:10px;color:#4a6080;padding:5px 8px;border-bottom:1px solid rgba(80,120,255,.1);letter-spacing:1px}
+td{padding:8px 8px;font-size:13px;border-bottom:1px solid rgba(80,120,255,.06)}
+tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(80,120,255,.04)}
-.sentiment{margin-top:14px;padding:10px 14px;background:rgba(74,175,255,.06);border-radius:8px;font-size:13px;color:#7a9cc8;border:1px solid rgba(74,175,255,.15)}
+.sentiment{margin-top:12px;padding:9px 12px;background:rgba(74,175,255,.06);border-radius:8px;font-size:12px;color:#7a9cc8;border:1px solid rgba(74,175,255,.12)}
 .sentiment span{font-weight:700;color:#4af}
-.empty{text-align:center;padding:60px 20px;color:#4a6080;font-size:14px}
-footer{text-align:center;padding:20px;font-size:11px;color:#3a5070;border-top:1px solid rgba(80,120,255,.08);margin-top:30px}
+.empty{text-align:center;padding:50px 20px;color:#4a6080;font-size:14px}
+.chart-wrap{margin-top:8px;position:relative}
+.ticker-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.ticker-btn{flex:1;min-width:120px;background:#0d1a30;border:1px solid rgba(80,120,255,.15);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;color:#8899bb}
+.ticker-btn:hover,.ticker-btn.active{border-color:#4af;background:rgba(74,175,255,.08)}
+.ticker-btn .n{font-size:11px;color:#556688}
+.ticker-btn .v{font-size:17px;font-weight:700;margin:3px 0}
+.day-nav{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px}
+.day-nav button{background:#1a2744;border:1px solid rgba(80,120,255,.2);color:#8899bb;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .15s}
+.day-nav button:hover,.day-nav button.active{background:#2a5abf;color:#fff;border-color:#4af}
+footer{text-align:center;padding:18px;font-size:11px;color:#3a5070;border-top:1px solid rgba(80,120,255,.08);margin-top:24px}
+canvas{max-width:100%}
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>📊 台股晨報歷史存檔</h1>
-    <p>自動每日 05:30 更新　美股夜盤 + 台指期夜盤</p>
+    <p>自動每日 05:30 更新　美股夜盤 + 台指期 + 台股加權</p>
   </div>
-  <div style="font-size:11px;color:#4a6080">資料來源：Hermes Cron Job</div>
+  <div style="font-size:11px;color:#3a5070">Hermes Cron Job · GYC-warehouse</div>
 </header>
+
 <div class="date-bar">
-  <label for="dateInput">選擇日期：</label>
+  <label>選擇日期：</label>
   <input type="date" id="dateInput">
   <button class="btn" onclick="goDate()">查詢</button>
-  <button class="btn" onclick="goPrev()">← 前一天</button>
-  <button class="btn" onclick="goNext()">後一天 →</button>
+  <button class="btn" onclick="goPrev()">←前一天</button>
+  <button class="btn" onclick="goNext()">後一天→</button>
+  <span style="margin-left:8px;font-size:12px;color:#4a6080">｜　Quick：</span>
+  <button class="btn" onclick="setRange(7)">7天</button>
+  <button class="btn" onclick="setRange(30)">30天</button>
+  <button class="btn" onclick="setRange(60)">60天</button>
+  <button class="btn" onclick="setRange(90)">90天</button>
 </div>
-<div class="day-nav" id="dayNav"></div>
-<div class="main" id="main">
-  <div class="empty">請選擇日期載入資料</div>
+
+<div class="main">
+  <!-- 圖表區 -->
+  <div class="card">
+    <h2>📈 指數走勢圖</h2>
+    <div class="ticker-row">
+      <div class="ticker-btn active" id="btn-twii" onclick="setTicker('twii')">
+        <div class="n">台股加權</div>
+        <div class="v up" id="lbl-twii">—</div>
+      </div>
+      <div class="ticker-btn" id="btn-sp500" onclick="setTicker('sp500')">
+        <div class="n">S&P 500</div>
+        <div class="v up" id="lbl-sp500">—</div>
+      </div>
+      <div class="ticker-btn" id="btn-both" onclick="setTicker('both')">
+        <div class="n">疊加對比</div>
+        <div class="v" style="color:#4af;font-size:13px">雙線圖</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- 當日資料 -->
+  <div id="dayCard">
+    <div class="empty">請選擇日期</div>
+  </div>
+
+  <!-- 30天捷徑 -->
+  <div class="day-nav" id="dayNav"></div>
 </div>
+
 <footer>台股晨報 cron（job_id: 3e6a6126f1aa）自動蒐集　國研化工智能系統</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const BASE = 'https://raw.githubusercontent.com/sukmff-oss/GYC-warehouse/main/twse_archive.json';
-let archive = null;
-let dates = [];
+let archive = null, dates = [], curDate = null, curTicker = 'twii';
+let chart = null, twiiChart = null, sp500Chart = null;
 
 async function init() {
   try {
-    const r = await fetch(BASE);
-    archive = await r.json();
-    dates = archive.dates || Object.keys(archive).filter(k => k !== 'lastUpdated' && k !== 'dates');
+    archive = await fetch(BASE).then(r => r.json());
+    dates = archive.dates || Object.keys(archive).filter(k => k !== 'lastUpdated' && k !== 'dates' && k !== 'twii_history' && k !== 'sp500_history');
     dates.sort().reverse();
     buildDayNav();
-    // 預設今天
-    const today = new Date().toISOString().split('T')[0];
+    updateTickerLabels();
+    const today = dates[0] || new Date().toISOString().split('T')[0];
     const el = document.getElementById('dateInput');
-    el.max = today;
-    el.value = dates[0] || today;
-    load(dates[0] || today);
+    el.max = today; el.value = today;
+    curDate = today;
+    loadDay(today);
+    drawChart();
   } catch(e) {
-    document.getElementById('main').innerHTML = '<div class="empty">載入失敗，請稍後重試<br><br><small style="color:#3a5070">'+e.message+'</small></div>';
+    document.getElementById('dayCard').innerHTML = '<div class="empty">載入失敗：'+e.message+'</div>';
   }
 }
+
+function updateTickerLabels() {
+  const twiiH = archive.twii_history || {};
+  const sp500H = archive.sp500_history || {};
+  const twiiKeys = Object.keys(twiiH).sort();
+  const sp500Keys = Object.keys(sp500H).sort();
+  if (twiiKeys.length) {
+    const last = twiiH[twiiKeys[twiiKeys.length-1]];
+    const prev = twiiH[twiiKeys[twiiKeys.length-2]];
+    const chg = prev ? ((last-prev)/prev*100).toFixed(2) : 0;
+    document.getElementById('lbl-twii').textContent = last.toLocaleString();
+    document.getElementById('lbl-twii').className = 'v ' + (chg>=0?'up':'dn');
+  }
+  if (sp500Keys.length) {
+    const last = sp500H[sp500Keys[sp500Keys.length-1]];
+    const prev = sp500H[sp500Keys[sp500Keys.length-2]];
+    const chg = prev ? ((last-prev)/prev*100).toFixed(2) : 0;
+    document.getElementById('lbl-sp500').textContent = last.toLocaleString();
+    document.getElementById('lbl-sp500').className = 'v ' + (chg>=0?'up':'dn');
+  }
+}
+
+function setTicker(t) {
+  curTicker = t;
+  document.querySelectorAll('.ticker-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-'+t).classList.add('active');
+  drawChart();
+}
+
+function setRange(days) {
+  const sliced = dates.slice(0, days);
+  if (sliced.length) {
+    document.getElementById('dateInput').value = sliced[0];
+    curDate = sliced[0];
+    loadDay(sliced[0]);
+  }
+}
+
+function goDate() { const d = document.getElementById('dateInput').value; curDate = d; loadDay(d); }
+function goPrev() { const i = dates.indexOf(curDate); if (i < dates.length-1) { const nd = dates[i+1]; document.getElementById('dateInput').value = nd; curDate = nd; loadDay(nd); } }
+function goNext() { const i = dates.indexOf(curDate); if (i > 0) { const nd = dates[i-1]; document.getElementById('dateInput').value = nd; curDate = nd; loadDay(nd); } }
 
 function buildDayNav() {
   const nav = document.getElementById('dayNav');
   nav.innerHTML = '';
-  // 最近30天
-  dates.slice(0,30).forEach(d => {
+  dates.slice(0, 60).forEach(d => {
     const b = document.createElement('button');
     b.textContent = d.slice(5).replace('-','/');
-    b.onclick = () => { document.getElementById('dateInput').value = d; load(d); };
+    b.onclick = () => { document.getElementById('dateInput').value = d; curDate = d; loadDay(d); };
     if (d === dates[0]) b.className = 'active';
     nav.appendChild(b);
   });
 }
 
-function goDate() { load(document.getElementById('dateInput').value); }
-function goPrev() {
-  const i = dates.indexOf(document.getElementById('dateInput').value);
-  if (i < dates.length-1) { document.getElementById('dateInput').value = dates[i+1]; load(dates[i+1]); }
-}
-function goNext() {
-  const i = dates.indexOf(document.getElementById('dateInput').value);
-  if (i > 0) { document.getElementById('dateInput').value = dates[i-1]; load(dates[i-1]); }
-}
-
-function ud(cls) { return cls === 'up' ? 'up' : cls === 'dn' ? 'dn' : 'flat'; }
+function fmt(n) { return n ? n.toLocaleString() : '—'; }
 function arrow(v) { return v > 0 ? '▲' : v < 0 ? '▼' : '─'; }
 
-function load(date) {
+function loadDay(date) {
   const d = archive[date];
+  document.querySelectorAll('.day-nav button').forEach(b => {
+    b.classList.toggle('active', b.textContent === date.slice(5).replace('-','/'));
+  });
   if (!d) {
-    document.getElementById('main').innerHTML = '<div class="empty">查無 ' + date + ' 資料</div>';
+    document.getElementById('dayCard').innerHTML = '<div class="card"><div class="empty">查無 ' + date + ' 晨報資料</div></div>';
     return;
   }
-  // 找前一日收盤用於計算台指期夜盤
-  const prevIdx = dates.indexOf(date);
-  const prevDay = prevIdx < dates.length - 1 ? archive[dates[prevIdx+1]] : null;
-  const prevClose = prevDay && prevDay.twf ? prevDay.twf.close : null;
-  const twfPrevClose = (prevClose && d.twf && d.twf.close) ? (d.twf.close - prevClose).toFixed(0) : null;
-
-  const m = d.market || d;
-  const rows = [
+  const m = d.market || {};
+  const usRows = [
     ['S&P 500', m.sp500],
     ['道瓊', m.dow],
     ['NASDAQ', m.nasdaq],
     ['費城半導體 SOX', m.sox],
   ];
-  let html = '';
-  rows.forEach(([name, v]) => {
+  let usHtml = '<table><th>指數</th><th>收盤</th><th>漲跌幅</th><tbody>';
+  usRows.forEach(([name, v]) => {
     if (!v) return;
     const pct = parseFloat(v.pct);
     const ud = pct > 0 ? 'up' : pct < 0 ? 'dn' : 'flat';
-    html += `<tr>
-      <td>${name}</td>
-      <td>${parseFloat(v.close).toLocaleString()}</td>
-      <td class="${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</td>
-    </tr>`;
+    usHtml += `<tr><td>${name}</td><td>${fmt(v.close)}</td><td class="${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</td></tr>`;
   });
+  usHtml += '</tbody></table>';
 
-  // 台指期
-  let twfHtml = '<div class="g">';
+  let twfHtml = '';
   if (m.twf) {
     const pct = parseFloat(m.twf.pct);
     const ud = pct > 0 ? 'up' : pct < 0 ? 'dn' : 'flat';
-    twfHtml += `<div class="m"><div class="l">台指期夜盤</div><div class="v ${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</div><div class="p ${ud}">${parseFloat(m.twf.close).toLocaleString()} 點</div></div>`;
+    twfHtml = `<div class="g" style="max-width:300px"><div class="m"><div class="l">台指期夜盤</div><div class="v ${ud}">${arrow(pct)} ${Math.abs(pct).toFixed(2)}%</div><div class="p ${ud}">${fmt(m.twf.close)} 點</div></div></div>`;
   }
-  twfHtml += '</div>';
 
-  // 法人情緒
   let sentHtml = '';
-  if (d.sentiment) {
-    sentHtml = `<div class="sentiment">📊 市場情緒：<span>${d.sentiment}</span>`;
-    if (d.sentimentReason) sentHtml += `　${d.sentimentReason}`;
-    sentHtml += '</div>';
+  if (d.sentiment) sentHtml = `<div class="sentiment">📊 市場情緒：<span>${d.sentiment}</span></div>`;
+
+  // TWII當日收盤
+  const twiiH = archive.twii_history || {};
+  const twiiDay = twiiH[date];
+  let twiiHtml = '';
+  if (twiiDay) {
+    const keys = Object.keys(twiiH).sort();
+    const idx = keys.indexOf(date);
+    const prev = idx > 0 ? twiiH[keys[idx-1]] : null;
+    const chgPct = prev ? ((twiiDay - prev)/prev*100).toFixed(2) : 0;
+    const ud = chgPct > 0 ? 'up' : chgPct < 0 ? 'dn' : 'flat';
+    twiiHtml = `<div class="g" style="max-width:300px;margin-top:8px"><div class="m"><div class="l">台股加權（${date}）</div><div class="v ${ud}">${fmt(twiiDay)}</div><div class="p ${ud}">${arrow(parseFloat(chgPct))} ${Math.abs(chgPct)}%</div></div></div>`;
   }
 
-  document.getElementById('main').innerHTML = `
+  document.getElementById('dayCard').innerHTML = `
   <div class="card">
     <h2>🌙 美股昨夜收盤（${date}）</h2>
-    <table>
-      <th>指數</th><th>收盤</th><th>漲跌幅</th>
-      <tbody>${html}</tbody>
-    </table>
+    ${usHtml}
     ${sentHtml}
   </div>
   <div class="card">
     <h2>📈 台指期夜盤</h2>
-    ${twfHtml}
+    ${twfHtml || '<div class="empty">無資料</div>'}
+    ${twiiHtml}
   </div>
   `;
+}
 
-  // update nav highlight
-  document.querySelectorAll('.day-nav button').forEach(b => {
-    b.classList.toggle('active', b.textContent === date.slice(5).replace('-','/'));
+function drawChart() {
+  const twiiH = archive.twii_history || {};
+  const sp500H = archive.sp500_history || {};
+
+  const allDates = [...new Set([...Object.keys(twiiH), ...Object.keys(sp500H)])].sort();
+  // 只取有晨報資料的日期範圍內的，或者最近90天
+  const recentDates = allDates.slice(-90);
+
+  const ctx = document.getElementById('chart').getContext('2d');
+
+  if (chart) { chart.destroy(); chart = null; }
+
+  const isBoth = curTicker === 'both';
+  const datasets = [];
+
+  if (curTicker === 'twii' || isBoth) {
+    const vals = recentDates.map(d => twiiH[d] || null);
+    // 歸一化：從100開始算%变化
+    const base = vals.find(v => v !== null) || 1;
+    const norm = vals.map(v => v ? (v/base*100) : null);
+    datasets.push({
+      label: '台股加權（歸一化）',
+      data: norm,
+      borderColor: '#4af',
+      backgroundColor: 'rgba(68,170,255,0.05)',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true,
+      yAxisID: 'y',
+    });
+  }
+
+  if (curTicker === 'sp500' || isBoth) {
+    const vals = recentDates.map(d => sp500H[d] || null);
+    const base = vals.find(v => v !== null) || 1;
+    const norm = vals.map(v => v ? (v/base*100) : null);
+    datasets.push({
+      label: 'S&P 500（歸一化）',
+      data: norm,
+      borderColor: '#f4a261',
+      backgroundColor: 'rgba(244,162,97,0.05)',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3,
+      fill: true,
+      yAxisID: 'y',
+    });
+  }
+
+  // 標記有晨報資料的日期（vertical line）
+  const annotationDates = new Set(dates);
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: recentDates, datasets },
+    options: {
+      responsive: true,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { labels: { color: '#8899bb', font: { size: 12 } } },
+        tooltip: {
+          backgroundColor: '#1a2744',
+          titleColor: '#4af',
+          bodyColor: '#e8edf5',
+          borderColor: 'rgba(80,120,255,0.3)',
+          borderWidth: 1,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => {
+              const raw = recentDates[ctx.dataIndex];
+              if (ctx.dataset.label.includes('台股')) {
+                return '台股加權：' + (twiiH[raw] ? twiiH[raw].toLocaleString() : '—');
+              } else {
+                return 'S&P 500：' + (sp500H[raw] ? sp500H[raw].toLocaleString() : '—');
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#4a6080', maxTicksLimit: 12, font: { size: 10 } },
+          grid: { color: 'rgba(80,120,255,0.06)' },
+          border: { color: 'rgba(80,120,255,0.1)' },
+        },
+        y: {
+          ticks: { color: '#4a6080', font: { size: 10 }, callback: v => v.toFixed(1) },
+          grid: { color: 'rgba(80,120,255,0.08)' },
+          border: { color: 'rgba(80,120,255,0.1)' },
+          title: { display: true, text: '起始=100', color: '#4a6080', font: { size: 10 } },
+        }
+      }
+    }
   });
+
+  // 滑鼠移到有晨報的日期就 highlight
+  const canvas = document.getElementById('chart');
+  canvas.onmousemove = function(e) {
+    const points = chart.getElementsAtEventForMode(e, 'nearest', { intersect: false }, false);
+    if (points.length) {
+      const idx = points[0].index;
+      const label = recentDates[idx];
+      canvas.style.cursor = annotationDates.has(label) ? 'crosshair' : 'default';
+    }
+  };
 }
 
 init();
