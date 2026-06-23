@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-06-23T11:14:33.555332+08:00",
+  "lastUpdated": "2026-06-23T11:17:01.849349+08:00",
   "dates": [
     "2026-05-19",
     "2026-05-20",
@@ -125,7 +125,7 @@
     "2026-06-17": 45877.39,
     "2026-06-18": 46465.2,
     "2026-06-22": 47741.51,
-    "2026-06-23": 47688.09
+    "2026-06-23": 47642.0
   },
   "sp500_history": {
     "2026-02-11": 6941.47,
@@ -223,26 +223,26 @@
     {
       "symbol": "2330.TW",
       "name": "台積電",
-      "current": 2510.0,
+      "current": 2505.0,
       "yesterday": 2510.0,
-      "chg": 0.0,
-      "chg_pct": 0.0
+      "chg": -5.0,
+      "chg_pct": -0.2
     },
     {
       "symbol": "2317.TW",
       "name": "鴻海",
-      "current": 263.5,
+      "current": 263.0,
       "yesterday": 268.5,
-      "chg": -5.0,
-      "chg_pct": -1.86
+      "chg": -5.5,
+      "chg_pct": -2.05
     },
     {
       "symbol": "2454.TW",
       "name": "聯發科",
-      "current": 4675.0,
+      "current": 4670.0,
       "yesterday": 4465.0,
-      "chg": 210.0,
-      "chg_pct": 4.7
+      "chg": 205.0,
+      "chg_pct": 4.59
     },
     {
       "symbol": "2881.TW",
@@ -301,6 +301,172 @@
       "chg_pct": 0.35
     }
   ],
+  "us_stocks_today": {
+    "topGainers": [
+      {
+        "symbol": "ABBV",
+        "name": "AbbVie",
+        "current": 230.01,
+        "yesterday": 216.49,
+        "chg": 13.52,
+        "chg_pct": 6.25
+      },
+      {
+        "symbol": "INTC",
+        "name": "Intel",
+        "current": 140.94,
+        "yesterday": 133.99,
+        "chg": 6.95,
+        "chg_pct": 5.19
+      },
+      {
+        "symbol": "TXN",
+        "name": "Texas Instr.",
+        "current": 332.28,
+        "yesterday": 322.86,
+        "chg": 9.42,
+        "chg_pct": 2.92
+      },
+      {
+        "symbol": "AMD",
+        "name": "AMD",
+        "current": 551.63,
+        "yesterday": 537.37,
+        "chg": 14.26,
+        "chg_pct": 2.65
+      },
+      {
+        "symbol": "JPM",
+        "name": "JPMorgan",
+        "current": 331.48,
+        "yesterday": 325.22,
+        "chg": 6.26,
+        "chg_pct": 1.92
+      },
+      {
+        "symbol": "MS",
+        "name": "Morgan Stanley",
+        "current": 227.09,
+        "yesterday": 223.17,
+        "chg": 3.92,
+        "chg_pct": 1.76
+      },
+      {
+        "symbol": "UNH",
+        "name": "UnitedHealth",
+        "current": 406.68,
+        "yesterday": 400.96,
+        "chg": 5.72,
+        "chg_pct": 1.43
+      },
+      {
+        "symbol": "JNJ",
+        "name": "Johnson",
+        "current": 231.29,
+        "yesterday": 228.39,
+        "chg": 2.9,
+        "chg_pct": 1.27
+      },
+      {
+        "symbol": "TSLA",
+        "name": "Tesla",
+        "current": 405.05,
+        "yesterday": 400.49,
+        "chg": 4.56,
+        "chg_pct": 1.14
+      },
+      {
+        "symbol": "GS",
+        "name": "Goldman",
+        "current": 1106.37,
+        "yesterday": 1096.56,
+        "chg": 9.81,
+        "chg_pct": 0.89
+      }
+    ],
+    "topLosers": [
+      {
+        "symbol": "NFLX",
+        "name": "Netflix",
+        "current": 72.88,
+        "yesterday": 77.38,
+        "chg": -4.5,
+        "chg_pct": -5.82
+      },
+      {
+        "symbol": "GOOGL",
+        "name": "Google",
+        "current": 349.68,
+        "yesterday": 368.03,
+        "chg": -18.35,
+        "chg_pct": -4.99
+      },
+      {
+        "symbol": "AMZN",
+        "name": "Amazon",
+        "current": 232.79,
+        "yesterday": 244.39,
+        "chg": -11.6,
+        "chg_pct": -4.75
+      },
+      {
+        "symbol": "AVGO",
+        "name": "Broadcom",
+        "current": 392.13,
+        "yesterday": 411.35,
+        "chg": -19.22,
+        "chg_pct": -4.67
+      },
+      {
+        "symbol": "NKE",
+        "name": "Nike",
+        "current": 43.19,
+        "yesterday": 45.2,
+        "chg": -2.01,
+        "chg_pct": -4.45
+      },
+      {
+        "symbol": "LOW",
+        "name": "Lowe's",
+        "current": 214.4,
+        "yesterday": 222.2,
+        "chg": -7.8,
+        "chg_pct": -3.51
+      },
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft",
+        "current": 367.34,
+        "yesterday": 379.4,
+        "chg": -12.06,
+        "chg_pct": -3.18
+      },
+      {
+        "symbol": "META",
+        "name": "Meta",
+        "current": 563.85,
+        "yesterday": 577.22,
+        "chg": -13.37,
+        "chg_pct": -2.32
+      },
+      {
+        "symbol": "HD",
+        "name": "Home Depot",
+        "current": 326.62,
+        "yesterday": 334.28,
+        "chg": -7.66,
+        "chg_pct": -2.29
+      },
+      {
+        "symbol": "QCOM",
+        "name": "Qualcomm",
+        "current": 221.9,
+        "yesterday": 226.11,
+        "chg": -4.21,
+        "chg_pct": -1.86
+      }
+    ]
+  },
   "2026-05-19": {
     "date": "2026-05-19",
     "sentiment": "多",
