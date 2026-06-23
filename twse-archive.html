@@ -83,13 +83,25 @@ footer{text-align:center;padding:14px;font-size:11px;color:#3a5070;border-top:1p
     <div class="module" id="mod-twstocks" data-module="twstocks">
       <div class="module-hdr" draggable="false">
         <span class="drag-handle">☰</span>
-        <span class="module-label">🇹🇼 台股熱門股 Top 10（當日）</span>
+        <span class="module-label">🇹🇼 台股熱門股 Top 15 + 跌幅 Top 15（當日）</span>
       </div>
       <div class="module-body">
-        <table>
-          <thead><tr><th>股票</th><th>昨收</th><th>現價</th><th>漲跌</th><th>漲幅</th></tr></thead>
-          <tbody id="twStocksBody"><tr><td colspan="5" class="empty">載入中...</td></tr></tbody>
-        </table>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font-size:10px;color:#4af;margin-bottom:6px;letter-spacing:.5px">▲ 漲幅最大 Top 15</div>
+            <table>
+              <thead><tr><th>股票</th><th>現價</th><th>漲%</th></tr></thead>
+              <tbody id="twGainersBody"><tr><td colspan="3" class="empty">—</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#f55;margin-bottom:6px;letter-spacing:.5px">▼ 跌幅最大 Top 15</div>
+            <table>
+              <thead><tr><th>股票</th><th>現價</th><th>跌%</th></tr></thead>
+              <tbody id="twLosersBody"><tr><td colspan="3" class="empty">—</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -341,16 +353,23 @@ function filterUsStocks(query) {
 function loadDay(date) {
   curDate = date;
 
-  // 台股 Top 10
-  const twStocks = archive.tw_stocks_today || [];
-  if (twStocks.length) {
-    document.getElementById('twStocksBody').innerHTML = twStocks.map(s => {
+  // 台股 Top 15 + Bottom 15
+  const twAll = archive.tw_stocks_today || [];
+  if (twAll.length) {
+    const sorted = [...twAll].sort((a, b) => (b.chg_pct || 0) - (a.chg_pct || 0));
+    const twGainers = sorted.slice(0, 15);
+    const twLosers = sorted.slice(-15).reverse();
+    document.getElementById('twGainersBody').innerHTML = twGainers.map(s => {
       const p = s.chg_pct || 0;
-      return `<tr><td><b>${s.name}</b></td><td>${fmt(s.yesterday)}</td><td>${fmt(s.current)}</td><td class="${ud(p)}">${arr(p)} ${Math.abs(s.chg).toFixed(2)}</td><td class="${ud(p)}">${arr(p)} ${Math.abs(p).toFixed(2)}%</td></tr>`;
+      return `<tr><td><b>${s.name}</b></td><td>${fmt(s.current)}</td><td class="up">+${Math.abs(p).toFixed(2)}%</td></tr>`;
+    }).join('');
+    document.getElementById('twLosersBody').innerHTML = twLosers.map(s => {
+      const p = s.chg_pct || 0;
+      return `<tr><td><b>${s.name}</b></td><td>${fmt(s.current)}</td><td class="dn">-${Math.abs(p).toFixed(2)}%</td></tr>`;
     }).join('');
   }
 
-  // 美股 Top 10
+  // 美股 Top 15 + Bottom 15
   const usData = archive.us_stocks_today || {};
   const gainers = usData.topGainers || [];
   const losers = usData.topLosers || [];
