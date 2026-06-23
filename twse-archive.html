@@ -93,29 +93,33 @@ footer{text-align:center;padding:14px;font-size:11px;color:#3a5070;border-top:1p
       </div>
     </div>
 
-    <!-- 模組2：美股熱門股 -->
+    <!-- 美股 Top 15 + 搜尋 -->
     <div class="module" id="mod-usstocks" data-module="usstocks">
       <div class="module-hdr" draggable="false">
         <span class="drag-handle">☰</span>
-        <span class="module-label">🇺🇸 美股熱門股 Top 10（當日）</span>
+        <span class="module-label">🇺🇸 美股熱門股 Top 15（當日）</span>
       </div>
       <div class="module-body">
+        <div style="margin-bottom:10px">
+          <input type="text" id="usSearch" placeholder="搜尋股票...（例如：輝達、NVIDIA）" style="width:100%;padding:7px 12px;background:#0d1a30;color:#e8edf5;border:1px solid rgba(80,120,255,.25);border-radius:8px;font-size:12px;outline:none" oninput="filterUsStocks(this.value)">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div>
-            <div style="font-size:10px;color:#4af;margin-bottom:6px;letter-spacing:.5px">▲ 漲幅最大</div>
+            <div style="font-size:10px;color:#4af;margin-bottom:6px;letter-spacing:.5px">▲ 漲幅最大 Top 15</div>
             <table>
               <thead><tr><th>股票</th><th>現價</th><th>漲%</th></tr></thead>
               <tbody id="usGainersBody"><tr><td colspan="3" class="empty">—</td></tr></tbody>
             </table>
           </div>
           <div>
-            <div style="font-size:10px;color:#f55;margin-bottom:6px;letter-spacing:.5px">▼ 跌幅最大</div>
+            <div style="font-size:10px;color:#f55;margin-bottom:6px;letter-spacing:.5px">▼ 跌幅最大 Top 15</div>
             <table>
               <thead><tr><th>股票</th><th>現價</th><th>跌%</th></tr></thead>
               <tbody id="usLosersBody"><tr><td colspan="3" class="empty">—</td></tr></tbody>
             </table>
           </div>
         </div>
+        <div id="usSearchResult" style="display:none;margin-top:10px;padding:10px;background:rgba(68,170,255,.06);border-radius:8px;border:1px solid rgba(68,170,255,.15)"></div>
       </div>
     </div>
 
@@ -304,6 +308,35 @@ function goNext() { const i = dates.indexOf(curDate); if (i > 0) { const nd = da
 function fmt(n) { return n != null ? n.toLocaleString() : '—'; }
 function arr(v) { return v > 0 ? '▲' : v < 0 ? '▼' : '─'; }
 function ud(v) { return v > 0 ? 'up' : v < 0 ? 'dn' : 'flat'; }
+
+function filterUsStocks(query) {
+  const allStocks = (archive.us_stocks_today || {}).allStocks || [];
+  const resultEl = document.getElementById('usSearchResult');
+  if (!query.trim()) {
+    resultEl.style.display = 'none';
+    return;
+  }
+  const q = query.toLowerCase();
+  const matches = allStocks.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    s.symbol.toLowerCase().includes(q)
+  );
+  if (!matches.length) {
+    resultEl.innerHTML = `<div style="color:#4a6080;font-size:12px;text-align:center">找不到「${query}」</div>`;
+  } else {
+    resultEl.innerHTML = '<div style="font-size:10px;color:#4af;margin-bottom:6px">🔍 搜尋結果</div><table>' +
+      matches.slice(0, 10).map(s => {
+        const p = s.chg_pct || 0;
+        const udc = ud(p);
+        return `<tr style="background:rgba(68,170,255,.04)">
+          <td><b>${s.name}</b><br><span style="font-size:10px;color:#4a6080">${s.symbol}</span></td>
+          <td>${fmt(s.current)}</td>
+          <td class="${udc}">${arr(p)} ${Math.abs(p).toFixed(2)}%</td>
+        </tr>`;
+      }).join('') + '</table>';
+  }
+  resultEl.style.display = 'block';
+}
 
 function loadDay(date) {
   curDate = date;
