@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>街区突击 · BLOCKADE STRIKE</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0a0c10;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-user-select:none; user-select:none; }
+  #app { position:fixed; inset:0; }
+  canvas.game { display:block; transition:filter .25s; }
+
+  /* ============ HUD ============ */
+  #hud { position:fixed; inset:0; pointer-events:none; opacity:0; transition:opacity .5s; }
+  #hud.on { opacity:1; }
+
+  /* 准星 */
+  #crosshair { position:absolute; left:50%; top:50%; width:22px; height:22px;
+    transform:translate(-50%,-50%); }
+  #crosshair span { position:absolute; background:#fff; box-shadow:0 0 3px rgba(0,0,0,.8);
+    transition:all .08s; }
+  #crosshair .t{left:50%;top:0;width:2px;height:6px;transform:translateX(-50%)}
+  #crosshair .b{left:50%;bottom:0;width:2px;height:6px;transform:translateX(-50%)}
+  #crosshair .l{left:0;top:50%;width:6px;height:2px;transform:translateY(-50%)}
+  #crosshair .r{right:0;top:50%;width:6px;height:2px;transform:translateY(-50%)}
+  #crosshair.ads { opacity:0; }
+  /* 开镜红点 */
+  #reddot { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:10px; height:10px; border-radius:50%; display:none;
+    background:radial-gradient(circle,#ff2a2a 0%,#ff2a2a 35%,rgba(255,42,42,0) 70%);
+    box-shadow:0 0 8px 2px rgba(255,40,40,.55); }
+  #reddot.on { display:block; }
+  /* 命中标记 */
+  #hitmark { position:absolute; left:50%; top:50%; width:34px; height:34px;
+    transform:translate(-50%,-50%) rotate(0deg); opacity:0; }
+  #hitmark span { position:absolute; background:#ff3333; width:3px; height:11px;
+    box-shadow:0 0 4px rgba(255,0,0,.8); }
+  #hitmark .a{left:4px;top:2px;transform:rotate(-45deg)}
+  #hitmark .b{right:4px;top:2px;transform:rotate(45deg)}
+  #hitmark .c{left:4px;bottom:2px;transform:rotate(45deg)}
+  #hitmark .d{right:4px;bottom:2px;transform:rotate(-45deg)}
+  #hitmark.pop { animation:hitpop .28s ease-out; }
+  @keyframes hitpop { 0%{opacity:1;transform:translate(-50%,-50%) scale(1.35)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(.9)} }
+
+  /* 小地图 */
+  #minimap { position:absolute; left:22px; top:22px; width:168px; height:168px;
+    border-radius:6px; overflow:hidden; border:2px solid rgba(255,255,255,.16);
+    box-shadow:0 4px 18px rgba(0,0,0,.45); background:#20242c; }
+
+  /* 罗盘 + 比分 */
+  #topbar { position:absolute; left:50%; top:14px; transform:translateX(-50%);
+    width:460px; text-align:center; }
+  #compass { width:100%; height:26px; display:block; }
+  #scoreline { display:flex; justify-content:center; align-items:center; gap:14px;
+    margin-top:2px; color:#fff; font-weight:700; letter-spacing:1px;
+    text-shadow:0 1px 4px rgba(0,0,0,.7); font-size:15px; }
+  #scoreline .blue { color:#5db2ff; font-size:20px; }
+  #scoreline .red  { color:#ff6a5d; font-size:20px; }
+  #scoreline .mid  { font-size:12px; opacity:.85; font-weight:600; }
+
+  /* 击杀播报 */
+  #killfeed { position:absolute; right:22px; top:22px; display:flex;
+    flex-direction:column; gap:6px; align-items:flex-end; }
+  .feed { background:rgba(10,14,20,.62); border:1px solid rgba(255,255,255,.12);
+    border-radius:4px; padding:5px 12px; color:#e8ecf2; font-size:12.5px;
+    font-weight:600; letter-spacing:.4px; animation:feedin .25s ease-out; }
+  .feed .b{color:#5db2ff}.feed .r{color:#ff6a5d}.feed .w{color:#ffd27a;margin:0 7px}
+  @keyframes feedin { from{transform:translateX(30px);opacity:0} to{transform:none;opacity:1} }
+
+  /* 击杀中央提示 */
+  #killtoast { position:absolute; left:50%; top:26%; transform:translateX(-50%);
+    text-align:center; opacity:0; pointer-events:none; }
+  #killtoast .big { color:#fff; font-size:26px; font-weight:800; letter-spacing:6px;
+    text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 26px rgba(255,210,120,.35); }
+  #killtoast .pts { color:#ffd27a; font-size:17px; font-weight:700; letter-spacing:2px;
+    margin-top:6px; text-shadow:0 1px 6px rgba(0,0,0,.8); }
+  #killtoast.show { animation:toast 1.6s ease-out; }
+  @keyframes toast { 0%{opacity:0;transform:translateX(-50%) scale(.8)}
+    12%{opacity:1;transform:translateX(-50%) scale(1.06)}
+    22%{transform:translateX(-50%) scale(1)} 78%{opacity:1}
+    100%{opacity:0;transform:translateX(-50%) translateY(-14px)} }
+
+  /* 左下 血量 */
+  #hpbox { position:absolute; left:26px; bottom:26px; color:#fff; }
+  #hpnum { font-size:26px; font-weight:800; text-shadow:0 1px 5px rgba(0,0,0,.7); }
+  #hpnum small { font-size:11px; font-weight:600; opacity:.7; letter-spacing:2px;
+    display:block; margin-bottom:2px; }
+  #hpbar { width:190px; height:7px; background:rgba(255,255,255,.14);
+    border-radius:4px; margin-top:6px; overflow:hidden;
+    box-shadow:0 1px 6px rgba(0,0,0,.4); }
+  #hpfill { height:100%; width:100%; border-radius:4px;
+    background:linear-gradient(90deg,#e8e8e8,#ffffff); transition:width .18s, background .3s; }
+  #hpfill.low { background:linear-gradient(90deg,#d33,#f66); }
+
+  /* 右下 弹药 */
+  #ammobox { position:absolute; right:30px; bottom:24px; color:#fff;
+    text-align:right; text-shadow:0 1px 5px rgba(0,0,0,.7); }
+  #gears { font-size:11px; letter-spacing:1px; opacity:.85; margin-bottom:6px;
+    display:flex; gap:10px; justify-content:flex-end; }
+  #gears b { border:1px solid rgba(255,255,255,.35); border-radius:3px;
+    padding:1px 5px; font-weight:600; }
+  #ammo { font-size:38px; font-weight:800; line-height:1; }
+  #ammo small { font-size:16px; font-weight:600; opacity:.65; margin-left:6px; }
+  #ammo.reload { color:#ffb04a; animation:blink .5s infinite alternate; }
+  @keyframes blink { from{opacity:1} to{opacity:.45} }
+
+  /* 受击方向指示 */
+  .dmgdir { position:absolute; left:50%; top:50%; width:120px; height:120px;
+    margin:-60px 0 0 -60px; pointer-events:none; opacity:0; }
+  .dmgdir::before { content:""; position:absolute; left:50%; top:-38px;
+    transform:translateX(-50%); border:14px solid transparent;
+    border-bottom:26px solid rgba(255,30,30,.85); filter:blur(1px); }
+  .dmgdir.show { animation:ddir .8s ease-out; }
+  @keyframes ddir { 0%{opacity:1} 100%{opacity:0} }
+
+  /* 红晕 / 阵亡 */
+  #vignette { position:fixed; inset:0; pointer-events:none; opacity:0;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(160,0,0,.55) 78%, rgba(120,0,0,.85) 100%);
+    transition:opacity .3s; }
+  #dmgflash { position:fixed; inset:0; pointer-events:none; opacity:0;
+    background:radial-gradient(ellipse at center, rgba(255,0,0,.12) 0%, rgba(200,0,0,.4) 100%); }
+
+  /* 狙击镜遮罩 */
+  #scope { position:fixed; inset:0; display:none; pointer-events:none;
+    background:radial-gradient(circle at center, transparent 0 31vmin, rgba(0,0,0,.97) 33vmin); }
+  #scope.on { display:block; }
+  #scope .ch-h { position:absolute; left:50%; top:50%; width:62vmin; height:1.5px;
+    background:rgba(0,0,0,.9); transform:translate(-50%,-50%); }
+  #scope .ch-v { position:absolute; left:50%; top:50%; width:1.5px; height:62vmin;
+    background:rgba(0,0,0,.9); transform:translate(-50%,-50%); }
+  #scope .ring { position:absolute; left:50%; top:50%; width:62vmin; height:62vmin;
+    border:2px solid rgba(0,0,0,.85); border-radius:50%; transform:translate(-50%,-50%); }
+  #scope .zoomtag { position:absolute; left:50%; top:calc(50% + 34vmin); transform:translateX(-50%);
+    color:#e8dfc8; font:bold 15px Consolas,monospace; letter-spacing:2px; text-shadow:0 1px 3px #000;
+    background:rgba(0,0,0,.45); padding:4px 14px; border-radius:4px; border:1px solid rgba(232,223,200,.3); }
+
+  /* 触屏控件 */
+  #touchui { position:fixed; inset:0; display:none; z-index:5; }
+  body.touch #touchui.ingame { display:block; }
+  #joy { position:absolute; left:5%; bottom:9%; width:130px; height:130px;
+    border-radius:50%; background:rgba(255,255,255,.08);
+    border:2px solid rgba(255,255,255,.25); pointer-events:auto; touch-action:none; }
+  #joyknob { position:absolute; left:50%; top:50%; width:54px; height:54px;
+    border-radius:50%; background:rgba(255,255,255,.35);
+    transform:translate(-50%,-50%); }
+  #lookzone { position:absolute; right:0; top:0; width:55%; height:100%;
+    pointer-events:auto; touch-action:none; }
+  .tbtn { position:absolute; pointer-events:auto; touch-action:none;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%; background:rgba(255,255,255,.12);
+    border:2px solid rgba(255,255,255,.3); color:#fff; font-weight:700;
+    font-size:14px; letter-spacing:1px; }
+  .tbtn:active, .tbtn.on { background:rgba(255,176,74,.45); }
+  #btnFire { right:5%; bottom:9%; width:96px; height:96px; font-size:17px;
+    background:rgba(255,90,60,.3); border-color:rgba(255,120,80,.6); }
+  #btnAds { right:19%; bottom:7%; width:64px; height:64px; }
+  #btnJump { right:6%; bottom:32%; width:64px; height:64px; }
+  #btnReload { right:18%; bottom:26%; width:56px; height:56px; font-size:12px; }
+  #btnNade { right:29%; bottom:13%; width:56px; height:56px; font-size:12px; }
+  #btnSwap { right:28%; bottom:29%; width:56px; height:56px; font-size:12px; }
+
+  /* 地图选择 */
+  #mapselect { display:flex; gap:16px; margin-top:30px; }
+  .mapcard { width:132px; padding:12px 0 10px; border-radius:8px; text-align:center;
+    cursor:pointer; pointer-events:auto; color:#cdd8e8; font-size:14px;
+    letter-spacing:2px; border:2px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.04); transition:all .18s; }
+  .mapcard:hover { border-color:rgba(255,176,74,.5); transform:translateY(-2px); }
+  .mapcard.sel { border-color:#ffb04a; color:#ffb04a;
+    background:rgba(255,176,74,.1); box-shadow:0 4px 20px rgba(255,176,74,.25); }
+  .mapcard .ico { height:52px; margin:0 10px 10px; border-radius:5px; }
+  .mapcard[data-map="town"] .ico { background:linear-gradient(160deg,#d8c9a8 40%,#8a8478 40% 60%,#cbb894 60%); }
+  .mapcard[data-map="ruins"] .ico { background:linear-gradient(160deg,#d6c098 45%,#bcb2a0 45% 65%,#9a8468 65%); }
+  .mapcard[data-map="docks"] .ico { background:linear-gradient(160deg,#9aa0a2 45%,#8a4a3a 45% 58%,#3a5a7a 58% 72%,#2a6a8a 72%); }
+
+  /* 移动端响应式 */
+  @media (max-width: 900px) {
+    #minimap { width:104px; height:104px; left:10px; top:10px; }
+    #topbar { width:300px; top:8px; }
+    #compass { height:20px; }
+    #scoreline { font-size:12px; gap:10px; }
+    #scoreline .blue, #scoreline .red { font-size:16px; }
+    #hpbox { left:12px; bottom:auto; top:124px; }
+    #hpbar { width:110px; }
+    #hpnum { font-size:18px; }
+    #ammobox { right:12px; top:10px; bottom:auto; }
+    #ammo { font-size:26px; }
+    #killfeed { right:10px; top:64px; }
+    .feed { font-size:11px; padding:4px 8px; }
+    .title { font-size:34px; letter-spacing:6px; }
+    .keys { font-size:12px; padding:0 20px; }
+    #mapselect { gap:8px; margin-top:20px; }
+    .mapcard { width:96px; font-size:12px; }
+    .playbtn { padding:12px 50px; font-size:16px; margin-top:24px; }
+  }
+
+  /* 连杀庆祝播报 */
+  #streak { position:absolute; left:50%; top:18%; transform:translateX(-50%);
+    text-align:center; opacity:0; pointer-events:none; }
+  #streak .big { font-size:44px; font-weight:900; letter-spacing:10px;
+    color:#ffd24a; -webkit-text-stroke:1.5px rgba(120,60,0,.6);
+    text-shadow:0 0 30px rgba(255,180,50,.8), 0 4px 12px rgba(0,0,0,.8); }
+  #streak .sub { font-size:15px; font-weight:700; letter-spacing:4px;
+    color:#fff; margin-top:6px; text-shadow:0 2px 8px rgba(0,0,0,.8); }
+  #streak.tier1 .big { color:#ff9a3a; }
+  #streak.tier2 .big { color:#ff5a3a; font-size:52px;
+    text-shadow:0 0 44px rgba(255,80,30,.9), 0 4px 12px rgba(0,0,0,.8); }
+  #streak.show { animation:streakpop 1.8s ease-out; }
+  @keyframes streakpop {
+    0%{opacity:0; transform:translateX(-50%) scale(.4)}
+    15%{opacity:1; transform:translateX(-50%) scale(1.15)}
+    25%{transform:translateX(-50%) scale(1)}
+    75%{opacity:1}
+    100%{opacity:0; transform:translateX(-50%) scale(1.05) translateY(-16px)} }
+
+  /* 护甲条 */
+  #armorbar { width:190px; height:5px; background:rgba(255,255,255,.12);
+    border-radius:3px; margin-top:5px; overflow:hidden; display:none; }
+  #armorfill { height:100%; background:linear-gradient(90deg,#3a7ad8,#6ab0ff);
+    border-radius:3px; transition:width .2s; }
+
+  /* 中央系统消息 */
+  #sysmsg { position:absolute; left:50%; top:38%; transform:translateX(-50%);
+    color:#fff; font-size:20px; font-weight:700; letter-spacing:3px;
+    text-shadow:0 2px 8px rgba(0,0,0,.8); opacity:0; transition:opacity .4s;
+    text-align:center; z-index:6; }
+  #sysmsg.show { opacity:1; }
+
+  /* ============ 开始 / 结算界面 ============ */
+  .screen { position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; z-index:10;
+    background:radial-gradient(ellipse at 50% 35%, #2a3242 0%, #14181f 60%, #0a0c10 100%);
+    transition:opacity .5s; }
+  .screen.hidden { opacity:0; pointer-events:none; }
+  .title { color:#fff; font-size:52px; font-weight:900; letter-spacing:10px;
+    text-shadow:0 4px 30px rgba(90,160,255,.35); }
+  .title em { font-style:normal; color:#ffb04a; }
+  .subtitle { color:#8fa2bd; margin-top:10px; letter-spacing:5px; font-size:14px; }
+  .keys { margin-top:34px; color:#aab8cc; font-size:13.5px; line-height:2.1;
+    text-align:center; letter-spacing:1px; }
+  .keys b { color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:4px;
+    padding:1px 8px; margin:0 3px; font-weight:600; background:rgba(255,255,255,.06); }
+  .playbtn { margin-top:38px; pointer-events:auto; cursor:pointer;
+    background:linear-gradient(180deg,#ff9d3c,#f07b1d); color:#1a1206;
+    font-size:19px; font-weight:800; letter-spacing:6px; padding:15px 74px;
+    border:none; border-radius:6px; box-shadow:0 8px 30px rgba(240,123,29,.4);
+    transition:transform .15s, box-shadow .15s; }
+  .playbtn:hover { transform:translateY(-2px) scale(1.03);
+    box-shadow:0 12px 38px rgba(240,123,29,.55); }
+  #endTitle { color:#fff; font-size:44px; font-weight:900; letter-spacing:8px; }
+  #endScore { color:#cdd8e8; font-size:20px; margin-top:16px; letter-spacing:2px; }
+  #endScore .b{color:#5db2ff}#endScore .r{color:#ff6a5d}
+  #endStats { color:#8fa2bd; margin-top:10px; font-size:14px; letter-spacing:1px; }
+
+  /* ===== V5：金币 / 保护 / BOSS / 任务 / 交互 ===== */
+  #goldbox { position:absolute; right:16px; top:14px; color:#ffd27a; font:bold 16px Consolas,monospace;
+    background:rgba(10,14,20,.5); padding:5px 12px; border-radius:6px; border:1px solid rgba(255,210,122,.35); }
+  #protect { position:absolute; left:50%; top:12%; transform:translateX(-50%); display:none;
+    color:#7ec8ff; font:bold 15px sans-serif; background:rgba(20,40,60,.55); padding:5px 16px;
+    border-radius:6px; border:1px solid rgba(126,200,255,.4); }
+  #bossbar { position:absolute; left:50%; top:9%; transform:translateX(-50%); display:none; width:340px;
+    text-align:center; }
+  #bossname { color:#ffd700; font:bold 14px sans-serif; letter-spacing:2px; text-shadow:0 1px 3px #000; }
+  #bosstrack { height:10px; background:rgba(0,0,0,.55); border:1px solid rgba(255,215,0,.5); border-radius:5px; margin-top:3px; }
+  #bossfill { height:100%; width:100%; background:linear-gradient(90deg,#ffd700,#ff8a3a); border-radius:4px; }
+  #objective { position:absolute; left:16px; top:190px; display:none; max-width:250px;
+    color:#ffb08a; font:13px sans-serif; background:rgba(10,14,20,.5); padding:7px 11px;
+    border-radius:6px; border-left:3px solid #ff6a3a; line-height:1.6; }
+  #plantbar { position:absolute; left:50%; bottom:26%; transform:translateX(-50%); display:none; width:280px;
+    text-align:center; color:#ffd27a; font:bold 13px sans-serif; }
+  #planttrack { height:12px; background:rgba(0,0,0,.6); border:1px solid rgba(255,210,122,.5); border-radius:6px; margin-top:4px; }
+  #plantfill { height:100%; width:0; background:linear-gradient(90deg,#ffb04a,#ff5a3a); border-radius:5px; }
+  #interact { position:absolute; left:50%; bottom:32%; transform:translateX(-50%); display:none;
+    color:#fff; font:bold 16px sans-serif; background:rgba(10,14,20,.65); padding:8px 20px;
+    border-radius:8px; border:1px solid rgba(255,255,255,.35); }
+
+  /* ===== 模式选择 ===== */
+  #modeselect { display:flex; gap:12px; margin-top:16px; }
+  .modecard { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.25); cursor:pointer;
+    color:#cfd8e8; font:14px sans-serif; background:rgba(255,255,255,.05); transition:.2s; }
+  .modecard.sel { border-color:#ffb04a; color:#ffb04a; background:rgba(255,176,74,.12); }
+
+  /* ===== 背包 / 仓库 ===== */
+  .panel { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(5,8,14,.82); z-index:30; }
+  .panel.on { display:flex; }
+  .panelbox { width:520px; max-width:92vw; max-height:82vh; overflow:auto; background:#141a26;
+    border:1px solid rgba(255,210,122,.35); border-radius:12px; padding:22px 26px; }
+  .panelbox h2 { color:#ffd27a; font:18px sans-serif; margin:0 0 4px; letter-spacing:3px; }
+  .panelbox .sub { color:#8fa2bd; font:12px sans-serif; margin-bottom:14px; }
+  .itemgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+  .itemcard { background:#1c2432; border:1px solid rgba(255,255,255,.12); border-radius:8px;
+    padding:10px 12px; color:#dfe6f0; font:13px sans-serif; }
+  .itemcard .ic { font-size:20px; }
+  .itemcard .nm { font-weight:bold; margin:4px 0 2px; }
+  .itemcard .ds { color:#8fa2bd; font-size:11px; min-height:15px; }
+  .itemcard .ct { color:#ffd27a; margin-top:2px; }
+  .itemcard button { margin-top:6px; margin-right:6px; padding:4px 10px; font-size:12px; cursor:pointer;
+    background:#2a3a52; color:#cfe0ff; border:1px solid rgba(255,255,255,.2); border-radius:5px; }
+  .itemcard button:hover { background:#3a4c6a; }
+  .panelclose { float:right; background:none; border:none; color:#8fa2bd; font-size:22px; cursor:pointer; }
+  .empty { color:#5a6a82; text-align:center; padding:30px 0; font:13px sans-serif; }
+  #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
+  .sbtn { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,210,122,.4); cursor:pointer;
+    color:#ffd27a; font:14px sans-serif; background:rgba(255,176,74,.08); }
+  .sbtn:hover { background:rgba(255,176,74,.2); }
+  #startgold { color:#ffd27a; font:bold 16px Consolas,monospace; }
+  #startstats { color:#8fa2bd; font:12px sans-serif; margin-top:8px; }
+  #endGold { color:#ffd27a; font:bold 15px sans-serif; margin-top:8px; }
+</style>
+<script src="https://www.kimi.com/sdk-seed.js" defer=""></script></head>
+<body>
+<div id="app"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <canvas id="minimap" width="168" height="168"></canvas>
+  <div id="topbar">
+    <canvas id="compass" width="460" height="26"></canvas>
+    <div id="scoreline">
+      <span class="blue" id="scoreB">0</span>
+      <span class="mid" id="timer">10:00</span>
+      <span class="red" id="scoreR">0</span>
+    </div>
+  </div>
+  <div id="killfeed"></div>
+  <div id="killtoast"><div class="big">ENEMY ELIMINATED</div><div class="pts">+100</div></div>
+  <div id="streak"><div class="big">DOUBLE KILL</div><div class="sub">双杀</div></div>
+  <div id="crosshair"><span class="t"></span><span class="b"></span><span class="l"></span><span class="r"></span></div>
+  <div id="reddot"></div>
+  <div id="scope"><div class="ring"></div><div class="ch-h"></div><div class="ch-v"></div><div class="zoomtag" id="scopezoom">4× · Z 变倍</div></div>
+  <div id="hitmark"><span class="a"></span><span class="b"></span><span class="c"></span><span class="d"></span></div>
+  <div id="hpbox">
+    <div id="hpnum"><small>HEALTH</small>100</div>
+    <div id="hpbar"><div id="hpfill"></div></div>
+    <div id="armorbar"><div id="armorfill"></div></div>
+  </div>
+  <div id="ammobox">
+    <div id="gears"><span><b>G</b> 手雷 ×<span id="nadenum">2</span></span><span id="wpnname">AK-47</span></div>
+    <div id="ammo">30<small>/ 210</small></div>
+  </div>
+  <div class="dmgdir" id="dmgdir0"></div>
+  <div class="dmgdir" id="dmgdir1"></div>
+  <div id="sysmsg"></div>
+  <div id="goldbox">💰 <span id="goldnum">0</span></div>
+  <div id="protect"></div>
+  <div id="bossbar"><div id="bossname">BOSS</div><div id="bosstrack"><div id="bossfill"></div></div></div>
+  <div id="objective"></div>
+  <div id="plantbar">安装炸弹中……<div id="planttrack"><div id="plantfill"></div></div></div>
+  <div id="interact"></div>
+</div>
+<div id="vignette"></div>
+<div id="dmgflash"></div>
+
+<!-- 触屏控件 -->
+<div id="touchui">
+  <div id="lookzone"></div>
+  <div id="joy"><div id="joyknob"></div></div>
+  <div class="tbtn" id="btnFire">开火</div>
+  <div class="tbtn" id="btnAds">开镜</div>
+  <div class="tbtn" id="btnJump">跳</div>
+  <div class="tbtn" id="btnReload">换弹</div>
+  <div class="tbtn" id="btnNade">手雷</div>
+  <div class="tbtn" id="btnSwap">换枪</div>
+  <div class="tbtn" id="btnAct">互动</div>
+  <div class="tbtn" id="btnPack2">背包</div>
+</div>
+
+<!-- 开始界面 -->
+<div class="screen" id="startScreen">
+  <div class="title">街区<em>突击</em></div>
+  <div class="subtitle">BLOCKADE STRIKE · 团队死斗</div>
+  <div class="keys">
+    <b>W A S D</b> 移动   <b>Shift</b> 疾跑   <b>空格</b> 跳跃   <b>G</b> 手雷   <b>Z</b> 狙击变倍   <b>B</b> 背包<br/>
+    <b>左键</b> 射击   <b>右键</b> 瞄准   <b>R</b> 换弹   <b>E / P</b> 安装炸弹 / 传送门   <b>1~0</b> 切换 10 种武器
+  </div>
+  <div id="mapselect">
+    <div class="mapcard sel" data-map="town"><div class="ico"></div>小镇街道</div>
+    <div class="mapcard" data-map="ruins"><div class="ico"></div>沙漠废墟</div>
+    <div class="mapcard" data-map="docks"><div class="ico"></div>货运码头</div>
+  </div>
+  <div id="modeselect">
+    <div class="modecard sel" data-mode="free">自由局 · 不限时</div>
+    <div class="modecard" data-mode="timed">限时局 · 3 分钟</div>
+  </div>
+  <button class="playbtn" id="playBtn">进入战斗</button>
+  <div id="startbar">
+    <button class="sbtn" id="btnPack">背包 [B]</button>
+    <button class="sbtn" id="btnWh">仓库</button>
+    <span id="startgold">💰 0</span>
+  </div>
+  <div id="startstats"></div>
+</div>
+
+<!-- 背包 -->
+<div class="panel" id="packPanel">
+  <div class="panelbox">
+    <button class="panelclose" data-close="packPanel">×</button>
+    <h2>背包</h2>
+    <div class="sub" id="packSub">存放拾取的装备道具 · 可在战斗中使用</div>
+    <div class="itemgrid" id="packGrid"></div>
+  </div>
+</div>
+
+<!-- 仓库 -->
+<div class="panel" id="whPanel">
+  <div class="panelbox">
+    <button class="panelclose" data-close="whPanel">×</button>
+    <h2>仓库</h2>
+    <div class="sub" id="whSub">长期存储 · 跨对局保留</div>
+    <div class="itemgrid" id="whGrid"></div>
+  </div>
+</div>
+
+<!-- 结算界面 -->
+<div class="screen hidden" id="endScreen">
+  <div id="endTitle">胜利</div>
+  <div id="endScore"><span class="b">0</span>  :  <span class="r">0</span></div>
+  <div id="endStats"></div>
+  <div id="endGold"></div>
+  <button class="playbtn" id="againBtn">再来一局</button>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="./js/main.js"></script>
+
+
+</body></html>
