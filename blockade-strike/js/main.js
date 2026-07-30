@@ -1316,6 +1316,24 @@ function loop() {
               if (killed) onKill(s, weapon.cfg.name, a.head);
             }
           }
+          // 黃金加農：命中點小範圍爆炸
+          if (G.cannon) {
+            const s0 = res.hits[0].soldier;
+            const bp = s0.pos.clone(); bp.y += 1.2;
+            if (G.coop && !net.isHost) {
+              explodeVisual(bp);
+              net.send({ t: 'boomfx', p: [bp.x, bp.y, bp.z] });   // 房主代播爆炸特效
+              for (const g of net.ghosts) {   // 爆炸波及附近敵人（直擊目標除外）
+                if (!g || g.hp <= 0 || agg.has(g)) continue;
+                const d = bp.distanceTo(g.pos.clone().setY(g.pos.y + 1));
+                if (d > 3.5) continue;
+                const ed = d < 1.5 ? 40 : 40 - (d - 1.5) / 2 * 32;
+                net.send({ t: 'hit', id: g.netId, dmg: ed, part: 'body', w: weapon.cfg.name });
+              }
+            } else {
+              explode(bp, weapon.cfg.name, 3.5, 40);
+            }
+          }
         }
       }
     }
