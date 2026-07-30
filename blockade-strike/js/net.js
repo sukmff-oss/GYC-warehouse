@@ -18,6 +18,7 @@ export class Net {
     this.connected = false;
     this.code = '';
     this.mapId = 'town';
+    this.env = 'night';
     this.conns = new Map();     // id -> {conn, name, state, avatar, stub}（房主用）
     this.remote = new Map();    // id -> {state, avatar, stub}（加入者看其他玩家，含房主）
     this.myId = 0; this.myName = 'P1';
@@ -85,7 +86,7 @@ export class Net {
       const name = 'P' + id;
       const rec = { conn, name, state: null, avatar: null, stub: null };
       this.conns.set(id, rec);
-      conn.send({ t: 'welcome', id, name, mapId: this.mapId });
+      conn.send({ t: 'welcome', id, name, mapId: this.mapId, env: this.env });
       this.onEvent('status', `${name} 加入（${this.conns.size + 1}/5）`);
       this.onEvent('roster', this.conns.size + 1);
       this._broadcastRoster();
@@ -158,7 +159,7 @@ export class Net {
         break;
       case 'full': this.onEvent('status', '房間已滿（5 人）'); break;
       case 'roster': this.onEvent('rosterInfo', d.players); break;
-      case 'map': this.mapId = d.mapId; this.onEvent('map', d.mapId); break;
+      case 'map': this.mapId = d.mapId; this.env = d.env || this.env; this.onEvent('map', d); break;
       case 'start': this.onEvent('start'); break;
       case 'snap': this._applySnap(d); break;
       case 'kill': this.onEvent('kill', d); break;

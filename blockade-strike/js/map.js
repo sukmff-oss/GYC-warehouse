@@ -17,7 +17,23 @@ export const patrolPoints = [];
 
 let scene, group;
 const rand = (a, b) => a + Math.random() * (b - a);
-let NIGHT = false;   // 夜晚模式（小鎮街道）：暖窗燈光、暗色天空
+let NIGHT = false;   // 夜晚模式：星空月亮、暖窗燈光
+let SUNSET = false;  // 夕陽模式：低空暖陽、橙紅天色
+
+// 依目前時段（夜晚 / 夕陽 / 白天）套用天空與霧色
+function applySkyEnv({ night, sunset, day, dayEl = 38, haze = 1 }) {
+  const hex = c => '#' + c.toString(16).padStart(6, '0');
+  if (NIGHT) {
+    scene.fog = new THREE.Fog(night, 55, 215);
+    buildSky(hex(night), 12, 0.5);
+  } else if (SUNSET) {
+    scene.fog = new THREE.Fog(sunset, 45, 200);
+    buildSky(hex(sunset), 5, 2.4);       // 太陽貼近地平線 + 重霾 → 橙紅夕照
+  } else {
+    scene.fog = new THREE.Fog(day, 60, 230);
+    buildSky(hex(day), dayEl, haze);
+  }
+}
 
 // ---------- 基础盒子（加入当前地图组）----------
 function box(w, h, d, color, x, y, z, opts = {}) {
@@ -260,9 +276,9 @@ function building(x, z, w, d, floors, face, fixedH) {
       const wz = z - d / 2 + (i + 0.5) * (d / nWin);
       // 窗套：边框 + 玻璃 + 窗台板 + 窗眉
       box(0.1, 1.55, 1.45, 0x8a7a5c, fx + face * 0.05, wy, wz, { solid: false, cast: false });
-      if (NIGHT && Math.random() < 0.55)
-        // 夜晚亮灯暖窗
-        box(0.12, 1.4, 1.3, 0xffd9a0, fx + face * 0.09, wy, wz, { solid: false, cast: false, emis: 0xffb05a, emisI: 1.15 });
+      if ((NIGHT || SUNSET) && Math.random() < (NIGHT ? 0.55 : 0.35))
+        // 夜晚 / 傍晚亮燈暖窗
+        box(0.12, 1.4, 1.3, 0xffd9a0, fx + face * 0.09, wy, wz, { solid: false, cast: false, emis: 0xffb05a, emisI: NIGHT ? 1.15 : 0.8 });
       else
         box(0.12, 1.4, 1.3, 0x2a3038, fx + face * 0.09, wy, wz, { solid: false, cast: false });
       box(0.26, 0.1, 1.7, 0xd0c6b0, fx + face * 0.1, wy - 0.82, wz, { solid: false, cast: false });
@@ -537,7 +553,7 @@ function streetlight(x, z, ry = 0) {
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.28), metal);
   head.position.set(1.75, 6.0, 0); head.castShadow = true; g.add(head);
   const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0xf8f2dc, emissive: 0xfff2c0, emissiveIntensity: NIGHT ? 2.2 : 0.6 }));
+    new THREE.MeshStandardMaterial({ color: 0xf8f2dc, emissive: 0xfff2c0, emissiveIntensity: NIGHT ? 2.2 : SUNSET ? 1.3 : 0.6 }));
   lamp.position.set(1.75, 5.92, 0); g.add(lamp);
   group.add(g);
   colliders.push({ min: new THREE.Vector3(x - 0.2, 0, z - 0.2), max: new THREE.Vector3(x + 0.2, 6, z + 0.2) });
@@ -549,11 +565,9 @@ function rubble(x, z, n = 5) {
       x + rand(-1.5, 1.5), 0.1, z + rand(-1.5, 1.5), { solid: false, cast: false });
 }
 
-// ================= 地图一：小镇街道（夜晚模式）=================
+// ================= 地图一：小镇街道 =================
 function buildTown() {
-  NIGHT = true;
-  scene.fog = new THREE.Fog(0x0d1420, 55, 215);
-  buildSky('#0d1420', 12, 0.5);
+  applySkyEnv({ night: 0x0d1420, sunset: 0x4a2a33, day: 0xbccfda });
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0xc9b894, (() => { const t = sandTex().clone(); t.needsUpdate = true; t.repeat.set(70, 70); return t; })(), { rough: 0.98 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
@@ -655,11 +669,9 @@ function buildTown() {
   };
 }
 
-// ================= 地图二：沙漠废墟（夜晚模式）=================
+// ================= 地图二：沙漠废墟 =================
 function buildRuins() {
-  NIGHT = true;
-  scene.fog = new THREE.Fog(0x0e141f, 50, 210);
-  buildSky('#0e141f', 12, 0.5);
+  applySkyEnv({ night: 0x0e141f, sunset: 0x5c3527, day: 0xe2d2ac, dayEl: 42 });
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0xd6c098, (() => { const t = sandTex().clone(); t.needsUpdate = true; t.repeat.set(70, 70); return t; })(), { rough: 0.98 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
@@ -754,11 +766,9 @@ function buildRuins() {
   };
 }
 
-// ================= 地图三：货运码头（夜晚模式）=================
+// ================= 地图三：货运码头 =================
 function buildDocks() {
-  NIGHT = true;
-  scene.fog = new THREE.Fog(0x0c1219, 55, 215);
-  buildSky('#0c1219', 12, 0.5);
+  applySkyEnv({ night: 0x0c1219, sunset: 0x472e35, day: 0xc4d2da });
 
   // 地面混凝土
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0x9aa0a2, (() => { const t = concreteTex().clone(); t.needsUpdate = true; t.repeat.set(55, 55); return t; })(), { rough: 0.95 }));
@@ -941,7 +951,7 @@ function buildAdventure() {
 // ---------- 入口 ----------
 const BUILDERS = { town: buildTown, ruins: buildRuins, docks: buildDocks, adventure: buildAdventure };
 
-export function buildMap(sc, mapId = 'town') {
+export function buildMap(sc, mapId = 'town', env = 'night') {
   scene = sc;
   // 清理旧地图
   if (group) {
@@ -953,10 +963,12 @@ export function buildMap(sc, mapId = 'town') {
 
   group = new THREE.Group();
   scene.add(group);
-  NIGHT = false;                  // 各地圖建造器自行決定是否夜晚（小鎮街道 = 夜晚）
+  NIGHT = (env === 'night');      // 時段：day 白天 | sunset 夕陽 | night 夜晚
+  SUNSET = (env === 'sunset');
   batchBegin(group);            // 开始收集同材质盒子（否则建筑墙体不会渲染 → 墙壁"透明"）
   const builder = BUILDERS[mapId] || buildTown;
   const info = builder();
   batchEnd();                   // 合并并真正加入场景
+  info.env = env;               // main.js 依此套用光照
   return info;
 }

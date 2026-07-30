@@ -44,20 +44,42 @@ scene.add(sun);
 const hemi = new THREE.HemisphereLight(0xbdd8f0, 0x8a7a5c, 0.62);
 scene.add(hemi);
 
-// 依地圖套用晝夜光照（小鎮街道 = 夜晚月光）
+// 依地圖時段套用光照（白天 / 夕陽 / 夜晚）
 function applyMapEnv(info) {
-  const night = !!info.night;
-  sun.intensity = night ? 0.55 : 2.9;
-  sun.color.set(night ? 0x9ab8e8 : 0xfff2dc);           // 冷色月光
-  sun.position.set(night ? -40 : 60, night ? 70 : 90, night ? -50 : 30);
-  hemi.intensity = night ? 0.26 : 0.62;
-  hemi.color.set(night ? 0x7a94c8 : 0xbdd8f0);
-  hemi.groundColor.set(night ? 0x141a26 : 0x8a7a5c);
-  renderer.toneMappingExposure = night ? 0.92 : 0.98;
-  // IBL 環境反射強度（夜晚壓暗，避免畫面灰亮）
+  const env = info.env || (info.night ? 'night' : 'day');
+  let envI;
+  if (env === 'night') {
+    sun.intensity = 0.55;
+    sun.color.set(0x9ab8e8);                    // 冷色月光
+    sun.position.set(-40, 70, -50);
+    hemi.intensity = 0.26;
+    hemi.color.set(0x7a94c8);
+    hemi.groundColor.set(0x141a26);
+    renderer.toneMappingExposure = 0.92;
+    envI = 0.12;
+  } else if (env === 'sunset') {
+    sun.intensity = 1.7;
+    sun.color.set(0xff9a50);                    // 低角度暖橙夕陽
+    sun.position.set(-85, 20, -55);
+    hemi.intensity = 0.42;
+    hemi.color.set(0xe09a62);
+    hemi.groundColor.set(0x38221c);
+    renderer.toneMappingExposure = 0.95;
+    envI = 0.3;
+  } else {
+    sun.intensity = 2.9;
+    sun.color.set(0xfff2dc);
+    sun.position.set(60, 90, 30);
+    hemi.intensity = 0.62;
+    hemi.color.set(0xbdd8f0);
+    hemi.groundColor.set(0x8a7a5c);
+    renderer.toneMappingExposure = 0.98;
+    envI = 1;
+  }
+  // IBL 環境反射強度（夜晚/夕陽壓暗，避免畫面灰亮）
   scene.traverse(o => {
     if (o.isMesh && o.material && 'envMapIntensity' in o.material)
-      o.material.envMapIntensity = night ? 0.12 : 1;
+      o.material.envMapIntensity = envI;
   });
 }
 
@@ -69,7 +91,7 @@ function applyMapEnv(info) {
 }
 
 // ---------- 游戏对象 ----------
-let mapInfo = buildMap(scene, 'town');
+let mapInfo = buildMap(scene, 'town', 'night');
 const player = new Player(camera, renderer.domElement);
 player.setBounds(mapInfo.bounds);
 const weapon = new Weapon(camera, scene);
@@ -84,6 +106,7 @@ const net = new Net(scene);   // P2P 連線（預設單機，不連線）
 const G = {
   state: 'menu',
   mapId: 'town',
+  env: 'night',            // day 白天 | sunset 夕陽 | night 夜晚
   mode: 'free',            // free 自由局 | timed 限时局（3 分钟）
   scoreB: 0, scoreR: 0,
   kills: 0, deaths: 0, shots: 0, hits: 0,
@@ -584,7 +607,7 @@ function enterAdventure() {
   G.adventureT = 120;
   G.advGold = 0; G.advItems = 0;
   G.bomb.state = 'carry'; bombG.visible = false; c4Mesh.visible = false;
-  mapInfo = buildMap(scene, 'adventure');
+  mapInfo = buildMap(scene, 'adventure', 'day');   // 黃金遺跡固定白天
   player.setBounds(mapInfo.bounds);
   player.spawn(mapInfo.playerSpawn);
   enemies.reset(6, mapInfo.bounds, mapInfo.playerSpawn);
@@ -794,7 +817,19 @@ document.querySelectorAll('.mapcard').forEach(card => {
     G.mapId = card.dataset.map;
     if (G.coop && net.isHost && net.connected) {   // 房主換圖同步給加入者
       net.mapId = G.mapId;
-      net._broadcast({ t: 'map', mapId: G.mapId });
+      net._broadcast({ t: 'map', mapId: G.mapId, env: G.env });
+    }
+  });
+});
+// 時段選擇（白天 / 夕陽 / 夜晚）
+document.querySelectorAll('.envcard').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.envcard').forEach(c => c.classList.remove('sel'));
+    card.classList.add('sel');
+    G.env = card.dataset.env;
+    if (G.coop && net.isHost && net.connected) {   // 房主換時段同步給加入者
+      net.env = G.env;
+      net._broadcast({ t: 'map', mapId: G.mapId, env: G.env });
     }
   });
 });
@@ -919,11 +954,15 @@ net.onEvent = (type, data) => {
     case 'welcome':
       net.rosterCount = 2;
       G.mapId = data.mapId;
+      if (data.env) G.env = data.env;
       document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data.mapId));
+      document.querySelectorAll('.envcard').forEach(c => c.classList.toggle('sel', c.dataset.env === G.env));
       break;
     case 'map':
-      G.mapId = data;
-      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data));
+      G.mapId = data.mapId;
+      if (data.env) G.env = data.env;
+      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === G.mapId));
+      document.querySelectorAll('.envcard').forEach(c => c.classList.toggle('sel', c.dataset.env === G.env));
       break;
     case 'start':
       if (G.state === 'menu' || G.state === 'end') startGame();
@@ -973,6 +1012,8 @@ net.onEvent = (type, data) => {
 $('btnHostCoop').addEventListener('click', () => {
   G.coop = true;
   net.host();
+  net.mapId = G.mapId;
+  net.env = G.env;
   $('btnLeaveCoop').style.display = '';
 });
 $('btnJoinCoop').addEventListener('click', () => {
@@ -997,7 +1038,7 @@ $('btnLeaveCoop').addEventListener('click', () => {
 // ---------- 开始 / 重开 ----------
 function startGame() {
   audio.init(); audio.resume();
-  mapInfo = buildMap(scene, G.mapId);
+  mapInfo = buildMap(scene, G.mapId, G.env);
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
   hud.setMap(mapInfo);

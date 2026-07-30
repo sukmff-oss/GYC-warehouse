@@ -1,6 +1,6 @@
 // =============================================================
 // lod-mesh.js — LOD 系統與 Mesh 合併優化
-// for 街區突擊 / BLOCKADE STRIKE
+// for 連線突擊 / BLOCKADE STRIKE
 // =============================================================
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';

@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-TW"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>街區突擊 · BLOCKADE STRIKE</title>
+<title>連線突擊 · BLOCKADE STRIKE</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden; background:#0a0c10;
@@ -291,6 +291,7 @@
 
   /* ===== 模式选择 ===== */
   #modeselect { display:flex; gap:12px; margin-top:16px; }
+  #envselect { display:flex; gap:12px; margin-top:12px; }
   .modecard { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.25); cursor:pointer;
     color:#cfd8e8; font:14px sans-serif; background:rgba(255,255,255,.05); transition:.2s; }
   .modecard.sel { border-color:#ffb04a; color:#ffb04a; background:rgba(255,176,74,.12); }
@@ -398,8 +399,8 @@
 
 <!-- 开始界面 -->
 <div class="screen" id="startScreen">
-  <div class="title">街區<em>突擊</em></div>
-  <div class="subtitle">BLOCKADE STRIKE · 團隊死鬥</div>
+  <div class="title">連線<em>突擊</em></div>
+  <div class="subtitle">BLOCKADE STRIKE · 連線合作</div>
   <div class="keys deskkeys">
     <b>W A S D</b> 移動   <b>Shift</b> 疾跑   <b>空格</b> 跳躍   <b>G</b> 手雷   <b>Z</b> 狙擊變倍   <b>B</b> 背包<br/>
     <b>左键</b> 射擊   <b>右键</b> 瞄準   <b>R</b> 換彈   <b>E / P</b> 安裝炸彈 / 傳送門   <b>1~0</b> 切換 10 種武器
@@ -412,6 +413,11 @@
     <div class="mapcard sel" data-map="town"><div class="ico"></div>小鎮街道</div>
     <div class="mapcard" data-map="ruins"><div class="ico"></div>沙漠廢墟</div>
     <div class="mapcard" data-map="docks"><div class="ico"></div>貨運碼頭</div>
+  </div>
+  <div id="envselect">
+    <div class="modecard envcard" data-env="day">☀️ 白天</div>
+    <div class="modecard envcard" data-env="sunset">🌇 夕陽</div>
+    <div class="modecard envcard sel" data-env="night">🌙 夜晚</div>
   </div>
   <div id="modeselect">
     <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
