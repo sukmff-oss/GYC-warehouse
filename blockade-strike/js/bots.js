@@ -186,6 +186,15 @@ export class BotManager {
     }
   }
 
+  // 房主建房 / 調整：BOT 隊友數量設為 n
+  setCount(n, playerPos) {
+    while (this.bots.length > n) {
+      const b = this.bots.pop();
+      this.scene.remove(b.group); this.scene.remove(b._lodMesh);
+    }
+    this.ensure(n, playerPos);
+  }
+
   setBounds(bounds) { for (const b of this.bots) b.bounds = bounds; }
 
   reset(playerPos) {

@@ -1021,8 +1021,16 @@ $('btnHostCoop').addEventListener('click', () => {
   net.host();
   net.mapId = G.mapId;
   net.env = G.env;
-  bots.ensure(2, player.pos);   // BOT 隊友自動加入房間（無需房號）
+  bots.ensure(+$('botCount').value, player.pos);   // BOT 隊友自動加入房間（無需房號）
   $('btnLeaveCoop').style.display = '';
+});
+// BOT 數量即時調整（房主開房中也可改）
+$('botCount').addEventListener('change', () => {
+  if (G.coop && net.isHost && net.connected) {
+    bots.setCount(+$('botCount').value, player.pos);
+    updateRoster();
+    $('coopStatus').textContent = `🤖 BOT 隊友已調整為 ${$('botCount').value} 位`;
+  }
 });
 $('btnJoinCoop').addEventListener('click', () => {
   const c = $('coopCodeInput').value.trim();
