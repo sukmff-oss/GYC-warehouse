@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { colliders, enemySpawns, patrolPoints } from './map.js';
+import { colliders, enemySpawns, patrolPoints, isNight } from './map.js';
 import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
@@ -44,14 +44,16 @@ export class Soldier {
 
   _build() {
     const g = new THREE.Group();
-    // 外观随机：军服 / 防弹衣配色
+    // 外观随机：军服 / 防弹衣配色（夜晚自動提亮，敵人在暗夜中更突出）
+    const nb = isNight() ? 1.55 : 1;
     const uniCol = UNIFORMS[(Math.random() * UNIFORMS.length) | 0];
     const vestCol = VESTS[(Math.random() * VESTS.length) | 0];
-    const uni = new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.92 });
-    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75), roughness: 0.95 });
+    const uni = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.92 });
+    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75 * nb), roughness: 0.95 });
     const skin = new THREE.MeshStandardMaterial({ color: [0xc9a184, 0xa87f62, 0x8a6a50][(Math.random() * 3) | 0], roughness: 0.85 });
+    if (isNight()) skin.color.multiplyScalar(1.2);
     const dark = new THREE.MeshStandardMaterial({ color: 0x2e2f33, roughness: 0.55, metalness: 0.5 });
-    const vest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.95 });
+    const vest = new THREE.MeshStandardMaterial({ color: new THREE.Color(vestCol).multiplyScalar(nb), roughness: 0.95 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x2a241c, roughness: 0.8 });
     const goggleMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.4 });
 
@@ -142,7 +144,7 @@ export class Soldier {
     // === LOD 簡化模型 ===
     this._lodMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 1.7, 0.35),
-      new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.95 })
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.95 })
     );
     this._lodMesh.position.copy(g.position);
     this._lodMesh.visible = false;

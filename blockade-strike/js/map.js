@@ -19,6 +19,7 @@ let scene, group;
 const rand = (a, b) => a + Math.random() * (b - a);
 let NIGHT = false;   // 夜晚模式：星空月亮、暖窗燈光
 let SUNSET = false;  // 夕陽模式：低空暖陽、橙紅天色
+export function isNight() { return NIGHT; }
 
 // 依目前時段（夜晚 / 夕陽 / 白天）套用天空與霧色
 function applySkyEnv({ night, sunset, day, dayEl = 38, haze = 1 }) {

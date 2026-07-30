@@ -50,14 +50,14 @@ function applyMapEnv(info) {
   const env = info.env || (info.night ? 'night' : 'day');
   let envI;
   if (env === 'night') {
-    sun.intensity = 0.55;
+    sun.intensity = 0.65;
     sun.color.set(0x9ab8e8);                    // 冷色月光
     sun.position.set(-40, 70, -50);
-    hemi.intensity = 0.26;
+    hemi.intensity = 0.33;
     hemi.color.set(0x7a94c8);
-    hemi.groundColor.set(0x141a26);
-    renderer.toneMappingExposure = 0.92;
-    envI = 0.12;
+    hemi.groundColor.set(0x1a2232);
+    renderer.toneMappingExposure = 0.94;
+    envI = 0.16;
   } else if (env === 'sunset') {
     sun.intensity = 1.7;
     sun.color.set(0xff9a50);                    // 低角度暖橙夕陽
