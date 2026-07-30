@@ -53,6 +53,7 @@ export class Soldier {
     const dark = new THREE.MeshStandardMaterial({ color: 0x2e2f33, roughness: 0.55, metalness: 0.5 });
     const vest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.95 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x2a241c, roughness: 0.8 });
+    const goggleMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.4, emissive: 0xff2222, emissiveIntensity: 0.6 });
 
     const M = (geo, mt, x, y, z, parent = g) => {
       const m = new THREE.Mesh(geo, mt);
@@ -100,7 +101,7 @@ export class Soldier {
     } else {
       M(new THREE.BoxGeometry(0.26, 0.08, 0.26), vest, 0, 1.86, 0);              // 便帽
     }
-    M(new THREE.BoxGeometry(0.2, 0.055, 0.03), dark, 0, 1.75, 0.135);            // 护目镜
+    M(new THREE.BoxGeometry(0.2, 0.055, 0.03), goggleMat, 0, 1.75, 0.135);            // 护目镜（微紅光，夜晚可辨）
     M(new THREE.BoxGeometry(0.1, 0.08, 0.1), skin, 0, 1.6, 0.06);                // 颈部/下颌
 
     // ===== 步枪（机匣/枪管/弹匣/枪托/瞄具）=====
@@ -119,6 +120,20 @@ export class Soldier {
     this.walkPh = Math.random() * 7;
     this.flinchT = 0;
     this.moving = false;
+    // 敵人頭頂標記：紅色倒三角，遠距離 / 夜晚清楚可辨
+    {
+      const mkc = document.createElement('canvas'); mkc.width = mkc.height = 64;
+      const mkx = mkc.getContext('2d');
+      mkx.shadowColor = 'rgba(255,40,40,.95)'; mkx.shadowBlur = 12;
+      mkx.fillStyle = '#ff3838';
+      mkx.beginPath(); mkx.moveTo(14, 16); mkx.lineTo(50, 16); mkx.lineTo(32, 46); mkx.closePath(); mkx.fill();
+      this._marker = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(mkc), transparent: true, depthWrite: false, fog: false, opacity: 0.92
+      }));
+      this._marker.scale.set(0.6, 0.6, 1);
+      this._marker.position.y = 2.35;
+      g.add(this._marker);
+    }
     this.headM.userData = { soldier: this, part: 'head' };
     this.torsoM.userData = { soldier: this, part: 'body' };
     this.legsM.userData = { soldier: this, part: 'body' };
@@ -355,7 +370,7 @@ export class Soldier {
       const cam = window.__game?.player?.pos;
       if (cam) {
         const dist = this.pos.distanceTo(cam);
-        const useLOD = dist > 30;
+        const useLOD = dist > 100;   // 100m 內保持完整模型，遠方敵人清楚可見
         if (this.group.visible !== !useLOD || this._lodMesh.visible !== useLOD) {
           this.group.visible = !useLOD;
           this._lodMesh.visible = useLOD;

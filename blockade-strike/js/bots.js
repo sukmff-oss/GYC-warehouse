@@ -34,6 +34,7 @@ class BotMate extends Soldier {
       new THREE.MeshStandardMaterial({ color: role.band, roughness: 0.7, emissive: role.bandEm, emissiveIntensity: 0.5 }));
     band.position.set(-0.33, 1.5, 0);
     this.group.add(band);
+    if (this._marker) this._marker.visible = false;   // BOT 隊友不顯示敵人標記
     this.deadT = 0;
     this.healT = 1.5;
   }

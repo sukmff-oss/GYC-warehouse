@@ -239,6 +239,7 @@ export class Net {
     const s = new Soldier(this.scene, name);
     s.noRespawn = true;
     s.state = 'remote';
+    if (s._marker) s._marker.visible = false;   // 隊友不顯示敵人標記
     // 藍色臂章區分敵我
     const band = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.1, 0.36),
       new THREE.MeshStandardMaterial({ color: 0x2a6ad8, roughness: 0.7, emissive: 0x1a3a78, emissiveIntensity: 0.5 }));
