@@ -1231,10 +1231,16 @@ function loop() {
     } else {
       const targets = (G.coop || bots.count) ? [player, ...net.targetStubs(), ...bots.targetStubs()] : player;
       enemies.update(dt, targets, now, fx);
-      if (bots.count) bots.update(dt, {   // BOT 隊友 AI（跟隨 / 索敵 / 開火）
+      if (bots.count) bots.update(dt, {   // BOT 隊友 AI（職業分化：狙擊/醫療/衝鋒）
         player, enemies, now,
-        onKill: (e, b) => onKill(e, '步槍', false, b.name),
-        tracer: (from, to) => bots.tracer(from, to)
+        onKill: (e, b) => onKill(e, b.role.weapon, false, b.name),
+        tracer: (from, to, hit, color) => bots.tracer(from, to, hit, color),
+        heal: (tgt, amt, medicName) => {
+          if (tgt === 'player') {
+            player.hp = Math.min(100, player.hp + amt);
+            hud.sysmsg(`💚 ${medicName} 為你治療 +${amt}`, 1200);
+          } else tgt.hp = Math.min(100, tgt.hp + amt);
+        }
       });
     }
     if (G.coop) {

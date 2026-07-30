@@ -1,26 +1,41 @@
 // =============================================================
 // bots.js — BOT 隊友（房主本地 AI，自動加入連線房，無需房號）
-// 跟隨玩家、主動索敵開火；透過快照同步給加入者（id 90+）
+// 職業分化：
+//   🎯 阿凱 狙擊手 —— 遠距離高傷，保持 20~50m，單發重擊
+//   💚 小琳 醫療兵 —— 靠近隊友脈衝回血，武器較弱
+//   ⚡ 阿志/阿豪 衝鋒手 —— 貼臉猛攻，高速突進連射
+// 透過快照同步給加入者（id 90+）
 // =============================================================
 import * as THREE from 'three';
 import { Soldier, losClear } from './enemies.js';
 
-const BOT_NAMES = ['BOT-阿凱', 'BOT-小琳', 'BOT-阿志'];
+const ROLES = [
+  { key: 'sniper', name: 'BOT-阿凱', weapon: '狙擊槍', band: 0x8a4ad8, bandEm: 0x4a1a88, tracer: 0xc09aff,
+    minD: 20, maxD: 50, sight: 65, burst: 1, pause: [1.9, 2.6], dmg: [42, 58], acc: 0.92, accDrop: 0.004, speed: 2.7 },
+  { key: 'medic', name: 'BOT-小琳', weapon: '衝鋒槍', band: 0x2ad86a, bandEm: 0x1a7a3a, tracer: 0x8affb0,
+    minD: 6, maxD: 18, sight: 35, burst: 2, pause: [1.2, 1.8], dmg: [6, 10], acc: 0.62, accDrop: 0.010, speed: 3.3, medic: true },
+  { key: 'rusher', name: 'BOT-阿志', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
+    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
+  { key: 'rusher', name: 'BOT-阿豪', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
+    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
+];
 
 class BotMate extends Soldier {
-  constructor(scene, name, id) {
-    super(scene, name);
+  constructor(scene, role, id) {
+    super(scene, role.name);
+    this.role = role;
     this.id = id;              // 快照玩家 id（90+）
     this.alive = true;
     this.isBot = true;
     this.vel = new THREE.Vector3();   // 敵人 AI 預判走位用
     this.noRespawn = true;     // 重生由 BotManager 控制
-    // 藍色臂章：隊友識別
+    // 職業色臂章：隊友識別
     const band = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 0.15),
-      new THREE.MeshStandardMaterial({ color: 0x2a6ad8, roughness: 0.7, emissive: 0x1a3a78, emissiveIntensity: 0.5 }));
+      new THREE.MeshStandardMaterial({ color: role.band, roughness: 0.7, emissive: role.bandEm, emissiveIntensity: 0.5 }));
     band.position.set(-0.33, 1.5, 0);
     this.group.add(band);
     this.deadT = 0;
+    this.healT = 1.5;
   }
 
   placeNear(p) {
@@ -46,7 +61,7 @@ class BotMate extends Soldier {
     return false;
   }
 
-  // ctx: { player, enemies, now, onKill(e, bot), tracer(from, to, hit) }
+  // ctx: { player, bots, enemies, now, onKill(e, bot), tracer(from, to, hit, color), heal(target, amt, medicName) }
   update(dt, ctx) {
     if (this.state === 'dead') {
       this.deadT += dt;
@@ -56,13 +71,32 @@ class BotMate extends Soldier {
       if (this.deadT > 1.2) this.group.visible = false;
       return;
     }
+    const R = this.role;
     const { player, enemies, now } = ctx;
-    const spd = 3.1;
+    const spd = R.speed;
     this.moving = false;
 
-    // 找最近可視敵人
+    // 💚 醫療兵：治療脈衝（優先最缺血隊友，含玩家）
+    if (R.medic) {
+      this.healT -= dt;
+      if (this.healT <= 0) {
+        this.healT = 2.5;
+        let ally = null, need = 0;
+        if (player.alive && player.hp < 100 && this.pos.distanceTo(player.pos) < 8) { ally = 'player'; need = 100 - player.hp; }
+        for (const b of ctx.bots) {
+          if (b !== this && b.alive && b.hp < 100 && this.pos.distanceTo(b.pos) < 8 && (100 - b.hp) > need) { ally = b; need = 100 - b.hp; }
+        }
+        if (ally) {
+          const tp = (ally === 'player' ? ctx.player.pos : ally.pos).clone(); tp.y += 1.3;
+          ctx.tracer(this.muzzleWorld(), tp, true, 0x5aff8a);
+          ctx.heal(ally, 16, this.name);
+        }
+      }
+    }
+
+    // 找最近可視敵人（視野依職業）
     const eye = this.pos.clone(); eye.y += 1.6;
-    let tgt = null, best = 55;
+    let tgt = null, best = R.sight;
     for (const e of enemies.soldiers) {
       if (e.state === 'dead') continue;
       const d = this.pos.distanceTo(e.pos);
@@ -76,7 +110,7 @@ class BotMate extends Soldier {
       const dx = tgt.pos.x - this.pos.x, dz = tgt.pos.z - this.pos.z;
       const dist = Math.hypot(dx, dz) || 1;
       this.yaw = Math.atan2(dx, dz);
-      // 走位：保持 8~26m，偶爾橫移；卡住則繞行
+      // 走位：保持職業交戰距離，偶爾橫移；卡住則繞行
       this.strafeT -= dt;
       if (this.strafeT <= 0) { this.strafeT = 0.8 + Math.random() * 1.2; this.strafeDir = Math.random() < .5 ? -1 : 1; }
       if (this._detourT > 0) {
@@ -85,15 +119,13 @@ class BotMate extends Soldier {
         this.moving = true;
       } else {
         let mx = -dz / dist * this.strafeDir, mz = dx / dist * this.strafeDir;
-        if (dist > 26) { mx += dx / dist; mz += dz / dist; }
-        else if (dist < 8) { mx -= dx / dist; mz -= dz / dist; }
+        if (dist > R.maxD) { mx += dx / dist * 1.4; mz += dz / dist * 1.4; }        // 太遠 → 壓上
+        else if (dist < R.minD) { mx -= dx / dist * 1.4; mz -= dz / dist * 1.4; }   // 太近 → 拉開
         const ml = Math.hypot(mx, mz) || 1;
-        if (dist > 26 || dist < 8 || Math.random() < 0.7) {
-          this._move(dt, mx / ml, mz / ml, spd);
-          this.moving = true;
-        }
+        this._move(dt, mx / ml, mz / ml, spd);
+        this.moving = true;
       }
-      // 開火（命中掃描，3 發點放）
+      // 開火（命中掃描，依職業點放數 / 間隔 / 傷害 / 命中率）
       if (this.burstLeft > 0) {
         this.fireT -= dt;
         if (this.fireT <= 0) {
@@ -102,10 +134,11 @@ class BotMate extends Soldier {
         }
       } else {
         this.pauseT -= dt;
-        if (this.pauseT <= 0) { this.burstLeft = 3; this.pauseT = 0.9 + Math.random() * 1.2; }
+        if (this.pauseT <= 0) { this.burstLeft = R.burst; this.pauseT = R.pause[0] + Math.random() * (R.pause[1] - R.pause[0]); }
       }
     } else {
-      // 無敵人：跟隨玩家（保持 3~6m）
+      // 無敵人：跟隨玩家（醫療兵貼更近）
+      const followD = R.medic ? 3 : 5;
       const p = player.pos;
       const dx = p.x - this.pos.x, dz = p.z - this.pos.z;
       const dist = Math.hypot(dx, dz) || 1;
@@ -113,7 +146,7 @@ class BotMate extends Soldier {
         this._detourT -= dt;
         this._move(dt, -dz / dist * this._detourDir, dx / dist * this._detourDir, spd);
         this.moving = true;
-      } else if (dist > 5) {
+      } else if (dist > followD) {
         this.yaw = Math.atan2(dx, dz);
         this._move(dt, dx / dist, dz / dist, dist > 14 ? spd * 1.35 : spd);
         this.moving = true;
@@ -149,16 +182,17 @@ class BotMate extends Soldier {
   }
 
   _shootAt(tgt, ctx) {
+    const R = this.role;
     const from = this.muzzleWorld();
     const aim = tgt.pos.clone(); aim.y += 1.25;
     const dist = from.distanceTo(aim);
-    const hit = Math.random() < Math.max(0.35, 0.8 - dist * 0.008);   // 越近越準
+    const hit = Math.random() < Math.max(0.3, R.acc - dist * R.accDrop);
     // 曳光：命中打到敵人胸口，未命中飛過頭
     const to = aim.clone();
     if (!hit) { to.x += (Math.random() - .5) * 1.6; to.y += 0.3 + Math.random() * 0.7; to.z += (Math.random() - .5) * 1.6; }
-    ctx.tracer(from, to, hit);
+    ctx.tracer(from, to, hit, R.tracer);
     if (hit && tgt.state !== 'dead') {
-      const dmg = 12 + Math.random() * 8;
+      const dmg = R.dmg[0] + Math.random() * (R.dmg[1] - R.dmg[0]);
       const killed = tgt.damage(dmg, 'body', ctx.now);
       if (killed) ctx.onKill(tgt, this);
     }
@@ -175,11 +209,11 @@ export class BotManager {
 
   get count() { return this.bots.length; }
 
-  // 房主建房：自動補滿 n 個 BOT 隊友
+  // 房主建房：自動補滿 n 個 BOT 隊友（依序指派職業）
   ensure(n, playerPos) {
     while (this.bots.length < n) {
       const i = this.bots.length;
-      const b = new BotMate(this.scene, BOT_NAMES[i] || 'BOT-' + (i + 1), 90 + i);
+      const b = new BotMate(this.scene, ROLES[i % ROLES.length], 90 + i);
       b.bounds = { minX: -90, maxX: 90, minZ: -95, maxZ: 95 };
       b.placeNear(playerPos);
       this.bots.push(b);
@@ -219,10 +253,12 @@ export class BotManager {
       +b.yaw.toFixed(2), 0, b.hp, b.moving ? 1 : 0]);
   }
 
-  // 曳光彈視覺
-  tracer(from, to) {
+  // 曳光彈視覺（職業色 / 治療綠光）
+  tracer(from, to, hit, color = 0xffe0a0) {
+    const mat = this._tracerMat.clone();
+    mat.color.set(color);
     const geo = new THREE.BufferGeometry().setFromPoints([from, to]);
-    const line = new THREE.Line(geo, this._tracerMat.clone());
+    const line = new THREE.Line(geo, mat);
     this.scene.add(line);
     this._tracers.push({ line, t: 0.07 });
   }
@@ -230,6 +266,7 @@ export class BotManager {
   damage(bot, dmg) { return bot.takeDamage(dmg); }
 
   update(dt, ctx) {
+    ctx.bots = this.bots;
     for (const b of this.bots) {
       b.update(dt, ctx);
       if (!b.alive && b.deadT > 6) { b._fallDir = 0; b.placeNear(ctx.player.pos); }   // 陣亡 6 秒後重生
