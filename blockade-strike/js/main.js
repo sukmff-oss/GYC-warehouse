@@ -717,6 +717,7 @@ function quitToMenu() {
   enemies.removeBosses();
   deactivatePortal();
   hud.plantBar(null); hud.prompt(null); hud.protect(0); hud.bossBar(null); hud.objective(null);
+  net.leave(); bots.clear(); G.coop = false;   // 退出公共房，釋放位置
   if (!IS_TOUCH) document.exitPointerLock?.();
   if (IS_TOUCH) $('touchui').classList.remove('ingame');
   save.save();
@@ -937,26 +938,27 @@ function useItem(id) {
 // ---------- 多人連線 UI ----------
 function updateRoster() {
   const n = net.isHost ? net.conns.size + 1 + bots.count : (net.rosterCount || (net.connected ? 2 : 1));
-  $('coopinfo').textContent = G.coop ? `👥 ${Math.min(n, 5)}/5 · 房號 ${net.code}${bots.count && net.isHost ? ` · 🤖×${bots.count}` : ''}` : '';
+  $('coopinfo').textContent = G.coop ? `👥 ${Math.min(n, 5)}/5 · 公共房` : '';
   $('coopinfo').style.display = (G.coop && G.state !== 'menu') ? 'block' : 'none';
 }
 
 net.onEvent = (type, data) => {
   switch (type) {
     case 'code':
-      $('coopStatus').textContent = `✅ 房號【${data}】· 分享給朋友加入（最多 5 人）${bots.count ? ` · 🤖 BOT×${bots.count} 已自動加入` : ''}`;
+      $('coopStatus').textContent = '✅ 已建立公共房 · 自動補滿 BOT 隊友';
       break;
     case 'status':
       $('coopStatus').textContent = data;
       break;
     case 'roster':
+      if (net.isHost) bots.setCount(Math.max(0, 5 - data), player.pos);   // 玩家進房自動踢走一位 BOT
       updateRoster();
-      $('coopStatus').textContent = `房號【${net.code}】· 目前 ${data}/5 人`;
+      $('coopStatus').textContent = `公共房 · 目前 ${data}/5 位玩家`;
       break;
     case 'rosterInfo':
       net.rosterCount = data.length;
       updateRoster();
-      $('coopStatus').textContent = `✅ 已在房間【${net.code}】· ${data.length}/5 人 · 等待房主開局`;
+      $('coopStatus').textContent = `✅ 已加入公共房 · ${data.length}/5 位玩家`;
       break;
     case 'welcome':
       net.rosterCount = 2;
@@ -964,6 +966,14 @@ net.onEvent = (type, data) => {
       if (data.env) G.env = data.env;
       document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data.mapId));
       document.querySelectorAll('.envcard').forEach(c => c.classList.toggle('sel', c.dataset.env === G.env));
+      if (G.state === 'menu' || G.state === 'end') startGame();   // 加入公共房後直接進場
+      break;
+    case 'full':   // 公共房已滿 5 位玩家 → 本局離線進行
+      G.coop = false;
+      net.leave();
+      bots.setCount(4, player.pos);
+      if (G.state === 'menu' || G.state === 'end') startGame();
+      hud.sysmsg('公共房間已滿 · 本局單機進行', 3000);
       break;
     case 'map':
       G.mapId = data.mapId;
@@ -1016,41 +1026,26 @@ net.onEvent = (type, data) => {
   }
 };
 
-$('btnHostCoop').addEventListener('click', () => {
-  G.coop = true;
-  net.host();
-  net.mapId = G.mapId;
-  net.env = G.env;
-  bots.ensure(+$('botCount').value, player.pos);   // BOT 隊友自動加入房間（無需房號）
-  $('btnLeaveCoop').style.display = '';
-});
-// BOT 數量即時調整（房主開房中也可改）
-$('botCount').addEventListener('change', () => {
-  if (G.coop && net.isHost && net.connected) {
-    bots.setCount(+$('botCount').value, player.pos);
-    updateRoster();
-    $('coopStatus').textContent = `🤖 BOT 隊友已調整為 ${$('botCount').value} 位`;
-  }
-});
-$('btnJoinCoop').addEventListener('click', () => {
-  const c = $('coopCodeInput').value.trim();
-  if (c.length !== 4) { $('coopStatus').textContent = '請輸入 4 碼房號'; return; }
-  G.coop = true;
-  net.join(c);
-  $('btnLeaveCoop').style.display = '';
-});
-$('coopCodeInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') $('btnJoinCoop').click();
-  e.stopPropagation();
-});
-$('btnLeaveCoop').addEventListener('click', () => {
-  net.leave();
-  bots.clear();
-  G.coop = false;
-  $('btnLeaveCoop').style.display = 'none';
-  $('coopStatus').textContent = '已離開房間';
-  updateRoster();
-});
+// ---------- 自動配房（進遊戲自動集中安排到公共房）----------
+function autoMatch() {
+  net.auto(role => {
+    if (role === 'host') {
+      G.coop = true;
+      bots.setCount(4, player.pos);   // 1 人 + 4 BOT = 滿編 5，玩家進房自動踢 BOT
+      startGame();
+    } else if (role === 'client') {
+      G.coop = true;
+      bots.clear();
+      $('coopStatus').textContent = '已加入公共房 · 同步戰場中…';
+      // 收到 welcome 後自動 startGame（見 net.onEvent）
+    } else {
+      G.coop = false;                 // 連線伺服器不可用 → 離線配 BOT 隊友
+      bots.setCount(4, player.pos);
+      startGame();
+      hud.sysmsg('⚠️ 無法連上配房伺服器 · 本局離線進行', 3200);
+    }
+  });
+}
 
 // ---------- 开始 / 重开 ----------
 function startGame() {
@@ -1099,7 +1094,10 @@ function startGame() {
   if (IS_TOUCH) $('touchui').classList.add('ingame');
   else renderer.domElement.requestPointerLock();
 }
-$('playBtn').addEventListener('click', startGame);
+$('playBtn').addEventListener('click', () => {
+  if (net.connected) startGame();   // 已在公共房（重開一局）
+  else autoMatch();                 // 進遊戲自動配房
+});
 $('againBtn').addEventListener('click', () => {
   $('endScreen').classList.add('hidden');
   $('startScreen').classList.remove('hidden');
@@ -1231,7 +1229,7 @@ function loop() {
     if (G.coop && !net.isHost) {
       net.updateGhosts(dt);
     } else {
-      const targets = G.coop ? [player, ...net.targetStubs(), ...bots.targetStubs()] : player;
+      const targets = (G.coop || bots.count) ? [player, ...net.targetStubs(), ...bots.targetStubs()] : player;
       enemies.update(dt, targets, now, fx);
       if (bots.count) bots.update(dt, {   // BOT 隊友 AI（跟隨 / 索敵 / 開火）
         player, enemies, now,

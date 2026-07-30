@@ -55,6 +55,55 @@ export class Net {
     return this.code;
   }
 
+  // ---------- 自動配房（固定公共房，無需房號）----------
+  // 優先搶當公共房主；已有人當房主則加入；都失敗則回調 'solo' 離線進行
+  auto(cb) {
+    this.leave();
+    const room = 'LOBBY1';
+    this.code = room;
+    let settled = false;
+    const done = role => { if (!settled) { settled = true; cb(role); } };
+    setTimeout(() => done(this.connected ? (this.isHost ? 'host' : 'client') : 'solo'), 7000);
+    this.isHost = true; this.myId = 1; this.myName = 'P1';
+    this.onEvent('status', '🔗 尋找公共房間…');
+    this.peer = new Peer(PREFIX + room);
+    this.peer.on('open', () => {
+      this.connected = true;
+      this.onEvent('code', room);
+      done('host');
+    });
+    this.peer.on('connection', c => this._accept(c));
+    this.peer.on('error', e => {
+      if (e.type === 'unavailable-id') this._joinPublic(room, done);
+      else if (!this.connected) { this.onEvent('status', '連線錯誤：' + e.type); done('solo'); }
+    });
+  }
+
+  _joinPublic(room, done) {
+    this.isHost = false;
+    try { this.peer.destroy(); } catch {}
+    this.peer = new Peer();
+    this.onEvent('status', '房間已存在 · 加入中…');
+    this.peer.on('error', e => {
+      if (e.type === 'peer-unavailable') {
+        // 房主剛好離線 → 換我搶當房主
+        try { this.peer.destroy(); } catch {}
+        this.isHost = true; this.myId = 1; this.myName = 'P1';
+        this.peer = new Peer(PREFIX + room);
+        this.peer.on('open', () => { this.connected = true; this.onEvent('code', room); done('host'); });
+        this.peer.on('connection', c => this._accept(c));
+        this.peer.on('error', () => done(this.connected ? 'host' : 'solo'));
+      } else done('solo');
+    });
+    this.peer.on('open', () => {
+      const conn = this.peer.connect(PREFIX + room, { reliable: true });
+      this.hostConn = conn;
+      conn.on('open', () => { this.connected = true; done('client'); });
+      conn.on('data', d => this._onDataAsClient(d));
+      conn.on('close', () => this.onEvent('status', '與房主斷線'));
+    });
+  }
+
   join(code) {
     this.leave();
     this.isHost = false;
@@ -157,7 +206,7 @@ export class Net {
         this.myId = d.id; this.myName = d.name; this.mapId = d.mapId;
         this.onEvent('welcome', d);
         break;
-      case 'full': this.onEvent('status', '房間已滿（5 人）'); break;
+      case 'full': this.onEvent('status', '房間已滿（5 人）'); this.onEvent('full'); break;
       case 'roster': this.onEvent('rosterInfo', d.players); break;
       case 'map': this.mapId = d.mapId; this.env = d.env || this.env; this.onEvent('map', d); break;
       case 'start': this.onEvent('start'); break;
