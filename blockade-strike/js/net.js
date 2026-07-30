@@ -255,7 +255,7 @@ export class Net {
   }
 
   // ---------- 房主快照 ----------
-  broadcastSnap(player, enemies, scoreB, dt) {
+  broadcastSnap(player, enemies, scoreB, dt, extraPlayers = []) {
     if (!this.isHost) return;
     this._snapT = (this._snapT || 0) + dt;
     if (this._snapT < 0.1) return;
@@ -265,6 +265,7 @@ export class Net {
       if (!r.state) continue;
       players.push([id, r.state.p[0], r.state.p[1], r.state.p[2], r.state.yaw, r.state.pitch, r.state.hp, r.state.mv ? 1 : 0]);
     }
+    for (const row of extraPlayers) players.push(row);   // BOT 隊友（id 90+）
     const es = [];
     enemies.soldiers.forEach((s, i) => {
       es.push([i, +s.pos.x.toFixed(2), +s.pos.y.toFixed(2), +s.pos.z.toFixed(2), +s.yaw.toFixed(2), s.hp, s.state === 'dead' ? 0 : 1, s.moving ? 1 : 0]);
@@ -276,7 +277,7 @@ export class Net {
   _applySnap(d) {
     for (const [id, x, y, z, yaw, pitch, hp, mv] of d.players) {
       if (id === this.myId) continue;
-      const r = this._getAvatar(id, 'P' + id);
+      const r = this._getAvatar(id, id >= 90 ? 'BOT' : 'P' + id);
       r.state = { p: [x, y, z], yaw, pitch, hp, mv: !!mv };
     }
     for (const [i, x, y, z, yaw, hp, alive, mv] of d.es) {

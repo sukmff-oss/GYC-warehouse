@@ -8,7 +8,7 @@ const NAMES = ['VIPER', 'JACKAL', 'COBRA', 'FALCON', 'GHOST', 'HYENA', 'RAZOR', 
 const UNIFORMS = [0x4f5c3a, 0x665232, 0x465262, 0x64552e];
 const VESTS = [0x3d472c, 0x4a3d28, 0x333c46, 0x453a28];
 
-function losClear(a, b) {
+export function losClear(a, b) {
   const dir = b.clone().sub(a);
   const dist = dir.length(); dir.normalize();
   const hit = rayVsWorld(a, dir, dist - 0.5);

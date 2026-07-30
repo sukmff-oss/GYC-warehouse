@@ -12,6 +12,7 @@ import { PostFX } from './post.js';
 import { perf, createQualityUI } from './performance-config.js';
 import { ObjectPool } from './lod-mesh.js';
 import { Net } from './net.js';
+import { BotManager } from './bots.js';
 
 const IS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) document.body.classList.add('touch');
@@ -101,6 +102,7 @@ const hud = new HUD();
 hud.setMap(mapInfo);
 applyMapEnv(mapInfo);   // 初始地圖（小鎮夜晚）光照
 const net = new Net(scene);   // P2P 連線（預設單機，不連線）
+const bots = new BotManager(scene);   // BOT 隊友（房主開房自動加入）
 
 // ---------- 游戏状态 ----------
 const G = {
@@ -438,6 +440,11 @@ const fx = {
     // 連線：子彈命中的是遠端玩家 → 轉交給對方客户端處理
     if (tgt && tgt.isRemote) {
       net._broadcast({ t: 'dmg', dmg, from: [fromPos.x, fromPos.y, fromPos.z], to: tgt.id });
+      return;
+    }
+    // BOT 隊友中彈：房主本地結算
+    if (tgt && tgt.isBot) {
+      if (bots.damage(tgt, dmg)) hud.sysmsg(`💀 ${tgt.name} 陣亡 · 6 秒後重生`, 2200);
       return;
     }
     applyIncomingDamage(dmg, fromPos);
@@ -929,15 +936,15 @@ function useItem(id) {
 
 // ---------- 多人連線 UI ----------
 function updateRoster() {
-  const n = net.isHost ? net.conns.size + 1 : (net.rosterCount || (net.connected ? 2 : 1));
-  $('coopinfo').textContent = G.coop ? `👥 ${Math.min(n, 5)}/5 · 房號 ${net.code}` : '';
+  const n = net.isHost ? net.conns.size + 1 + bots.count : (net.rosterCount || (net.connected ? 2 : 1));
+  $('coopinfo').textContent = G.coop ? `👥 ${Math.min(n, 5)}/5 · 房號 ${net.code}${bots.count && net.isHost ? ` · 🤖×${bots.count}` : ''}` : '';
   $('coopinfo').style.display = (G.coop && G.state !== 'menu') ? 'block' : 'none';
 }
 
 net.onEvent = (type, data) => {
   switch (type) {
     case 'code':
-      $('coopStatus').textContent = `✅ 房號【${data}】· 分享給朋友加入（最多 5 人）`;
+      $('coopStatus').textContent = `✅ 房號【${data}】· 分享給朋友加入（最多 5 人）${bots.count ? ` · 🤖 BOT×${bots.count} 已自動加入` : ''}`;
       break;
     case 'status':
       $('coopStatus').textContent = data;
@@ -1014,6 +1021,7 @@ $('btnHostCoop').addEventListener('click', () => {
   net.host();
   net.mapId = G.mapId;
   net.env = G.env;
+  bots.ensure(2, player.pos);   // BOT 隊友自動加入房間（無需房號）
   $('btnLeaveCoop').style.display = '';
 });
 $('btnJoinCoop').addEventListener('click', () => {
@@ -1029,6 +1037,7 @@ $('coopCodeInput').addEventListener('keydown', e => {
 });
 $('btnLeaveCoop').addEventListener('click', () => {
   net.leave();
+  bots.clear();
   G.coop = false;
   $('btnLeaveCoop').style.display = 'none';
   $('coopStatus').textContent = '已離開房間';
@@ -1041,6 +1050,7 @@ function startGame() {
   mapInfo = buildMap(scene, G.mapId, G.env);
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
+  if (bots.count) { bots.setBounds(mapInfo.bounds); bots.reset(mapInfo.playerSpawn); }   // BOT 隊友重新部署
   hud.setMap(mapInfo);
   G.state = 'play';
   G.scoreB = 0; G.scoreR = 0; G.kills = 0; G.deaths = 0; G.shots = 0; G.hits = 0;
@@ -1213,13 +1223,18 @@ function loop() {
     if (G.coop && !net.isHost) {
       net.updateGhosts(dt);
     } else {
-      const targets = G.coop ? [player, ...net.targetStubs()] : player;
+      const targets = G.coop ? [player, ...net.targetStubs(), ...bots.targetStubs()] : player;
       enemies.update(dt, targets, now, fx);
+      if (bots.count) bots.update(dt, {   // BOT 隊友 AI（跟隨 / 索敵 / 開火）
+        player, enemies, now,
+        onKill: (e, b) => onKill(e, '步槍', false, b.name),
+        tracer: (from, to) => bots.tracer(from, to)
+      });
     }
     if (G.coop) {
       net.update(dt, pos => explodeVisual(pos));   // 遠端玩家化身 / 視覺子彈 / 手雷
       if (net.isHost) {
-        net.broadcastSnap(player, enemies, G.scoreB, dt);
+        net.broadcastSnap(player, enemies, G.scoreB, dt, bots.snapRows());
       } else {
         net._stateT = (net._stateT || 0) + dt;
         if (net._stateT > 0.08) {
