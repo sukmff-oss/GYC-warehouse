@@ -15,7 +15,7 @@ function losClear(a, b) {
   return !hit;
 }
 
-class Soldier {
+export class Soldier {
   constructor(scene, name) {
     this.scene = scene;
     this.name = name;
@@ -233,7 +233,17 @@ class Soldier {
     return this.muzzleLocal.clone().applyMatrix4(this.group.matrixWorld);
   }
 
-  update(dt, player, now, fx) {
+  update(dt, playerOrTargets, now, fx) {
+    // 多人連線：可傳入目標陣列，敵人自動找最近的存活玩家
+    const targets = (Array.isArray(playerOrTargets) ? playerOrTargets : [playerOrTargets]).filter(p => p && p.alive);
+    let player = targets[0] || (Array.isArray(playerOrTargets) ? null : playerOrTargets);
+    if (targets.length > 1) {
+      let best = Infinity;
+      for (const t of targets) {
+        const d = this.pos.distanceTo(t.pos);
+        if (d < best) { best = d; player = t; }
+      }
+    }
     if (this.state === 'dead') {
       this.deadT += dt;
       // 倒地
@@ -241,9 +251,10 @@ class Soldier {
       this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
       this.group.position.y = -t * 0.25;
       if (this.deadT > 2.2) this.group.visible = false;
-      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this.spawn(player.pos); }
+      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this.spawn(player ? player.pos : this.pos); }
       return;
     }
+    if (!player) { this._sync(); return; }   // 無存活目標：待機
 
     const eye = this.pos.clone().add(new THREE.Vector3(0, 1.6, 0));
     const pEye = player.pos.clone().add(new THREE.Vector3(0, 1.55, 0));
@@ -414,7 +425,8 @@ export class EnemyManager {
     return b;
   }
 
-  updateBullets(dt, player, fx) {
+  updateBullets(dt, playerOrTargets, fx) {
+    const targets = (Array.isArray(playerOrTargets) ? playerOrTargets : [playerOrTargets]).filter(p => p && p.alive);
     const active = this.bulletPool.getActive();
     for (let i = active.length - 1; i >= 0; i--) {
       const b = active[i];
@@ -429,22 +441,24 @@ export class EnemyManager {
       b.line.geometry.attributes.position.needsUpdate = true;
       b.head.position.copy(d.pos);
       let dead = d.life <= 0;
-      // 命中玩家
-      if (!dead && player.alive) {
-        const sx = d.pos.x - prev.x, sz = d.pos.z - prev.z;
-        const L2 = sx * sx + sz * sz;
-        let t = L2 > 1e-9 ? ((player.pos.x - prev.x) * sx + (player.pos.z - prev.z) * sz) / L2 : 0;
-        t = Math.max(0, Math.min(1, t));
-        const cx = prev.x + sx * t, cz = prev.z + sz * t;
-        const cy = prev.y + (d.pos.y - prev.y) * t;
-        const hd = Math.hypot(player.pos.x - cx, player.pos.z - cz);
-        const relY = cy - player.pos.y;
-        if (hd < 0.42 && relY > -0.1 && relY < 1.85) {
-          fx.playerHit(d.dmg, d.from);
-          dead = true;
-        } else if (!d.whizzed && hd < 2.2 && relY > -0.2 && relY < 2.2) {
-          d.whizzed = true;
-          audio.whizz();
+      // 命中玩家（逐一檢查所有目標）
+      if (!dead) {
+        for (const tgt of targets) {
+          const sx = d.pos.x - prev.x, sz = d.pos.z - prev.z;
+          const L2 = sx * sx + sz * sz;
+          let t = L2 > 1e-9 ? ((tgt.pos.x - prev.x) * sx + (tgt.pos.z - prev.z) * sz) / L2 : 0;
+          t = Math.max(0, Math.min(1, t));
+          const cx = prev.x + sx * t, cz = prev.z + sz * t;
+          const cy = prev.y + (d.pos.y - prev.y) * t;
+          const hd = Math.hypot(tgt.pos.x - cx, tgt.pos.z - cz);
+          const relY = cy - tgt.pos.y;
+          if (hd < 0.42 && relY > -0.1 && relY < 1.85) {
+            fx.playerHit(d.dmg, d.from, tgt);
+            dead = true; break;
+          } else if (!d.whizzed && hd < 2.2 && relY > -0.2 && relY < 2.2) {
+            d.whizzed = true;
+            audio.whizz();
+          }
         }
       }
       // 命中世界

@@ -295,6 +295,20 @@
     color:#cfd8e8; font:14px sans-serif; background:rgba(255,255,255,.05); transition:.2s; }
   .modecard.sel { border-color:#ffb04a; color:#ffb04a; background:rgba(255,176,74,.12); }
 
+  /* ===== 連線合作 ===== */
+  #coopbar { display:flex; gap:10px; margin-top:16px; align-items:center;
+    flex-wrap:wrap; justify-content:center; }
+  #coopCodeInput { width:84px; padding:8px 0; border-radius:8px; text-align:center;
+    border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.06);
+    color:#fff; font:bold 16px Consolas,monospace; letter-spacing:3px; outline:none; }
+  #coopCodeInput:focus { border-color:#ffb04a; }
+  #coopStatus { margin-top:10px; color:#8fa2bd; font-size:12.5px; letter-spacing:1px;
+    min-height:16px; }
+  #coopinfo { position:absolute; left:22px; top:196px; display:none;
+    color:#e8ecf2; font:12px sans-serif; line-height:1.8;
+    background:rgba(10,14,20,.5); padding:7px 11px; border-radius:6px;
+    border-left:3px solid #5db2ff; }
+
   /* ===== 背包 / 仓库 ===== */
   .panel { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
     background:rgba(5,8,14,.82); z-index:30; }
@@ -360,6 +374,7 @@
   <div id="protect"></div>
   <div id="bossbar"><div id="bossname">BOSS</div><div id="bosstrack"><div id="bossfill"></div></div></div>
   <div id="objective"></div>
+  <div id="coopinfo"></div>
   <div id="plantbar">安裝炸彈中……<div id="planttrack"><div id="plantfill"></div></div></div>
   <div id="interact"></div>
 </div>
@@ -402,6 +417,13 @@
     <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
     <div class="modecard" data-mode="timed">限時局 · 3 分鐘</div>
   </div>
+  <div id="coopbar">
+    <button class="sbtn" id="btnHostCoop">建立連線房</button>
+    <input id="coopCodeInput" maxlength="4" placeholder="房號" autocomplete="off"/>
+    <button class="sbtn" id="btnJoinCoop">加入</button>
+    <button class="sbtn" id="btnLeaveCoop" style="display:none">離開</button>
+  </div>
+  <div id="coopStatus"></div>
   <button class="playbtn" id="playBtn">進入戰鬥</button>
   <div id="startbar">
     <button class="sbtn" id="btnPack">背包 [B]</button>
@@ -440,6 +462,7 @@
   <button class="playbtn" id="againBtn">再來一局</button>
 </div>
 
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.160.0/build/three.module.js",

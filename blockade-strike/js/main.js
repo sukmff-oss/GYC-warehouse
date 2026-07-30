@@ -11,6 +11,7 @@ import { save, ITEMS } from './save.js';
 import { PostFX } from './post.js';
 import { perf, createQualityUI } from './performance-config.js';
 import { ObjectPool } from './lod-mesh.js';
+import { Net } from './net.js';
 
 const IS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) document.body.classList.add('touch');
@@ -77,6 +78,7 @@ const loot = new LootManager(scene);
 const hud = new HUD();
 hud.setMap(mapInfo);
 applyMapEnv(mapInfo);   // 初始地圖（小鎮夜晚）光照
+const net = new Net(scene);   // P2P 連線（預設單機，不連線）
 
 // ---------- 游戏状态 ----------
 const G = {
@@ -89,6 +91,7 @@ const G = {
   firing: false, adsHeld: false,
   shake: 0,
   streak: 0, lastKillT: -10, firstBlood: false,
+  coop: false,             // 多人連線模式
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
   boss: null,              // 当前 BOSS 士兵
@@ -117,6 +120,12 @@ const nades = [];
 
 weapon.onThrow = () => {
   const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  if (G.coop && !net.isHost) {
+    // 加入者：手雷由房主端生成（才有傷害），本地只發請求
+    net.send({ t: 'nade', o: [camera.position.x, camera.position.y, camera.position.z], dir: [dir.x, dir.y, dir.z] });
+    audio.step();
+    return;
+  }
   const mesh = nadePool.acquire();
   mesh.visible = true;
   mesh.position.copy(camera.position).addScaledVector(dir, 0.6).y -= 0.15;
@@ -125,7 +134,36 @@ weapon.onThrow = () => {
   vel.addScaledVector(player.vel, 0.4);
   nades.push({ mesh, vel, fuse: 2.5 });
   audio.step();
+  if (G.coop && net.isHost)
+    net._broadcast({ t: 'vnade', o: [camera.position.x, camera.position.y, camera.position.z], dir: [dir.x, dir.y, dir.z] });
 };
+
+// 純視覺爆炸（連線同步用，不造成傷害）
+function explodeVisual(pos) {
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: weapon.impactTex, color: 0xffb060, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  flash.position.copy(pos).y += 0.4;
+  flash.scale.set(2, 2, 1);
+  scene.add(flash);
+  const parts = [{ obj: flash, vel: new THREE.Vector3(), life: 0.25, particle: true, grow: 26 }];
+  for (let i = 0; i < 14; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: weapon.impactTex, transparent: true, depthWrite: false,
+      color: i < 7 ? 0xff9040 : 0x555048
+    }));
+    sp.position.copy(pos).y += 0.3;
+    sp.scale.set(rand(0.3, 0.7), rand(0.3, 0.7), 1);
+    const v = new THREE.Vector3(rand(-1, 1), rand(0.2, 1.6), rand(-1, 1)).multiplyScalar(rand(3, 9));
+    scene.add(sp);
+    parts.push({ obj: sp, vel: v, life: rand(0.4, 0.9), particle: true });
+  }
+  weapon.shells.push(...parts);
+  const dPlayer = pos.distanceTo(player.pos);
+  audio.boom(dPlayer);
+  G.shake = Math.max(G.shake, Math.max(0, 1 - dPlayer / 21));
+}
 
 function explode(pos, weaponName = 'M67', radius = 7, dmgBase = 100) {
   // 特效
@@ -151,6 +189,7 @@ function explode(pos, weaponName = 'M67', radius = 7, dmgBase = 100) {
     parts.push({ obj: sp, vel: v, life: rand(0.4, 0.9), particle: true });
   }
   weapon.shells.push(...parts);
+  if (G.coop && net.isHost) net._broadcast({ t: 'boom', p: [pos.x, pos.y, pos.z] });
 
   const dPlayer = pos.distanceTo(player.pos);
   audio.boom(dPlayer);
@@ -225,12 +264,20 @@ function addGold(n) {
 }
 
 // ---------- 击杀庆祝 ----------
-function onKill(soldier, weaponName, isHeadshot = false) {
+function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
+  const mine = killerName === 'YOU';
   G.kills++; G.scoreB++;
   save.stats.kills++; save.save();
   hud.setScore(G.scoreB, G.scoreR);
-  if (now - G.lastKillT < 4) G.streak++; else G.streak = 1;
-  G.lastKillT = now;
+  if (mine) {
+    if (now - G.lastKillT < 4) G.streak++; else G.streak = 1;
+    G.lastKillT = now;
+  }
+  // 連線：廣播擊殺與團隊金幣
+  if (G.coop && net.isHost) {
+    net._broadcast({ t: 'kill', k: mine ? 'P1' : killerName, w: weaponName, v: soldier.name, head: isHeadshot });
+    net._broadcast({ t: 'gold', n: 10 });
+  }
 
   // ===== BOSS 击杀 =====
   if (soldier.isBoss) {
@@ -270,8 +317,13 @@ function onKill(soldier, weaponName, isHeadshot = false) {
   }
 
   addGold(10);
-  loot.drop(soldier.pos.clone());
+  if (!G.coop) loot.drop(soldier.pos.clone());   // 連線模式關閉拾取（避免不同步）
 
+  if (!mine) {   // 隊友擊殺：只上播報
+    audio.kill();
+    hud.feed(killerName, weaponName, soldier.name, true);
+    return;
+  }
   if (!G.firstBlood) {
     G.firstBlood = true;
     hud.celebrate('FIRST BLOOD', '首殺 · 先聲奪人', 0);
@@ -353,19 +405,33 @@ function updateRockets(dt) {
 // ---------- 敌人回调 ----------
 const fx = {
   enemyTracer() {},   // 旧即时曳光已弃用（实体弹道替代）
-  enemyBullet(from, dir, speed, dmg, boss) { enemies.fireBullet(from, dir, speed, dmg, boss); },
+  enemyBullet(from, dir, speed, dmg, boss) {
+    enemies.fireBullet(from, dir, speed, dmg, boss);
+    if (G.coop && net.isHost)
+      net._broadcast({ t: 'ebolt', o: [from.x, from.y, from.z], d: [dir.x, dir.y, dir.z], speed, boss });
+  },
   enemyImpact(pos) { weapon._impact(pos, null, false); },
-  playerHit(dmg, fromPos) {
-    if (G.state !== 'play') return;
-    if (player.protectT > 0) { // 出生保护：敌方攻击无效
-      hud.sysmsg('🛡 保護期內 · 敵方攻擊無效', 800);
+  playerHit(dmg, fromPos, tgt) {
+    // 連線：子彈命中的是遠端玩家 → 轉交給對方客户端處理
+    if (tgt && tgt.isRemote) {
+      net._broadcast({ t: 'dmg', dmg, from: [fromPos.x, fromPos.y, fromPos.z], to: tgt.id });
       return;
     }
-    const dx = fromPos.x - player.pos.x, dz = fromPos.z - player.pos.z;
-    hud.damageFrom(Math.atan2(dx, -dz) - (-player.yaw));
-    if (player.damage(dmg, fromPos, now)) onPlayerDeath();
+    applyIncomingDamage(dmg, fromPos);
   }
 };
+
+// 本地玩家受到敵方子彈傷害（單機 & 連線雙方共用）
+function applyIncomingDamage(dmg, fromPos) {
+  if (G.state !== 'play') return;
+  if (player.protectT > 0) { // 出生保护：敌方攻击无效
+    hud.sysmsg('🛡 保護期內 · 敵方攻擊無效', 800);
+    return;
+  }
+  const dx = fromPos.x - player.pos.x, dz = fromPos.z - player.pos.z;
+  hud.damageFrom(Math.atan2(dx, -dz) - (-player.yaw));
+  if (player.damage(dmg, fromPos, now)) onPlayerDeath();
+}
 
 function onPlayerDeath() {
   G.state = 'dead';
@@ -445,6 +511,7 @@ const c4Mesh = new THREE.Group();  // 已安装的 C4
 }
 
 function setupBomb() {
+  if (G.coop) { bombG.visible = false; c4Mesh.visible = false; return; }   // 連線模式關閉爆破任務
   if (mapInfo.bombSite && !G.inAdventure) {
     bombG.position.set(mapInfo.bombSite.x, 0, mapInfo.bombSite.z);
     bombG.visible = G.bomb.state === 'carry';
@@ -453,6 +520,7 @@ function setupBomb() {
 }
 
 function updateBomb(dt) {
+  if (G.coop) { hud.plantBar(null); return; }   // 連線模式關閉爆破任務
   const b = G.bomb;
   const site = mapInfo.bombSite;
   if (!site || G.inAdventure) { hud.plantBar(null); return; }
@@ -625,6 +693,7 @@ function quitToMenu() {
   $('endScreen').classList.add('hidden');
   $('startScreen').classList.remove('hidden');
   refreshStartbar();
+  updateRoster();
 }
 document.addEventListener('pointerlockchange', () => {
   if (IS_TOUCH) return;
@@ -723,6 +792,10 @@ document.querySelectorAll('.mapcard').forEach(card => {
     document.querySelectorAll('.mapcard').forEach(c => c.classList.remove('sel'));
     card.classList.add('sel');
     G.mapId = card.dataset.map;
+    if (G.coop && net.isHost && net.connected) {   // 房主換圖同步給加入者
+      net.mapId = G.mapId;
+      net._broadcast({ t: 'map', mapId: G.mapId });
+    }
   });
 });
 
@@ -819,6 +892,108 @@ function useItem(id) {
   renderPack();
 }
 
+// ---------- 多人連線 UI ----------
+function updateRoster() {
+  const n = net.isHost ? net.conns.size + 1 : (net.rosterCount || (net.connected ? 2 : 1));
+  $('coopinfo').textContent = G.coop ? `👥 ${Math.min(n, 5)}/5 · 房號 ${net.code}` : '';
+  $('coopinfo').style.display = (G.coop && G.state !== 'menu') ? 'block' : 'none';
+}
+
+net.onEvent = (type, data) => {
+  switch (type) {
+    case 'code':
+      $('coopStatus').textContent = `✅ 房號【${data}】· 分享給朋友加入（最多 5 人）`;
+      break;
+    case 'status':
+      $('coopStatus').textContent = data;
+      break;
+    case 'roster':
+      updateRoster();
+      $('coopStatus').textContent = `房號【${net.code}】· 目前 ${data}/5 人`;
+      break;
+    case 'rosterInfo':
+      net.rosterCount = data.length;
+      updateRoster();
+      $('coopStatus').textContent = `✅ 已在房間【${net.code}】· ${data.length}/5 人 · 等待房主開局`;
+      break;
+    case 'welcome':
+      net.rosterCount = 2;
+      G.mapId = data.mapId;
+      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data.mapId));
+      break;
+    case 'map':
+      G.mapId = data;
+      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data));
+      break;
+    case 'start':
+      if (G.state === 'menu' || G.state === 'end') startGame();
+      break;
+    case 'snapScore':
+      if (!net.isHost) { G.scoreB = data; hud.setScore(G.scoreB, G.scoreR); }
+      break;
+    case 'kill':
+      hud.feed(data.k, data.w, data.v, true);
+      if (data.k === net.myName) { hud.killToast(data.head ? 150 : 100); audio.kill(); }
+      break;
+    case 'gold':
+      addGold(data);
+      break;
+    case 'dmg':
+      applyIncomingDamage(data.dmg, new THREE.Vector3(data.from[0], data.from[1], data.from[2]));
+      break;
+    case 'boom':
+      explodeVisual(new THREE.Vector3(data.p[0], data.p[1], data.p[2]));
+      break;
+    case 'msg':
+      hud.sysmsg(data, 2500);
+      break;
+    case 'clientHit': {   // 房主：加入者回報命中
+      if (G.state !== 'play') break;
+      const s = enemies.soldiers[data.id];
+      if (s && s.state !== 'dead') {
+        const killed = s.damage(data.dmg, data.part, now);
+        if (killed) onKill(s, data.w, data.part === 'head', data.from.name);
+      }
+      break;
+    }
+    case 'clientNade': {   // 房主：代加入者生成真手雷
+      const dir = new THREE.Vector3(data.dir[0], data.dir[1], data.dir[2]);
+      const mesh = nadePool.acquire();
+      mesh.visible = true;
+      mesh.position.set(data.o[0], data.o[1], data.o[2]).addScaledVector(dir, 0.6);
+      const vel = dir.clone().multiplyScalar(16);
+      vel.y += 3.5;
+      nades.push({ mesh, vel, fuse: 2.5 });
+      audio.step();
+      break;
+    }
+  }
+};
+
+$('btnHostCoop').addEventListener('click', () => {
+  G.coop = true;
+  net.host();
+  $('btnLeaveCoop').style.display = '';
+});
+$('btnJoinCoop').addEventListener('click', () => {
+  const c = $('coopCodeInput').value.trim();
+  if (c.length !== 4) { $('coopStatus').textContent = '請輸入 4 碼房號'; return; }
+  G.coop = true;
+  net.join(c);
+  $('btnLeaveCoop').style.display = '';
+});
+$('coopCodeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') $('btnJoinCoop').click();
+  e.stopPropagation();
+});
+$('btnLeaveCoop').addEventListener('click', () => {
+  net.leave();
+  G.coop = false;
+  $('btnLeaveCoop').style.display = 'none';
+  $('coopStatus').textContent = '已離開房間';
+  updateRoster();
+});
+
 // ---------- 开始 / 重开 ----------
 function startGame() {
   audio.init(); audio.resume();
@@ -839,15 +1014,24 @@ function startGame() {
   resetWeapons();
   G.streak = 0; G.lastKillT = -10; G.firstBlood = false;
   enemies.removeBosses();
-  enemies.reset(12, mapInfo.bounds, mapInfo.playerSpawn);
-  enemies.clearBullets();
-  enemies.spawnAll(player.pos);
-  // 敌方 BOSS 驻守爆破点附近
-  if (mapInfo.bombSite) {
+  if (G.coop && !net.isHost) {
+    // 連線加入者：不跑本地敵人 AI，改用房主同步的殘影
+    enemies.reset(0, mapInfo.bounds, mapInfo.playerSpawn);
+    enemies.clearBullets();
+    net.clearGhosts();
+  } else {
+    enemies.reset(12, mapInfo.bounds, mapInfo.playerSpawn);
+    enemies.clearBullets();
+    enemies.spawnAll(player.pos);
+  }
+  // 敌方 BOSS 驻守爆破点附近（連線模式關閉 BOSS/傳送門）
+  if (mapInfo.bombSite && !G.coop) {
     G.boss = enemies.spawnBoss(new THREE.Vector3(mapInfo.bombSite.x + 4, 0, mapInfo.bombSite.z + 4), {});
   }
   setupBomb();
   applyMapEnv(mapInfo);   // 地圖光照（敵人/BOSS 建立後統一套用）
+  if (G.coop && net.isHost) net._broadcast({ t: 'start' });   // 通知加入者開局
+  updateRoster();
   for (const n of nades) scene.remove(n.mesh);
   nades.length = 0;
   $('startScreen').classList.add('hidden');
@@ -951,7 +1135,10 @@ function loop() {
     // 开火
     if (G.firing && G.state === 'play') {
       if (weapon.ammo <= 0 && weapon.reloading <= 0) weapon.startReload();
-      const res = weapon.tryFire(now, player, (o, d, m) => enemies.hitTest(o, d, m));
+      const ht = (G.coop && !net.isHost)
+        ? (o, d, m) => net.hitTestGhosts(o, d, m)          // 加入者：打同步殘影
+        : (o, d, m) => enemies.hitTest(o, d, m);
+      const res = weapon.tryFire(now, player, ht);
       if (res !== null) {
         G.shots++;
         if (!weapon.cfg.auto) G.firing = false;   // 非全自动一枪一按
@@ -969,17 +1156,47 @@ function loop() {
             agg.set(h.soldier, a);
           }
           for (const [s, a] of agg) {
-            const killed = s.damage(a.dmg, a.head ? 'head' : 'body', now);
-            if (killed) onKill(s, weapon.cfg.name, a.head);
+            if (G.coop && !net.isHost) {
+              // 加入者：命中回報房主，由房主結算傷害/擊殺
+              net.send({ t: 'hit', id: s.netId, dmg: a.dmg, part: a.head ? 'head' : 'body', w: weapon.cfg.name });
+            } else {
+              const killed = s.damage(a.dmg, a.head ? 'head' : 'body', now);
+              if (killed) onKill(s, weapon.cfg.name, a.head);
+            }
           }
         }
       }
     }
 
-    enemies.update(dt, player, now, fx);
+    // 敵人 AI / 連線同步
+    if (G.coop && !net.isHost) {
+      net.updateGhosts(dt);
+    } else {
+      const targets = G.coop ? [player, ...net.targetStubs()] : player;
+      enemies.update(dt, targets, now, fx);
+    }
+    if (G.coop) {
+      net.update(dt, pos => explodeVisual(pos));   // 遠端玩家化身 / 視覺子彈 / 手雷
+      if (net.isHost) {
+        net.broadcastSnap(player, enemies, G.scoreB, dt);
+      } else {
+        net._stateT = (net._stateT || 0) + dt;
+        if (net._stateT > 0.08) {
+          net._stateT = 0;
+          net.send({
+            t: 'state',
+            p: [player.pos.x, player.pos.y, player.pos.z],
+            yaw: player.yaw, pitch: player.pitch,
+            hp: player.alive ? player.hp : 0,
+            mv: Math.hypot(player.vel.x, player.vel.z) > 0.5 ? 1 : 0
+          });
+        }
+      }
+    }
 
     // HUD
-    if (perf.shouldUpdateMinimap(dt)) hud.drawMinimap(player, enemies.soldiers, now);
+    if (perf.shouldUpdateMinimap(dt))
+      hud.drawMinimap(player, (G.coop && !net.isHost) ? net.ghosts.filter(Boolean) : enemies.soldiers, now);
     hud.drawCompass(player);
     if (G.inAdventure) hud.setTimer(G.adventureT);
     else if (G.mode === 'timed') hud.setTimer(G.time);
@@ -988,7 +1205,9 @@ function loop() {
     // 任务指引
     if (G.inAdventure) {
       hud.objective(`🌀 奇遇 · 黃金遺跡<br>拾取稀有裝備，擊殺遠古守衛<br>剩餘 ${Math.ceil(G.adventureT)}s`);
-    } else if (mapInfo.bombSite) {
+    } else if (G.coop) {
+      hud.objective(`👥 合作模式 · 你是 ${net.isHost ? 'P1（房主）' : net.myName}<br>合力殲滅敵軍 · 金幣團隊共享`);
+    } else if (mapInfo.bombSite && !G.coop) {
       const b = G.bomb, site = mapInfo.bombSite;
       if (b.state === 'planted') hud.objective(`💣 炸彈已安裝<br>引爆倒計時 <b>${Math.ceil(b.boomT)}s</b>`);
       else {
