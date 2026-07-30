@@ -151,6 +151,81 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
     });
     return;
   }
+  // ===== 夕陽天空：大氣漸層 + 大夕陽光暈 + 晚霞雲 =====
+  if (SUNSET) {
+    const simple = typeof perf !== 'undefined' && perf.settings.skyQuality === 'simple';
+    if (simple) {
+      scene.background = new THREE.Color(horizon);
+      scene.fog = new THREE.Fog(horizon, 45, 200);
+    } else {
+      // 大氣散射（低太陽 + 重霾 → 橙紅漸層天）
+      const sky = new Sky();
+      sky.scale.setScalar(3000);
+      group.add(sky);
+      const u = sky.material.uniforms;
+      u.turbidity.value = 8;
+      u.rayleigh.value = 3;
+      u.mieCoefficient.value = 0.005;
+      u.mieDirectionalG.value = 0.8;
+      const sunDir = new THREE.Vector3().setFromSphericalCoords(1,
+        THREE.MathUtils.degToRad(90 - sunElevation), THREE.MathUtils.degToRad(135));
+      u.sunPosition.value.copy(sunDir);
+    }
+    // 大夕陽（光暈 + 日輪），掛在地平線附近
+    const sc = document.createElement('canvas'); sc.width = sc.height = 256;
+    const sx = sc.getContext('2d');
+    const sg = sx.createRadialGradient(128, 128, 10, 128, 128, 128);
+    sg.addColorStop(0, 'rgba(255,246,220,1)');
+    sg.addColorStop(0.12, 'rgba(255,214,140,.95)');
+    sg.addColorStop(0.3, 'rgba(255,150,70,.5)');
+    sg.addColorStop(0.6, 'rgba(230,90,60,.18)');
+    sg.addColorStop(1, 'rgba(200,70,60,0)');
+    sx.fillStyle = sg; sx.fillRect(0, 0, 256, 256);
+    const sunSp = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(sc), transparent: true, fog: false, depthWrite: false
+    }));
+    sunSp.scale.set(320, 320, 1);
+    const sd = new THREE.Vector3().setFromSphericalCoords(1,
+      THREE.MathUtils.degToRad(90 - sunElevation), THREE.MathUtils.degToRad(135));
+    sunSp.position.copy(sd).multiplyScalar(880);
+    sunSp.position.y = Math.max(sunSp.position.y, 40);
+    group.add(sunSp);
+    // 晚霞雲（暖橙 + 暗紫兩層，緩慢飄動）
+    const mkCloudTex = (r, g, b, a) => {
+      const cc = document.createElement('canvas'); cc.width = cc.height = 128;
+      const cx = cc.getContext('2d');
+      for (let i = 0; i < 9; i++) {
+        const px = rand(20, 108), py = rand(45, 85), rr = rand(14, 30);
+        const rg = cx.createRadialGradient(px, py, 0, px, py, rr);
+        rg.addColorStop(0, `rgba(${r},${g},${b},${a})`); rg.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        cx.fillStyle = rg; cx.beginPath(); cx.arc(px, py, rr, 0, 7); cx.fill();
+      }
+      return new THREE.CanvasTexture(cc);
+    };
+    const warmTex = mkCloudTex(255, 168, 105, 0.55);
+    const duskTex = mkCloudTex(96, 56, 82, 0.45);
+    const clouds = [];
+    for (let i = 0; i < 12; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: i % 3 === 2 ? duskTex : warmTex, transparent: true,
+        opacity: rand(.35, .65), fog: false, depthWrite: false
+      }));
+      const s = rand(130, 280);
+      sp.scale.set(s, s * 0.32, 1);
+      const a = rand(0, Math.PI * 2), r = rand(230, 540);
+      sp.position.set(Math.cos(a) * r, rand(60, 190), Math.sin(a) * r);
+      sp.userData.drift = rand(0.5, 1.3);
+      group.add(sp);
+      clouds.push(sp);
+    }
+    mapAnims.push(() => {
+      for (const cl of clouds) {
+        cl.position.x += cl.userData.drift * 0.016;
+        if (cl.position.x > 580) cl.position.x = -580;
+      }
+    });
+    return;
+  }
   if (typeof perf !== 'undefined' && perf.settings.skyQuality === 'simple') {
     scene.background = new THREE.Color(horizon);
     scene.fog = new THREE.Fog(horizon, 60, 220);
