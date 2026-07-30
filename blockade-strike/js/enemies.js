@@ -1,21 +1,22 @@
 import * as THREE from 'three';
-import { colliders, enemySpawns, patrolPoints, isNight } from './map.js';
+import { colliders, enemySpawns, patrolPoints } from './map.js';
 import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
 
 const NAMES = ['VIPER', 'JACKAL', 'COBRA', 'FALCON', 'GHOST', 'HYENA', 'RAZOR', 'WOLF', 'SNAKE', 'TALON', 'BEAR', 'HAWK'];
-const UNIFORMS = [0x4f5c3a, 0x665232, 0x465262, 0x64552e];
-const VESTS = [0x3d472c, 0x4a3d28, 0x333c46, 0x453a28];
+const UNIFORMS = [0x8a7a52, 0x6b6a45, 0x4a5240, 0x7a6248];  // CS歹徒：沙漠褐 / 橄欖綠 / 游擊灰綠 / 土棕
+const VESTS = [0x2e2a26, 0x3a332a, 0x46403a, 0x33302c];     // 深色戰術背心
+const MASKS = [0x1e1e22, 0x3a3d32, 0x565048];               // 蒙面頭套：黑 / 墨綠 / 灰
 
-export function losClear(a, b) {
+function losClear(a, b) {
   const dir = b.clone().sub(a);
   const dist = dir.length(); dir.normalize();
   const hit = rayVsWorld(a, dir, dist - 0.5);
   return !hit;
 }
 
-export class Soldier {
+class Soldier {
   constructor(scene, name) {
     this.scene = scene;
     this.name = name;
@@ -34,28 +35,26 @@ export class Soldier {
     this.noRespawn = false;
     this.playerSpawn = null;    // 玩家出生点（禁区）
     this.bounds = { minX: -28.5, maxX: 28.5, minZ: -90, maxZ: 90 };
-    this._stuckT = 0;           // 卡住偵測：想移動但位移過小的累計時間
-    this._lastX = 0; this._lastZ = 0;
-    this._detourT = 0;          // 繞行計時（卡住時橫向繞過障礙）
-    this._detourDir = 1;
     this._build();
     this.hitMeshes = [this.headM, this.torsoM, this.legsM];
   }
 
   _build() {
     const g = new THREE.Group();
-    // 外观随机：军服 / 防弹衣配色（夜晚自動提亮，敵人在暗夜中更突出）
-    const nb = isNight() ? 1.55 : 1;
+    // 外观随机：军服 / 防弹衣配色
     const uniCol = UNIFORMS[(Math.random() * UNIFORMS.length) | 0];
     const vestCol = VESTS[(Math.random() * VESTS.length) | 0];
-    const uni = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.92 });
-    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75 * nb), roughness: 0.95 });
+    const uni = new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.92 });
+    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75), roughness: 0.95 });
     const skin = new THREE.MeshStandardMaterial({ color: [0xc9a184, 0xa87f62, 0x8a6a50][(Math.random() * 3) | 0], roughness: 0.85 });
-    if (isNight()) skin.color.multiplyScalar(1.2);
     const dark = new THREE.MeshStandardMaterial({ color: 0x2e2f33, roughness: 0.55, metalness: 0.5 });
-    const vest = new THREE.MeshStandardMaterial({ color: new THREE.Color(vestCol).multiplyScalar(nb), roughness: 0.95 });
+    const vest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.95 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x2a241c, roughness: 0.8 });
-    const goggleMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.4 });
+    const glove = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 0.9 });        // 露指手套
+    const mask = new THREE.MeshStandardMaterial({ color: MASKS[(Math.random() * MASKS.length) | 0], roughness: 0.95 });
+    const bandana = new THREE.MeshStandardMaterial({ color: 0x8a2a22, roughness: 0.9 });      // 紅頭巾
+    const shemagh = new THREE.MeshStandardMaterial({ color: 0xcfc4a4, roughness: 0.95 });     // 沙漠頭巾
+    const wood = new THREE.MeshStandardMaterial({ color: 0x6a4a2c, roughness: 0.8 });         // AK 木件
 
     const M = (geo, mt, x, y, z, parent = g) => {
       const m = new THREE.Mesh(geo, mt);
@@ -67,13 +66,14 @@ export class Soldier {
     this.legsM = M(new THREE.BoxGeometry(0.4, 0.3, 0.26), uniD, 0, 0.98, 0);  // 髋（命中区）
     this.legL = new THREE.Group(); this.legL.position.set(-0.115, 0.86, 0); g.add(this.legL);
     this.legR = new THREE.Group(); this.legR.position.set(0.115, 0.86, 0); g.add(this.legR);
-    const mkLeg = (grp) => {
+    const mkLeg = (grp, side) => {
       M(new THREE.BoxGeometry(0.16, 0.5, 0.18), uni, 0, -0.25, 0, grp);                    // 大腿
+      M(new THREE.BoxGeometry(0.07, 0.15, 0.08), uniD, side * 0.09, -0.28, 0.02, grp);     // 工作褲側袋
       M(new THREE.BoxGeometry(0.14, 0.36, 0.15), uniD, 0, -0.63, 0.01, grp);               // 小腿
       M(new THREE.BoxGeometry(0.15, 0.11, 0.26), boot, 0, -0.86, 0.05, grp);               // 军靴
       M(new THREE.BoxGeometry(0.17, 0.12, 0.2), vest, 0, -0.48, 0.06, grp);                // 护膝
     };
-    mkLeg(this.legL); mkLeg(this.legR);
+    mkLeg(this.legL, -1); mkLeg(this.legR, 1);
 
     // ===== 躯干（战术背心）=====
     this.torsoM = M(new THREE.BoxGeometry(0.52, 0.55, 0.32), vest, 0, 1.36, 0);  // 命中区
@@ -83,36 +83,58 @@ export class Soldier {
     M(new THREE.BoxGeometry(0.5, 0.09, 0.3), dark, 0, 1.06, 0);                  // 腰带
     M(new THREE.BoxGeometry(0.36, 0.44, 0.18), uniD, 0, 1.36, -0.27);            // 背包
     M(new THREE.BoxGeometry(0.3, 0.1, 0.12), vest, 0, 1.06, -0.24);              // 腰后包
+    const strap = M(new THREE.BoxGeometry(0.1, 0.66, 0.36), dark, -0.06, 1.38, 0);  // 斜挎彈藥帶
+    strap.rotation.z = 0.52;
+    for (let i = 0; i < 3; i++)                                                   // 彈藥帶彈匣包
+      M(new THREE.BoxGeometry(0.09, 0.11, 0.05), uniD, -0.19 + i * 0.13, 1.48 - i * 0.13, 0.19);
 
     // ===== 手臂（肩组可摆动 / 交战前指）=====
     this.armL = new THREE.Group(); this.armL.position.set(-0.33, 1.56, 0); g.add(this.armL);
     this.armR = new THREE.Group(); this.armR.position.set(0.33, 1.56, 0); g.add(this.armR);
     const mkArm = (grp) => {
       M(new THREE.SphereGeometry(0.1, 8, 8), uniD, 0, 0.02, 0, grp);              // 肩甲
-      M(new THREE.BoxGeometry(0.13, 0.34, 0.14), uni, 0, -0.2, 0, grp);           // 上臂
-      M(new THREE.BoxGeometry(0.11, 0.3, 0.12), uniD, 0, -0.48, 0.03, grp);       // 前臂
-      M(new THREE.BoxGeometry(0.09, 0.09, 0.1), skin, 0, -0.66, 0.04, grp);       // 手套
+      M(new THREE.BoxGeometry(0.13, 0.34, 0.14), uni, 0, -0.2, 0, grp);           // 上臂（短袖作戰服）
+      M(new THREE.BoxGeometry(0.11, 0.3, 0.12), skin, 0, -0.48, 0.03, grp);       // 前臂（露臂）
+      M(new THREE.BoxGeometry(0.09, 0.09, 0.1), glove, 0, -0.66, 0.04, grp);      // 露指手套
     };
     mkArm(this.armL); mkArm(this.armR);
 
-    // ===== 头部（球面 + 头盔 + 护目镜）=====
-    this.headM = M(new THREE.SphereGeometry(0.145, 12, 10), skin, 0, 1.74, 0);   // 命中区
-    if (Math.random() < 0.72) {
-      M(new THREE.SphereGeometry(0.175, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), Math.random() < 0.5 ? dark : uni, 0, 1.78, 0); // 头盔
-      M(new THREE.BoxGeometry(0.3, 0.05, 0.28), dark, 0, 1.74, 0);               // 盔沿
+    // ===== 頭部（CS 歹徒：蒙面頭套 / 紅頭巾 / 沙漠頭巾）=====
+    const maskStyle = (Math.random() * 3) | 0;
+    if (maskStyle === 0) {
+      // 蒙面頭套（只露雙眼）
+      this.headM = M(new THREE.SphereGeometry(0.145, 12, 10), mask, 0, 1.74, 0);   // 命中区
+      M(new THREE.BoxGeometry(0.2, 0.05, 0.03), skin, 0, 1.75, 0.132);             // 眼縫
+      M(new THREE.BoxGeometry(0.05, 0.028, 0.015), dark, -0.045, 1.752, 0.15);     // 左眼
+      M(new THREE.BoxGeometry(0.05, 0.028, 0.015), dark, 0.045, 1.752, 0.15);      // 右眼
+      M(new THREE.BoxGeometry(0.1, 0.08, 0.1), mask, 0, 1.6, 0.06);                // 頸部頭套
+    } else if (maskStyle === 1) {
+      // 紅頭巾（游擊隊）
+      this.headM = M(new THREE.SphereGeometry(0.145, 12, 10), skin, 0, 1.74, 0);   // 命中区
+      M(new THREE.BoxGeometry(0.29, 0.08, 0.29), bandana, 0, 1.82, 0);             // 頭巾環
+      M(new THREE.BoxGeometry(0.22, 0.1, 0.22), bandana, 0, 1.87, -0.02);          // 頭巾頂
+      M(new THREE.BoxGeometry(0.09, 0.14, 0.04), bandana, 0.06, 1.72, -0.15);      // 頭巾垂尾
+      M(new THREE.BoxGeometry(0.2, 0.055, 0.03), dark, 0, 1.75, 0.135);            // 墨鏡
+      M(new THREE.BoxGeometry(0.1, 0.08, 0.1), skin, 0, 1.6, 0.06);                // 颈部/下颌
     } else {
-      M(new THREE.BoxGeometry(0.26, 0.08, 0.26), vest, 0, 1.86, 0);              // 便帽
+      // 沙漠頭巾 shemagh
+      this.headM = M(new THREE.SphereGeometry(0.145, 12, 10), shemagh, 0, 1.74, 0); // 命中区
+      M(new THREE.BoxGeometry(0.3, 0.05, 0.3), dark, 0, 1.85, 0);                  // 頭箍 agal
+      M(new THREE.BoxGeometry(0.24, 0.2, 0.05), shemagh, 0, 1.64, -0.13);          // 後披
+      M(new THREE.BoxGeometry(0.2, 0.05, 0.03), skin, 0, 1.74, 0.132);             // 眼縫
+      M(new THREE.BoxGeometry(0.05, 0.028, 0.015), dark, -0.045, 1.742, 0.15);     // 左眼
+      M(new THREE.BoxGeometry(0.05, 0.028, 0.015), dark, 0.045, 1.742, 0.15);      // 右眼
+      M(new THREE.BoxGeometry(0.1, 0.08, 0.1), shemagh, 0, 1.6, 0.06);             // 頸部圍巾
     }
-    M(new THREE.BoxGeometry(0.2, 0.055, 0.03), goggleMat, 0, 1.75, 0.135);            // 护目镜（微紅光，夜晚可辨）
-    M(new THREE.BoxGeometry(0.1, 0.08, 0.1), skin, 0, 1.6, 0.06);                // 颈部/下颌
 
-    // ===== 步枪（机匣/枪管/弹匣/枪托/瞄具）=====
+    // ===== AK 步槍（木槍托/木護木/彈匣/瞄具）=====
     const gun = new THREE.Group(); gun.position.set(0.16, 1.34, 0.28); g.add(gun);
     M(new THREE.BoxGeometry(0.06, 0.1, 0.42), dark, 0, 0, 0.1, gun);             // 机匣
     const barrel = M(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6), dark, 0, 0.01, 0.48, gun);
     barrel.rotation.x = Math.PI / 2;
+    M(new THREE.BoxGeometry(0.055, 0.07, 0.16), wood, 0, 0, 0.28, gun);          // 木護木
     M(new THREE.BoxGeometry(0.05, 0.16, 0.08), dark, 0, -0.11, 0.06, gun);       // 弹匣
-    M(new THREE.BoxGeometry(0.05, 0.09, 0.18), dark, 0, -0.01, -0.2, gun);       // 枪托
+    M(new THREE.BoxGeometry(0.05, 0.09, 0.18), wood, 0, -0.01, -0.2, gun);       // 木槍托
     M(new THREE.BoxGeometry(0.03, 0.05, 0.06), dark, 0, 0.09, 0.12, gun);        // 瞄具
     this.muzzleLocal = new THREE.Vector3(0.16, 1.35, 0.78);
 
@@ -122,19 +144,6 @@ export class Soldier {
     this.walkPh = Math.random() * 7;
     this.flinchT = 0;
     this.moving = false;
-    // 敵人頭頂標記：紅色倒三角，遠距離 / 夜晚清楚可辨
-    {
-      const mkc = document.createElement('canvas'); mkc.width = mkc.height = 64;
-      const mkx = mkc.getContext('2d');
-      mkx.fillStyle = '#ff3838';
-      mkx.beginPath(); mkx.moveTo(14, 16); mkx.lineTo(50, 16); mkx.lineTo(32, 46); mkx.closePath(); mkx.fill();
-      this._marker = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: new THREE.CanvasTexture(mkc), transparent: true, depthWrite: false, fog: false, opacity: 0.92
-      }));
-      this._marker.scale.set(0.6, 0.6, 1);
-      this._marker.position.y = 2.35;
-      g.add(this._marker);
-    }
     this.headM.userData = { soldier: this, part: 'head' };
     this.torsoM.userData = { soldier: this, part: 'body' };
     this.legsM.userData = { soldier: this, part: 'body' };
@@ -144,7 +153,7 @@ export class Soldier {
     // === LOD 簡化模型 ===
     this._lodMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 1.7, 0.35),
-      new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.95 })
+      new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.95 })
     );
     this._lodMesh.position.copy(g.position);
     this._lodMesh.visible = false;
@@ -171,20 +180,9 @@ export class Soldier {
       const far = enemySpawns.filter(p => p.distanceTo(playerPos) > 20
         && (!ps || p.distanceTo(ps) > 25));
       const pool = far.length ? far : enemySpawns;
-      // 出生點 + 隨機偏移後必須不在掩體內，否則換點重試（避免卡進建築物）
-      for (let i = 0; i < 14 && !placed; i++) {
-        const p = pool[(Math.random() * pool.length) | 0];
-        const x = p.x + (Math.random() - .5) * 3, z = p.z + (Math.random() - .5) * 3;
-        if (!this._blocked(x, z)) { this.pos.set(x, 0, z); placed = true; }
-      }
-      if (!placed) {   // 兜底：全圖隨機找空點
-        for (let i = 0; i < 24 && !placed; i++) {
-          const x = this.bounds.minX + 2 + Math.random() * (this.bounds.maxX - this.bounds.minX - 4);
-          const z = this.bounds.minZ + 2 + Math.random() * (this.bounds.maxZ - this.bounds.minZ - 4);
-          if (!this._blocked(x, z)) { this.pos.set(x, 0, z); placed = true; }
-        }
-      }
-      if (!placed) this.pos.copy(pool[0]);
+      this.pos.copy(pool[(Math.random() * pool.length) | 0]);
+      this.pos.x += (Math.random() - .5) * 3;
+      this.pos.z += (Math.random() - .5) * 3;
     }
     this.hp = 100;
     this.state = 'patrol';
@@ -195,12 +193,8 @@ export class Soldier {
   }
 
   _pickPatrol() {
-    // 巡邏目標不能在建築物/掩體內，多試幾次避開壞點
-    for (let i = 0; i < 8; i++) {
-      const p = patrolPoints[(Math.random() * patrolPoints.length) | 0];
-      if (!this._blocked(p.x, p.z)) { this.target.copy(p); return; }
-    }
-    this.target.copy(patrolPoints[0]);
+    const p = patrolPoints[(Math.random() * patrolPoints.length) | 0];
+    this.target.copy(p);
   }
 
   _sync() {
@@ -249,17 +243,7 @@ export class Soldier {
     return this.muzzleLocal.clone().applyMatrix4(this.group.matrixWorld);
   }
 
-  update(dt, playerOrTargets, now, fx) {
-    // 多人連線：可傳入目標陣列，敵人自動找最近的存活玩家
-    const targets = (Array.isArray(playerOrTargets) ? playerOrTargets : [playerOrTargets]).filter(p => p && p.alive);
-    let player = targets[0] || (Array.isArray(playerOrTargets) ? null : playerOrTargets);
-    if (targets.length > 1) {
-      let best = Infinity;
-      for (const t of targets) {
-        const d = this.pos.distanceTo(t.pos);
-        if (d < best) { best = d; player = t; }
-      }
-    }
+  update(dt, player, now, fx) {
     if (this.state === 'dead') {
       this.deadT += dt;
       // 倒地
@@ -267,10 +251,9 @@ export class Soldier {
       this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
       this.group.position.y = -t * 0.25;
       if (this.deadT > 2.2) this.group.visible = false;
-      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this.spawn(player ? player.pos : this.pos); }
+      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this.spawn(player.pos); }
       return;
     }
-    if (!player) { this._sync(); return; }   // 無存活目標：待機
 
     const eye = this.pos.clone().add(new THREE.Vector3(0, 1.6, 0));
     const pEye = player.pos.clone().add(new THREE.Vector3(0, 1.55, 0));
@@ -299,13 +282,7 @@ export class Soldier {
       // 走位：保持距离 + 横移
       this.strafeT -= dt;
       if (this.strafeT <= 0) { this.strafeT = 0.8 + Math.random() * 1.2; this.strafeDir = Math.random() < .5 ? -1 : 1; }
-      if (this._detourT > 0) {
-        // 卡住繞行：沿障礙切線方向走一段
-        this._detourT -= dt;
-        const ml = dist || 1;
-        this._move(dt, -dz / ml * this._detourDir + dx / ml * 0.25, dx / ml * this._detourDir + dz / ml * 0.25, spd);
-        this.moving = true;
-      } else if (canSee) {
+      if (canSee) {
         const px = -dz / (dist || 1) * this.strafeDir, pz = dx / (dist || 1) * this.strafeDir;
         let mx = px, mz = pz;
         if (dist > 30) { mx += dx / dist * 0.8; mz += dz / dist * 0.8; }
@@ -337,18 +314,6 @@ export class Soldier {
         }
       }
     }
-    // ===== 卡住偵測：想動卻動不了 → 換巡邏點或橫向繞行 =====
-    if (this.moving) {
-      const moved = Math.hypot(this.pos.x - this._lastX, this.pos.z - this._lastZ);
-      if (moved < 0.3 * spd * dt) this._stuckT += dt; else this._stuckT = 0;
-      if (this._stuckT > 1.0) {
-        this._stuckT = 0;
-        if (this.state === 'patrol') this._pickPatrol();
-        else { this._detourT = 0.9; this._detourDir = Math.random() < .5 ? -1 : 1; }
-      }
-    } else this._stuckT = 0;
-    this._lastX = this.pos.x; this._lastZ = this.pos.z;
-
     // ===== 程序化动画：行走摆动 / 交战持枪 / 受击后仰 =====
     const lerp = Math.min(1, dt * 10);
     if (this.moving) this.walkPh += dt * spd * 3.4;
@@ -366,12 +331,13 @@ export class Soldier {
 
     this._sync();
 
-    // LOD 切換
+    // LOD 切換 — 使用 perf 設定，若不可用則預設 100m
     if (this._lodMesh) {
       const cam = window.__game?.player?.pos;
       if (cam) {
         const dist = this.pos.distanceTo(cam);
-        const useLOD = dist > 100;   // 100m 內保持完整模型，遠方敵人清楚可見
+        const lodDist = (typeof perf !== 'undefined' && perf.settings?.lodDistance) ? perf.settings.lodDistance : 100;
+        const useLOD = dist > lodDist;
         if (this.group.visible !== !useLOD || this._lodMesh.visible !== useLOD) {
           this.group.visible = !useLOD;
           this._lodMesh.visible = useLOD;
@@ -441,8 +407,7 @@ export class EnemyManager {
     return b;
   }
 
-  updateBullets(dt, playerOrTargets, fx) {
-    const targets = (Array.isArray(playerOrTargets) ? playerOrTargets : [playerOrTargets]).filter(p => p && p.alive);
+  updateBullets(dt, player, fx) {
     const active = this.bulletPool.getActive();
     for (let i = active.length - 1; i >= 0; i--) {
       const b = active[i];
@@ -457,24 +422,22 @@ export class EnemyManager {
       b.line.geometry.attributes.position.needsUpdate = true;
       b.head.position.copy(d.pos);
       let dead = d.life <= 0;
-      // 命中玩家（逐一檢查所有目標）
-      if (!dead) {
-        for (const tgt of targets) {
-          const sx = d.pos.x - prev.x, sz = d.pos.z - prev.z;
-          const L2 = sx * sx + sz * sz;
-          let t = L2 > 1e-9 ? ((tgt.pos.x - prev.x) * sx + (tgt.pos.z - prev.z) * sz) / L2 : 0;
-          t = Math.max(0, Math.min(1, t));
-          const cx = prev.x + sx * t, cz = prev.z + sz * t;
-          const cy = prev.y + (d.pos.y - prev.y) * t;
-          const hd = Math.hypot(tgt.pos.x - cx, tgt.pos.z - cz);
-          const relY = cy - tgt.pos.y;
-          if (hd < 0.42 && relY > -0.1 && relY < 1.85) {
-            fx.playerHit(d.dmg, d.from, tgt);
-            dead = true; break;
-          } else if (!d.whizzed && hd < 2.2 && relY > -0.2 && relY < 2.2) {
-            d.whizzed = true;
-            audio.whizz();
-          }
+      // 命中玩家
+      if (!dead && player.alive) {
+        const sx = d.pos.x - prev.x, sz = d.pos.z - prev.z;
+        const L2 = sx * sx + sz * sz;
+        let t = L2 > 1e-9 ? ((player.pos.x - prev.x) * sx + (player.pos.z - prev.z) * sz) / L2 : 0;
+        t = Math.max(0, Math.min(1, t));
+        const cx = prev.x + sx * t, cz = prev.z + sz * t;
+        const cy = prev.y + (d.pos.y - prev.y) * t;
+        const hd = Math.hypot(player.pos.x - cx, player.pos.z - cz);
+        const relY = cy - player.pos.y;
+        if (hd < 0.42 && relY > -0.1 && relY < 1.85) {
+          fx.playerHit(d.dmg, d.from);
+          dead = true;
+        } else if (!d.whizzed && hd < 2.2 && relY > -0.2 && relY < 2.2) {
+          d.whizzed = true;
+          audio.whizz();
         }
       }
       // 命中世界
@@ -506,7 +469,7 @@ export class EnemyManager {
   }
 
   // 生成 BOSS（不重生，金色王冠标记）
-  spawnBoss(pos, { hp = 600, scale = 1.45, name = 'BOSS·軍閥', rare = false } = {}) {
+  spawnBoss(pos, { hp = 600, scale = 1.45, name = 'BOSS·军阀', rare = false } = {}) {
     const s = new Soldier(this.scene, name);
     s.isBoss = true; s.noRespawn = true; s.hunter = true;
     s.maxHp = hp; s.hp = hp;
