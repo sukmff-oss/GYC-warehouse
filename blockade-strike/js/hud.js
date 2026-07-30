@@ -112,7 +112,7 @@ export class HUD {
   protect(t) {
     const el = $('protect');
     if (t > 0) {
-      el.textContent = `🛡 出生保护 · ${t.toFixed(1)}s`;
+      el.textContent = `🛡 出生保護 · ${t.toFixed(1)}s`;
       el.style.display = 'block';
     } else el.style.display = 'none';
   }

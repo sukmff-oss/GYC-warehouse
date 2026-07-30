@@ -14,7 +14,7 @@ export const WEAPONS = {
   awp:    { name: 'AWP',   auto: false, interval: 1.4,   dmg: 100, mag: 5,   reserve: 25,  spreadHip: 0.05,  spreadAds: 0.0008, heatSpread: 0,      zoomFov: 18, kick: 0.12,  recoil: 0.035, reloadTime: 2.6, sight: 'scope',  sightH: 0.105, muzzleZ: -1.0,  bolt: true, zooms: [36, 18, 9], zoomNames: ['2×', '4×', '8×'] },
   m82:    { name: 'M82 巴雷特', auto: false, interval: 1.8, dmg: 150, mag: 5, reserve: 15,  spreadHip: 0.06,  spreadAds: 0.0006, heatSpread: 0,      zoomFov: 14, kick: 0.2,   recoil: 0.06,  reloadTime: 3.0, sight: 'scope',  sightH: 0.108, muzzleZ: -1.15, bolt: true, pierce: true, zooms: [30, 14, 7], zoomNames: ['3×', '6×', '12×'] },
   m249:   { name: 'M249',  auto: true,  interval: 0.075, dmg: 28,  mag: 100, reserve: 200, spreadHip: 0.022, spreadAds: 0.008,  heatSpread: 0.02,  zoomFov: 54, kick: 0.05,  recoil: 0.012, reloadTime: 3.5, sight: 'iron',   sightH: 0.08,  muzzleZ: -0.9 },
-  deagle: { name: '沙漠之鹰', auto: false, interval: 0.35, dmg: 50,  mag: 7,   reserve: 49,  spreadHip: 0.02,  spreadAds: 0.006,  heatSpread: 0.01,  zoomFov: 58, kick: 0.09,  recoil: 0.025, reloadTime: 1.6, sight: 'iron',   sightH: 0.055, muzzleZ: -0.42, pistol: true },
+  deagle: { name: '沙漠之鷹', auto: false, interval: 0.35, dmg: 50,  mag: 7,   reserve: 49,  spreadHip: 0.02,  spreadAds: 0.006,  heatSpread: 0.01,  zoomFov: 58, kick: 0.09,  recoil: 0.025, reloadTime: 1.6, sight: 'iron',   sightH: 0.055, muzzleZ: -0.42, pistol: true },
   rpg:    { name: 'RPG-7', auto: false, interval: 1.2,   dmg: 0,   mag: 1,   reserve: 4,   spreadHip: 0.01,  spreadAds: 0.002,  heatSpread: 0,      zoomFov: 50, kick: 0.15,  recoil: 0.04,  reloadTime: 3.0, sight: 'iron',   sightH: 0.07,  muzzleZ: -1.1,  rocket: true }
 };
 
@@ -99,7 +99,7 @@ export class Weapon {
   // 稀有/史诗加成武器显示名
   get displayName() {
     const b = this.state[this.activeId].boost || 1;
-    return (b >= 1.4 ? '黄金·' : b > 1.01 ? '改良·' : '') + this.cfg.name;
+    return (b >= 1.4 ? '黃金·' : b > 1.01 ? '改良·' : '') + this.cfg.name;
   }
   cycleZoom() {
     if (!this.cfg.zooms) return null;

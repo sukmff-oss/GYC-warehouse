@@ -11,11 +11,11 @@ const RARITY_COLOR = {
 
 // 装备类掉落（立即生效，不进背包）
 const GEAR = {
-  boostweapon: { icon: '⚡', name: '强化武器', desc: '当前武器伤害 +20%' },
-  goldweapon:  { icon: '🌟', name: '黄金武器', desc: '当前武器伤害 +40%' },
-  armor100:    { icon: '🛡', name: '重型护甲', desc: '护甲立即全满' },
-  fullhp:      { icon: '💊', name: '纳米修复', desc: '生命立即全满' },
-  fullsupply:  { icon: '📦', name: '全补给',   desc: '弹药与手雷补满' },
+  boostweapon: { icon: '⚡', name: '強化武器', desc: '當前武器傷害 +20%' },
+  goldweapon:  { icon: '🌟', name: '黃金武器', desc: '當前武器傷害 +40%' },
+  armor100:    { icon: '🛡', name: '重型護甲', desc: '護甲立即全滿' },
+  fullhp:      { icon: '💊', name: '奈米修復', desc: '生命立即全滿' },
+  fullsupply:  { icon: '📦', name: '全補給',   desc: '彈藥與手雷補滿' },
 };
 
 // 普通掉落的道具池（加权）
@@ -112,7 +112,7 @@ export function applyLoot(spec, player, weapon, hud, audio) {
     if (save.addItem(spec.itemId, 1)) {
       hud.sysmsg(`拾取 ${it.icon} ${it.name} · 已放入背包（B 打开）`, 2200);
     } else {
-      hud.sysmsg('背包已满 · 道具未能拾取', 1800);
+      hud.sysmsg('背包已滿 · 道具未能拾取', 1800);
     }
     audio.kill();
     return;

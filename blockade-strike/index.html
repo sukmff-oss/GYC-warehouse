@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="zh-CN"><head>
+<!DOCTYPE html><html lang="zh-TW"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>街区突击 · BLOCKADE STRIKE</title>
+<title>街區突擊 · BLOCKADE STRIKE</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden; background:#0a0c10;
@@ -340,10 +340,10 @@
   </div>
   <div id="killfeed"></div>
   <div id="killtoast"><div class="big">ENEMY ELIMINATED</div><div class="pts">+100</div></div>
-  <div id="streak"><div class="big">DOUBLE KILL</div><div class="sub">双杀</div></div>
+  <div id="streak"><div class="big">DOUBLE KILL</div><div class="sub">雙殺</div></div>
   <div id="crosshair"><span class="t"></span><span class="b"></span><span class="l"></span><span class="r"></span></div>
   <div id="reddot"></div>
-  <div id="scope"><div class="ring"></div><div class="ch-h"></div><div class="ch-v"></div><div class="zoomtag" id="scopezoom">4× · Z 变倍</div></div>
+  <div id="scope"><div class="ring"></div><div class="ch-h"></div><div class="ch-v"></div><div class="zoomtag" id="scopezoom">4× · Z 變倍</div></div>
   <div id="hitmark"><span class="a"></span><span class="b"></span><span class="c"></span><span class="d"></span></div>
   <div id="hpbox">
     <div id="hpnum"><small>HEALTH</small>100</div>
@@ -351,8 +351,7 @@
     <div id="armorbar"><div id="armorfill"></div></div>
   </div>
   <div id="ammobox">
-    <div id="gears"><span><b>G</b> 手雷 ×<span id="nadenum">2</span></span><span id="wpnname">AK-47</span></div>
-    <div id="ammo">30<small>/ 210</small></div>
+    <div id="gears"><span><b>G</b> 手雷 ×<span id="nadenum">2</span></span><span id="wpnname">AK-47</span></div>    <div id="ammo">30<small>/ 210</small></div>
   </div>
   <div class="dmgdir" id="dmgdir0"></div>
   <div class="dmgdir" id="dmgdir1"></div>
@@ -361,7 +360,7 @@
   <div id="protect"></div>
   <div id="bossbar"><div id="bossname">BOSS</div><div id="bosstrack"><div id="bossfill"></div></div></div>
   <div id="objective"></div>
-  <div id="plantbar">安装炸弹中……<div id="planttrack"><div id="plantfill"></div></div></div>
+  <div id="plantbar">安裝炸彈中……<div id="planttrack"><div id="plantfill"></div></div></div>
   <div id="interact"></div>
 </div>
 <div id="vignette"></div>
@@ -371,42 +370,42 @@
 <div id="touchui">
   <div id="lookzone"></div>
   <div id="joy"><div id="joyknob"></div></div>
-  <div class="tbtn" id="btnFire">开火</div>
-  <div class="tbtn" id="btnAds">开镜</div>
+  <div class="tbtn" id="btnFire">開火</div>
+  <div class="tbtn" id="btnAds">開鏡</div>
   <div class="tbtn" id="btnJump">跳</div>
-  <div class="tbtn" id="btnReload">换弹</div>
+  <div class="tbtn" id="btnReload">換彈</div>
   <div class="tbtn" id="btnNade">手雷</div>
-  <div class="tbtn" id="btnSwap">换枪</div>
-  <div class="tbtn" id="btnAct">互动</div>
+  <div class="tbtn" id="btnSwap">換槍</div>
+  <div class="tbtn" id="btnAct">互動</div>
   <div class="tbtn" id="btnPack2">背包</div>
   <div class="tbtn" id="btnQuit">退出</div>
 </div>
 
 <!-- 开始界面 -->
 <div class="screen" id="startScreen">
-  <div class="title">街区<em>突击</em></div>
-  <div class="subtitle">BLOCKADE STRIKE · 团队死斗</div>
+  <div class="title">街區<em>突擊</em></div>
+  <div class="subtitle">BLOCKADE STRIKE · 團隊死鬥</div>
   <div class="keys deskkeys">
-    <b>W A S D</b> 移动   <b>Shift</b> 疾跑   <b>空格</b> 跳跃   <b>G</b> 手雷   <b>Z</b> 狙击变倍   <b>B</b> 背包<br/>
-    <b>左键</b> 射击   <b>右键</b> 瞄准   <b>R</b> 换弹   <b>E / P</b> 安装炸弹 / 传送门   <b>1~0</b> 切换 10 种武器
+    <b>W A S D</b> 移動   <b>Shift</b> 疾跑   <b>空格</b> 跳躍   <b>G</b> 手雷   <b>Z</b> 狙擊變倍   <b>B</b> 背包<br/>
+    <b>左键</b> 射擊   <b>右键</b> 瞄準   <b>R</b> 換彈   <b>E / P</b> 安裝炸彈 / 傳送門   <b>1~0</b> 切換 10 種武器
   </div>
   <div class="keys touchkeys">
-    <b>左摇杆</b> 移动（推满疾跑）  <b>右侧滑动</b> 转视角<br/>
-    <b>开火 / 开镜 / 跳 / 换弹 / 手雷 / 换枪</b> 点按右侧按钮  <b>互动</b> 安装炸弹 · 进出传送门
+    <b>左搖桿</b> 移動（推滿疾跑）  <b>右側滑動</b> 轉視角<br/>
+    <b>開火 / 開鏡 / 跳 / 換彈 / 手雷 / 換槍</b> 點按右側按鈕  <b>互動</b> 安裝炸彈 · 進出傳送門
   </div>
   <div id="mapselect">
-    <div class="mapcard sel" data-map="town"><div class="ico"></div>小镇街道</div>
-    <div class="mapcard" data-map="ruins"><div class="ico"></div>沙漠废墟</div>
-    <div class="mapcard" data-map="docks"><div class="ico"></div>货运码头</div>
+    <div class="mapcard sel" data-map="town"><div class="ico"></div>小鎮街道</div>
+    <div class="mapcard" data-map="ruins"><div class="ico"></div>沙漠廢墟</div>
+    <div class="mapcard" data-map="docks"><div class="ico"></div>貨運碼頭</div>
   </div>
   <div id="modeselect">
-    <div class="modecard sel" data-mode="free">自由局 · 不限时</div>
-    <div class="modecard" data-mode="timed">限时局 · 3 分钟</div>
+    <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
+    <div class="modecard" data-mode="timed">限時局 · 3 分鐘</div>
   </div>
-  <button class="playbtn" id="playBtn">进入战斗</button>
+  <button class="playbtn" id="playBtn">進入戰鬥</button>
   <div id="startbar">
     <button class="sbtn" id="btnPack">背包 [B]</button>
-    <button class="sbtn" id="btnWh">仓库</button>
+    <button class="sbtn" id="btnWh">倉庫</button>
     <span id="startgold">💰 0</span>
   </div>
   <div id="startstats"></div>
@@ -417,7 +416,7 @@
   <div class="panelbox">
     <button class="panelclose" data-close="packPanel">×</button>
     <h2>背包</h2>
-    <div class="sub" id="packSub">存放拾取的装备道具 · 可在战斗中使用</div>
+    <div class="sub" id="packSub">存放拾取的裝備道具 · 可在戰鬥中使用</div>
     <div class="itemgrid" id="packGrid"></div>
   </div>
 </div>
@@ -426,19 +425,19 @@
 <div class="panel" id="whPanel">
   <div class="panelbox">
     <button class="panelclose" data-close="whPanel">×</button>
-    <h2>仓库</h2>
-    <div class="sub" id="whSub">长期存储 · 跨对局保留</div>
+    <h2>倉庫</h2>
+    <div class="sub" id="whSub">長期存儲 · 跨對局保留</div>
     <div class="itemgrid" id="whGrid"></div>
   </div>
 </div>
 
 <!-- 结算界面 -->
 <div class="screen hidden" id="endScreen">
-  <div id="endTitle">胜利</div>
+  <div id="endTitle">勝利</div>
   <div id="endScore"><span class="b">0</span>  :  <span class="r">0</span></div>
   <div id="endStats"></div>
   <div id="endGold"></div>
-  <button class="playbtn" id="againBtn">再来一局</button>
+  <button class="playbtn" id="againBtn">再來一局</button>
 </div>
 
 <script type="importmap">

@@ -40,7 +40,25 @@ sun.shadow.camera.top = 75; sun.shadow.camera.bottom = -75;
 sun.shadow.camera.far = 350;
 sun.shadow.bias = -0.0008;
 scene.add(sun);
-scene.add(new THREE.HemisphereLight(0xbdd8f0, 0x8a7a5c, 0.62));
+const hemi = new THREE.HemisphereLight(0xbdd8f0, 0x8a7a5c, 0.62);
+scene.add(hemi);
+
+// 依地圖套用晝夜光照（小鎮街道 = 夜晚月光）
+function applyMapEnv(info) {
+  const night = !!info.night;
+  sun.intensity = night ? 0.55 : 2.9;
+  sun.color.set(night ? 0x9ab8e8 : 0xfff2dc);           // 冷色月光
+  sun.position.set(night ? -40 : 60, night ? 70 : 90, night ? -50 : 30);
+  hemi.intensity = night ? 0.26 : 0.62;
+  hemi.color.set(night ? 0x7a94c8 : 0xbdd8f0);
+  hemi.groundColor.set(night ? 0x141a26 : 0x8a7a5c);
+  renderer.toneMappingExposure = night ? 0.92 : 0.98;
+  // IBL 環境反射強度（夜晚壓暗，避免畫面灰亮）
+  scene.traverse(o => {
+    if (o.isMesh && o.material && 'envMapIntensity' in o.material)
+      o.material.envMapIntensity = night ? 0.12 : 1;
+  });
+}
 
 // 真实光照：IBL 环境反射
 {
@@ -58,6 +76,7 @@ const enemies = new EnemyManager(scene, perf.settings.enemyCount);
 const loot = new LootManager(scene);
 const hud = new HUD();
 hud.setMap(mapInfo);
+applyMapEnv(mapInfo);   // 初始地圖（小鎮夜晚）光照
 
 // ---------- 游戏状态 ----------
 const G = {
@@ -219,7 +238,7 @@ function onKill(soldier, weaponName, isHeadshot = false) {
     addGold(rare ? 1000 : 200);
     save.stats.boss++; save.save();
     hud.bossBar(null);
-    hud.celebrate(rare ? 'GUARDIAN DOWN' : 'BOSS DOWN', rare ? '远古守卫已击杀 · 金币 +1000' : '敌方 BOSS 已击杀 · 金币 +200', 2);
+    hud.celebrate(rare ? 'GUARDIAN DOWN' : 'BOSS DOWN', rare ? '遠古守衛已擊殺 · 金幣 +1000' : '敵方 BOSS 已擊殺 · 金幣 +200', 2);
     audio.voice('rampage');
     // 大量掉落
     const drops = rare ? 5 : 3;
@@ -241,10 +260,10 @@ function onKill(soldier, weaponName, isHeadshot = false) {
     }
     if (rare) {
       activatePortal('exit');   // 返程传送门
-      hud.sysmsg(IS_TOUCH ? '返程传送门已开启 · 靠近点互动键离开奇遇' : '返程传送门已开启 · 靠近按 P 离开奇遇', 4000);
+      hud.sysmsg(IS_TOUCH ? '返程傳送門已開啟 · 靠近點互動鍵離開奇遇' : '返程傳送門已開啟 · 靠近按 P 離開奇遇', 4000);
     } else {
       activatePortal('adventure'); // 奇遇传送门
-      hud.sysmsg(IS_TOUCH ? '🌀 奇遇传送门已开启 · 靠近点互动键进入黄金遗迹' : '🌀 奇遇传送门已开启 · 靠近按 P 进入黄金遗迹', 4500);
+      hud.sysmsg(IS_TOUCH ? '🌀 奇遇傳送門已開啟 · 靠近點互動鍵進入黃金遺跡' : '🌀 奇遇傳送門已開啟 · 靠近按 P 進入黃金遺跡', 4500);
     }
     G.boss = null;
     return;
@@ -255,20 +274,20 @@ function onKill(soldier, weaponName, isHeadshot = false) {
 
   if (!G.firstBlood) {
     G.firstBlood = true;
-    hud.celebrate('FIRST BLOOD', '首杀 · 先声夺人', 0);
+    hud.celebrate('FIRST BLOOD', '首殺 · 先聲奪人', 0);
     audio.voice('firstblood');
   } else if (isHeadshot) {
     hud.killToast(150);
-    hud.celebrate('HEADSHOT', '爆头', 0);
+    hud.celebrate('HEADSHOT', '爆頭', 0);
     audio.voice('headshot');
   } else if (G.streak === 2) {
-    hud.celebrate('DOUBLE KILL', '双杀', 1);
+    hud.celebrate('DOUBLE KILL', '雙殺', 1);
     audio.voice('double');
   } else if (G.streak === 3) {
-    hud.celebrate('TRIPLE KILL', '三连杀', 1);
+    hud.celebrate('TRIPLE KILL', '三連殺', 1);
     audio.voice('triple');
   } else if (G.streak >= 4) {
-    hud.celebrate('RAMPAGE', `${G.streak} 连杀 · 超神`, 2);
+    hud.celebrate('RAMPAGE', `${G.streak} 連殺 · 超神`, 2);
     audio.voice('rampage');
   } else {
     hud.killToast(100);
@@ -339,7 +358,7 @@ const fx = {
   playerHit(dmg, fromPos) {
     if (G.state !== 'play') return;
     if (player.protectT > 0) { // 出生保护：敌方攻击无效
-      hud.sysmsg('🛡 保护期内 · 敌方攻击无效', 800);
+      hud.sysmsg('🛡 保護期內 · 敵方攻擊無效', 800);
       return;
     }
     const dx = fromPos.x - player.pos.x, dz = fromPos.z - player.pos.z;
@@ -355,7 +374,7 @@ function onPlayerDeath() {
   G.streak = 0;
   hud.setScore(G.scoreB, G.scoreR);
   hud.feed('ENEMY', 'AK-47', 'YOU', false);
-  hud.sysmsg('你已阵亡 · 3 秒后重新部署', 3000);
+  hud.sysmsg('你已陣亡 · 3 秒後重新部署', 3000);
   $('vignette').style.opacity = '1';
   G.respawnT = 3;
 }
@@ -443,12 +462,12 @@ function updateBomb(dt) {
     bombG.visible = true;
     bombG.getObjectByName('ring').rotation.z += dt * 0.8;
     if (dSite < site.r && player.alive && G.state === 'play')
-      hud.prompt(IS_TOUCH ? '点按 <b>互动</b> 安装 C4 炸弹' : '按 <b>E</b> 安装 C4 炸弹');
+      hud.prompt(IS_TOUCH ? '點按 <b>互動</b> 安裝 C4 炸彈' : '按 <b>E</b> 安裝 C4 炸彈');
   } else if (b.state === 'planting') {
     if (dSite > site.r + 1.5 || !player.alive) { // 离开/阵亡中断
       b.state = 'carry';
       hud.plantBar(null);
-      hud.sysmsg('安装已中断', 1400);
+      hud.sysmsg('安裝已中斷', 1400);
     } else {
       b.plantT -= dt;
       hud.plantBar(1 - b.plantT / 3);
@@ -459,8 +478,8 @@ function updateBomb(dt) {
         c4Mesh.position.set(site.x, 0, site.z);
         c4Mesh.visible = true;
         audio.plant();
-        hud.sysmsg('💣 炸弹已安装 · 20 秒后引爆', 2600);
-        hud.celebrate('BOMB PLANTED', '炸弹已安装', 1);
+        hud.sysmsg('💣 炸彈已安裝 · 20 秒後引爆', 2600);
+        hud.celebrate('BOMB PLANTED', '炸彈已安裝', 1);
       }
     }
   } else if (b.state === 'planted') {
@@ -476,15 +495,15 @@ function updateBomb(dt) {
     if (b.boomT <= 0) {
       c4Mesh.visible = false;
       b.state = 'carry';
-      explode(new THREE.Vector3(site.x, 0.3, site.z), 'C4 炸药', 12, 320);
+      explode(new THREE.Vector3(site.x, 0.3, site.z), 'C4 炸藥', 12, 320);
       G.missions++;
       save.stats.missions++; save.save();
       G.scoreB += 10;
       hud.setScore(G.scoreB, G.scoreR);
       addGold(300);
-      hud.celebrate('MISSION COMPLETE', '爆破任务完成 · 金币 +300', 2);
+      hud.celebrate('MISSION COMPLETE', '爆破任務完成 · 金幣 +300', 2);
       audio.voice('victory');
-      hud.sysmsg('爆破任务完成！任务已刷新，可再次执行', 3500);
+      hud.sysmsg('爆破任務完成！任務已刷新，可再次執行', 3500);
       setupBomb();
     }
   }
@@ -505,7 +524,7 @@ function enterAdventure() {
   enemies.clearBullets();
   enemies.spawnAll(player.pos);
   // 稀有 BOSS
-  G.boss = enemies.spawnBoss(mapInfo.bossPos, { hp: 1500, scale: 1.7, name: '远古守卫', rare: true });
+  G.boss = enemies.spawnBoss(mapInfo.bossPos, { hp: 1500, scale: 1.7, name: '遠古守衛', rare: true });
   // 基座宝藏（稀有/史诗道具与装备）
   const itemPool = ['boostcore', 'goldcore', 'goldbag', 'medkit', 'armorpack', 'nadepack'];
   for (const spot of mapInfo.lootSpots) {
@@ -515,8 +534,9 @@ function enterAdventure() {
     else loot.drop(spot, { rarity: 'epic', type: Math.random() < 0.6 ? 'goldweapon' : 'fullsupply' });
   }
   hud.setMap(mapInfo);
-  hud.celebrate('GOLDEN RUINS', '奇遇 · 黄金遗迹 · 限时 120 秒', 2);
-  hud.sysmsg('拾取稀有装备，击杀远古守卫可获得大量金币！', 4000);
+  applyMapEnv(mapInfo);   // 地圖光照（在所有新物件建立後統一套用）
+  hud.celebrate('GOLDEN RUINS', '奇遇 · 黃金遺跡 · 限時 120 秒', 2);
+  hud.sysmsg('拾取稀有裝備，擊殺遠古守衛可獲得大量金幣！', 4000);
 }
 
 function exitAdventure() {
@@ -568,7 +588,7 @@ function doInteract() { // E / 触屏互动键：安装炸弹或进出传送门
     && Math.hypot(player.pos.x - site.x, player.pos.z - site.z) < site.r) {
     G.bomb.state = 'planting';
     G.bomb.plantT = 3;
-    hud.sysmsg('安装炸弹中……保持站位', 2000);
+    hud.sysmsg('安裝炸彈中……保持站位', 2000);
   }
 }
 
@@ -610,7 +630,7 @@ document.addEventListener('pointerlockchange', () => {
   if (IS_TOUCH) return;
   if (document.pointerLockElement !== renderer.domElement) {
     G.firing = false; G.adsHeld = false;
-    if (G.state === 'play') hud.sysmsg('已暂停 · 点击画面继续', 60000);
+    if (G.state === 'play') hud.sysmsg('已暫停 · 點擊畫面繼續', 60000);
   } else hud.sysmsg('', 1);
 });
 renderer.domElement.addEventListener('click', () => {
@@ -719,7 +739,7 @@ document.querySelectorAll('.modecard').forEach(card => {
 function refreshStartbar() {
   $('startgold').textContent = '💰 ' + save.gold;
   const st = save.stats;
-  $('startstats').textContent = `生涯：击杀 ${st.kills} · BOSS ${st.boss} · 爆破任务 ${st.missions} · 奇遇 ${st.adventures}`;
+  $('startstats').textContent = `生涯：擊殺 ${st.kills} · BOSS ${st.boss} · 爆破任務 ${st.missions} · 奇遇 ${st.adventures}`;
 }
 refreshStartbar();
 hud.gold(save.gold);
@@ -744,12 +764,12 @@ function renderPack() {
   const grid = $('packGrid');
   grid.innerHTML = '';
   const ids = Object.keys(save.pack);
-  $('packSub').textContent = `存放拾取的装备道具 · 可在战斗中使用（${save.totalOf(save.pack)}/${24}）`;
-  if (!ids.length) { grid.innerHTML = '<div class="empty">背包空空如也 · 去战斗中拾取装备吧</div>'; return; }
+  $('packSub').textContent = `存放拾取的裝備道具 · 可在戰鬥中使用（${save.totalOf(save.pack)}/${24}）`;
+  if (!ids.length) { grid.innerHTML = '<div class="empty">背包空空如也 · 去戰鬥中拾取裝備吧</div>'; return; }
   for (const id of ids) {
     grid.appendChild(itemCard(id, save.pack[id], [
       ['使用', () => useItem(id)],
-      ['存入仓库', () => { save.toWarehouse(id); renderPack(); }]
+      ['存入倉庫', () => { save.toWarehouse(id); renderPack(); }]
     ]));
   }
 }
@@ -758,8 +778,8 @@ function renderWh() {
   const grid = $('whGrid');
   grid.innerHTML = '';
   const ids = Object.keys(save.wh);
-  $('whSub').textContent = `长期存储 · 跨对局保留（${save.totalOf(save.wh)}/${60}）`;
-  if (!ids.length) { grid.innerHTML = '<div class="empty">仓库空空如也 · 背包中的道具可存入</div>'; return; }
+  $('whSub').textContent = `長期存儲 · 跨對局保留（${save.totalOf(save.wh)}/${60}）`;
+  if (!ids.length) { grid.innerHTML = '<div class="empty">倉庫空空如也 · 背包中的道具可存入</div>'; return; }
   for (const id of ids) {
     grid.appendChild(itemCard(id, save.wh[id], [
       ['取出到背包', () => { save.toPack(id); renderWh(); }]
@@ -827,6 +847,7 @@ function startGame() {
     G.boss = enemies.spawnBoss(new THREE.Vector3(mapInfo.bombSite.x + 4, 0, mapInfo.bombSite.z + 4), {});
   }
   setupBomb();
+  applyMapEnv(mapInfo);   // 地圖光照（敵人/BOSS 建立後統一套用）
   for (const n of nades) scene.remove(n.mesh);
   nades.length = 0;
   $('startScreen').classList.add('hidden');
@@ -849,20 +870,20 @@ function endRound(fromAdventure = false) {
   if (!IS_TOUCH) document.exitPointerLock?.();
   if (IS_TOUCH) $('touchui').classList.remove('ingame');
   if (fromAdventure) {
-    $('endTitle').textContent = '奇 遇 结 束';
+    $('endTitle').textContent = '奇 遇 結 束';
     $('endTitle').style.color = '#ffd27a';
     $('endScore').innerHTML = `<span class="b">+${G.advGold}</span> 💰`;
-    $('endStats').textContent = `黄金遗迹收获：金币 ${G.advGold} · 道具装备 ${G.advItems} 件`;
+    $('endStats').textContent = `黃金遺跡收穫：金幣 ${G.advGold} · 道具裝備 ${G.advItems} 件`;
   } else {
     const win = G.scoreB >= G.scoreR;
-    $('endTitle').textContent = G.scoreB === G.scoreR ? '平局' : (win ? '胜 利' : '战 败');
+    $('endTitle').textContent = G.scoreB === G.scoreR ? '平局' : (win ? '勝 利' : '戰 敗');
     $('endTitle').style.color = win ? '#ffd27a' : '#ff6a5d';
     $('endScore').innerHTML = `<span class="b">${G.scoreB}</span> &nbsp;:&nbsp; <span class="r">${G.scoreR}</span>`;
     const acc = G.shots ? Math.round(G.hits / G.shots * 100) : 0;
-    $('endStats').textContent = `击杀 ${G.kills} · 阵亡 ${G.deaths} · 命中率 ${acc}% · 爆破任务 ${G.missions} 次`;
+    $('endStats').textContent = `擊殺 ${G.kills} · 陣亡 ${G.deaths} · 命中率 ${acc}% · 爆破任務 ${G.missions} 次`;
     if (G.scoreB > G.scoreR) audio.voice('victory');
   }
-  $('endGold').textContent = `💰 当前金币 ${save.gold}（已自动存档）`;
+  $('endGold').textContent = `💰 當前金幣 ${save.gold}（已自動存檔）`;
   save.save();
   $('endScreen').classList.remove('hidden');
   refreshStartbar();
@@ -910,8 +931,8 @@ function loop() {
     // 传送门交互提示
     if (G.portal.active && player.alive && player.pos.distanceTo(portalG.position) < 6) {
       hud.prompt(G.portal.target === 'adventure'
-        ? (IS_TOUCH ? '点按 <b>互动</b> 进入奇遇地图 · 黄金遗迹' : '按 <b>P</b> 进入奇遇地图 · 黄金遗迹')
-        : (IS_TOUCH ? '点按 <b>互动</b> 离开奇遇地图（结算收获）' : '按 <b>P</b> 离开奇遇地图（结算收获）'));
+        ? (IS_TOUCH ? '點按 <b>互動</b> 進入奇遇地圖 · 黃金遺跡' : '按 <b>P</b> 進入奇遇地圖 · 黃金遺跡')
+        : (IS_TOUCH ? '點按 <b>互動</b> 離開奇遇地圖（結算收穫）' : '按 <b>P</b> 離開奇遇地圖（結算收穫）'));
     } else if (!(mapInfo.bombSite && !G.inAdventure && G.bomb.state === 'carry'
       && Math.hypot(player.pos.x - mapInfo.bombSite.x, player.pos.z - mapInfo.bombSite.z) < mapInfo.bombSite.r)) {
       hud.prompt(null);
@@ -966,13 +987,13 @@ function loop() {
     hud.protect(player.alive ? player.protectT : 0);
     // 任务指引
     if (G.inAdventure) {
-      hud.objective(`🌀 奇遇 · 黄金遗迹<br>拾取稀有装备，击杀远古守卫<br>剩余 ${Math.ceil(G.adventureT)}s`);
+      hud.objective(`🌀 奇遇 · 黃金遺跡<br>拾取稀有裝備，擊殺遠古守衛<br>剩餘 ${Math.ceil(G.adventureT)}s`);
     } else if (mapInfo.bombSite) {
       const b = G.bomb, site = mapInfo.bombSite;
-      if (b.state === 'planted') hud.objective(`💣 炸弹已安装<br>引爆倒计时 <b>${Math.ceil(b.boomT)}s</b>`);
+      if (b.state === 'planted') hud.objective(`💣 炸彈已安裝<br>引爆倒計時 <b>${Math.ceil(b.boomT)}s</b>`);
       else {
         const d = Math.hypot(player.pos.x - site.x, player.pos.z - site.z);
-        hud.objective(`🎯 任务：前往敌方阵营安装 C4<br>距离爆破点 ${Math.round(d)}m · ${IS_TOUCH ? '点互动键' : '按 E'} 安装`);
+        hud.objective(`🎯 任務：前往敵方陣營安裝 C4<br>距離爆破點 ${Math.round(d)}m · ${IS_TOUCH ? '點互動鍵' : '按 E'} 安裝`);
       }
     } else hud.objective(null);
     hud.setHP(player.hp, player.armor);

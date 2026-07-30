@@ -17,11 +17,18 @@ export const patrolPoints = [];
 
 let scene, group;
 const rand = (a, b) => a + Math.random() * (b - a);
+let NIGHT = false;   // 夜晚模式（小鎮街道）：暖窗燈光、暗色天空
 
 // ---------- 基础盒子（加入当前地图组）----------
 function box(w, h, d, color, x, y, z, opts = {}) {
   let material;
-  if (opts.tex) {
+  if (opts.emis) {
+    // 自發光材質（夜晚暖窗 / 燈具）
+    material = new THREE.MeshStandardMaterial({
+      color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0,
+      emissive: opts.emis, emissiveIntensity: opts.emisI ?? 1
+    });
+  } else if (opts.tex) {
     // 按盒子尺寸平铺，保持贴图密度一致
     const t = opts.tex.clone();
     t.needsUpdate = true;
@@ -67,6 +74,67 @@ import { batchBegin, batchBox, batchEnd } from './lod-mesh.js';
 export const mapAnims = [];
 
 function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
+  // ===== 夜晚天空：深色背景 + 星空 + 月亮 =====
+  if (NIGHT) {
+    scene.background = new THREE.Color(horizon);
+    scene.fog = new THREE.Fog(horizon, 55, 215);
+    // 星空
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(320 * 3);
+    for (let i = 0; i < 320; i++) {
+      const a = rand(0, Math.PI * 2), el = rand(0.08, 1.4), r = 700;
+      starPos[i * 3] = Math.cos(a) * Math.cos(el) * r;
+      starPos[i * 3 + 1] = Math.sin(el) * r;
+      starPos[i * 3 + 2] = Math.sin(a) * Math.cos(el) * r;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+      color: 0xcdd8f0, size: 1.6, sizeAttenuation: false, fog: false,
+      transparent: true, opacity: 0.85, depthWrite: false
+    }));
+    group.add(stars);
+    // 月亮（帶光暈）
+    const mc = document.createElement('canvas'); mc.width = mc.height = 128;
+    const mx = mc.getContext('2d');
+    const mg = mx.createRadialGradient(64, 64, 8, 64, 64, 64);
+    mg.addColorStop(0, 'rgba(235,242,255,1)'); mg.addColorStop(0.25, 'rgba(215,228,250,.9)');
+    mg.addColorStop(0.45, 'rgba(160,185,230,.28)'); mg.addColorStop(1, 'rgba(140,170,220,0)');
+    mx.fillStyle = mg; mx.fillRect(0, 0, 128, 128);
+    const moon = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(mc), transparent: true, fog: false, depthWrite: false
+    }));
+    moon.scale.set(150, 150, 1);
+    moon.position.set(-320, 380, -520);
+    group.add(moon);
+    // 稀疏暗雲
+    const cc = document.createElement('canvas'); cc.width = cc.height = 128;
+    const cx = cc.getContext('2d');
+    for (let i = 0; i < 10; i++) {
+      const px = rand(20, 108), py = rand(45, 85), r = rand(14, 30);
+      const rg = cx.createRadialGradient(px, py, 0, px, py, r);
+      rg.addColorStop(0, 'rgba(60,72,96,.5)'); rg.addColorStop(1, 'rgba(60,72,96,0)');
+      cx.fillStyle = rg; cx.beginPath(); cx.arc(px, py, r, 0, 7); cx.fill();
+    }
+    const ctex = new THREE.CanvasTexture(cc);
+    const clouds = [];
+    for (let i = 0; i < 8; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ctex, transparent: true, opacity: rand(.3, .5), fog: false, depthWrite: false }));
+      const s = rand(120, 240);
+      sp.scale.set(s, s * 0.38, 1);
+      const a = rand(0, Math.PI * 2), r = rand(220, 520);
+      sp.position.set(Math.cos(a) * r, rand(110, 220), Math.sin(a) * r);
+      sp.userData.drift = rand(0.4, 1.1);
+      group.add(sp);
+      clouds.push(sp);
+    }
+    mapAnims.push((t) => {
+      for (const cl of clouds) {
+        cl.position.x += cl.userData.drift * 0.016;
+        if (cl.position.x > 560) cl.position.x = -560;
+      }
+    });
+    return;
+  }
   if (typeof perf !== 'undefined' && perf.settings.skyQuality === 'simple') {
     scene.background = new THREE.Color(horizon);
     scene.fog = new THREE.Fog(horizon, 60, 220);
@@ -144,7 +212,7 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
 const wallCols = [0xd8c9a8, 0xcbb894, 0xe0d3b5, 0xc4a982, 0xd0bf9f, 0xbfa77e];
 const awnCols = [0x3f6d4e, 0x8a4a3a, 0x3a5a7a, 0x9a7a3a, 0x6a4a6a, 0xb06a3a];
 
-const signNames = ['五金商店', '咖啡馆', '大药房', '便民超市', '老茶馆', '书店', '面包房', '杂货铺'];
+const signNames = ['五金商店', '咖啡館', '大藥房', '便民超市', '老茶館', '書店', '麵包房', '雜貨鋪'];
 const signBgs = ['#3a4a5c', '#6a3a2a', '#2a5a42', '#7a5a20', '#4a3a62'];
 
 function building(x, z, w, d, floors, face, fixedH) {
@@ -192,7 +260,11 @@ function building(x, z, w, d, floors, face, fixedH) {
       const wz = z - d / 2 + (i + 0.5) * (d / nWin);
       // 窗套：边框 + 玻璃 + 窗台板 + 窗眉
       box(0.1, 1.55, 1.45, 0x8a7a5c, fx + face * 0.05, wy, wz, { solid: false, cast: false });
-      box(0.12, 1.4, 1.3, 0x2a3038, fx + face * 0.09, wy, wz, { solid: false, cast: false });
+      if (NIGHT && Math.random() < 0.55)
+        // 夜晚亮灯暖窗
+        box(0.12, 1.4, 1.3, 0xffd9a0, fx + face * 0.09, wy, wz, { solid: false, cast: false, emis: 0xffb05a, emisI: 1.15 });
+      else
+        box(0.12, 1.4, 1.3, 0x2a3038, fx + face * 0.09, wy, wz, { solid: false, cast: false });
       box(0.26, 0.1, 1.7, 0xd0c6b0, fx + face * 0.1, wy - 0.82, wz, { solid: false, cast: false });
       box(0.2, 0.1, 1.6, 0xc4b89e, fx + face * 0.08, wy + 0.83, wz, { solid: false, cast: false });
       // 玻璃高光条
@@ -465,7 +537,7 @@ function streetlight(x, z, ry = 0) {
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.28), metal);
   head.position.set(1.75, 6.0, 0); head.castShadow = true; g.add(head);
   const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0xf8f2dc, emissive: 0xfff2c0, emissiveIntensity: 0.6 }));
+    new THREE.MeshStandardMaterial({ color: 0xf8f2dc, emissive: 0xfff2c0, emissiveIntensity: NIGHT ? 2.2 : 0.6 }));
   lamp.position.set(1.75, 5.92, 0); g.add(lamp);
   group.add(g);
   colliders.push({ min: new THREE.Vector3(x - 0.2, 0, z - 0.2), max: new THREE.Vector3(x + 0.2, 6, z + 0.2) });
@@ -477,10 +549,11 @@ function rubble(x, z, n = 5) {
       x + rand(-1.5, 1.5), 0.1, z + rand(-1.5, 1.5), { solid: false, cast: false });
 }
 
-// ================= 地图一：小镇街道 =================
+// ================= 地图一：小镇街道（夜晚模式）=================
 function buildTown() {
-  scene.fog = new THREE.Fog(0xdde2d8, 60, 235);
-  buildSky('#e8e2d0', 44, 0.8);
+  NIGHT = true;
+  scene.fog = new THREE.Fog(0x0d1420, 55, 215);
+  buildSky('#0d1420', 12, 0.5);
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0xc9b894, (() => { const t = sandTex().clone(); t.needsUpdate = true; t.repeat.set(70, 70); return t; })(), { rough: 0.98 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
@@ -559,16 +632,16 @@ function buildTown() {
   for (let i = 0; i < 40; i++) rubble(rand(-7, 7), rand(-85, 85), 1);
 
   enemySpawns.push(
-    new THREE.Vector3(0, 0, -80), new THREE.Vector3(-24, 0, -38),
+    new THREE.Vector3(0, 0, -80), new THREE.Vector3(-24, 0, -34),
     new THREE.Vector3(24, 0, 30), new THREE.Vector3(0, 0, -60),
     new THREE.Vector3(-5, 0, -70), new THREE.Vector3(5, 0, 70),
-    new THREE.Vector3(-24, 0, 30), new THREE.Vector3(24, 0, -38),
-    new THREE.Vector3(0, 0, -45), new THREE.Vector3(-20, 0, -60)
+    new THREE.Vector3(-24, 0, 26), new THREE.Vector3(24, 0, -42),
+    new THREE.Vector3(0, 0, -45), new THREE.Vector3(-20, 0, -52)
   );
   patrolPoints.push(
     new THREE.Vector3(0, 0, -40), new THREE.Vector3(-5, 0, -10),
     new THREE.Vector3(5, 0, 10), new THREE.Vector3(0, 0, 40),
-    new THREE.Vector3(-20, 0, -38), new THREE.Vector3(20, 0, 30),
+    new THREE.Vector3(-20, 0, -38), new THREE.Vector3(25, 0, 30),
     new THREE.Vector3(4, 0, -60), new THREE.Vector3(-4, 0, 60),
     new THREE.Vector3(0, 0, 0)
   );
@@ -576,6 +649,7 @@ function buildTown() {
     playerSpawn: new THREE.Vector3(0, 0, 78),
     bounds: { minX: -28.5, maxX: 28.5, minZ: -90, maxZ: 90 },
     extent: 95,
+    night: true,                            // 夜晚光照（main.js 依此調暗環境）
     bombSite: { x: 0, z: -82, r: 4 },      // 北端敌方阵营
     portalPos: new THREE.Vector3(0, 0, -30)
   };
@@ -875,6 +949,7 @@ export function buildMap(sc, mapId = 'town') {
 
   group = new THREE.Group();
   scene.add(group);
+  NIGHT = false;                  // 各地圖建造器自行決定是否夜晚（小鎮街道 = 夜晚）
   batchBegin(group);            // 开始收集同材质盒子（否则建筑墙体不会渲染 → 墙壁"透明"）
   const builder = BUILDERS[mapId] || buildTown;
   const info = builder();

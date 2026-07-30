@@ -7,12 +7,12 @@ export const WH_CAP = 60;
 
 // 道具图鉴（背包/仓库中可存放的物品）
 export const ITEMS = {
-  medkit:    { icon: '💊', name: '医疗包',   desc: '恢复 50 点生命',        color: '#7affa0' },
-  armorpack: { icon: '🛡', name: '护甲包',   desc: '恢复 50 点护甲',        color: '#6ab0ff' },
+  medkit:    { icon: '💊', name: '醫療包',   desc: '恢復 50 點生命',        color: '#7affa0' },
+  armorpack: { icon: '🛡', name: '護甲包',   desc: '恢復 50 點護甲',        color: '#6ab0ff' },
   nadepack:  { icon: '💣', name: '手雷包',   desc: '手雷 +2',               color: '#ffb04a' },
-  boostcore: { icon: '⚡', name: '强化核心', desc: '当前武器伤害提升至 +20%', color: '#ffe06a' },
-  goldcore:  { icon: '🌟', name: '黄金核心', desc: '当前武器伤害提升至 +40%', color: '#ffd700' },
-  goldbag:   { icon: '💰', name: '金币袋',   desc: '立即获得 100 金币',      color: '#ffd27a' },
+  boostcore: { icon: '⚡', name: '強化核心', desc: '當前武器傷害提升至 +20%', color: '#ffe06a' },
+  goldcore:  { icon: '🌟', name: '黃金核心', desc: '當前武器傷害提升至 +40%', color: '#ffd700' },
+  goldbag:   { icon: '💰', name: '金幣袋',   desc: '立即獲得 100 金幣',      color: '#ffd27a' },
 };
 
 function defaults() {
