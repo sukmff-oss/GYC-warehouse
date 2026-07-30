@@ -120,6 +120,7 @@ const G = {
   cannon: false,           // 持有黃金加農槍（無限子彈）
   cannonSpawned: false,    // 本局 100 殺加農槍已生成過
   cannonBoosts: {},        // 加農槍改過的武器 boost（死亡時還原）
+  cannonGoal: 100,         // 加農槍解鎖殺數（25 / 50 / 100）
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
   boss: null,              // 当前 BOSS 士兵
@@ -304,8 +305,8 @@ function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
     const bk = bots.bots.find(b => b.name === killerName);
     if (bk) bk.hp = Math.min(100, bk.hp + healAmt);
   }
-  // 累計 100 殺：地圖隨機出現黃金加農槍（無限子彈）
-  if (!G.cannonSpawned && G.kills >= 100) {
+  // 累計殺數達標：地圖隨機出現黃金加農槍（無限子彈）
+  if (!G.cannonSpawned && G.kills >= G.cannonGoal) {
     G.cannonSpawned = true;
     spawnCannon();
   }
@@ -919,6 +920,14 @@ document.querySelectorAll('.envcard').forEach(card => {
       net.env = G.env;
       net._broadcast({ t: 'map', mapId: G.mapId, env: G.env });
     }
+  });
+});
+// 加農槍解鎖難度（25 / 50 / 100 殺）
+document.querySelectorAll('.cannoncard').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.cannoncard').forEach(c => c.classList.remove('sel'));
+    card.classList.add('sel');
+    G.cannonGoal = +card.dataset.goal;
   });
 });
 

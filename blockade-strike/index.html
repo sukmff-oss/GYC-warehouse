@@ -292,6 +292,8 @@
   /* ===== 模式选择 ===== */
   #modeselect { display:flex; gap:12px; margin-top:16px; }
   #envselect { display:flex; gap:12px; margin-top:12px; }
+  #cannonselect { display:flex; gap:12px; margin-top:12px; align-items:center; }
+  .cannonlabel { color:#8fa2bd; font:12.5px sans-serif; letter-spacing:1px; }
   .modecard { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.25); cursor:pointer;
     color:#cfd8e8; font:14px sans-serif; background:rgba(255,255,255,.05); transition:.2s; }
   .modecard.sel { border-color:#ffb04a; color:#ffb04a; background:rgba(255,176,74,.12); }
@@ -416,6 +418,12 @@
   <div id="modeselect">
     <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
     <div class="modecard" data-mode="timed">限時局 · 3 分鐘</div>
+  </div>
+  <div id="cannonselect">
+    <span class="cannonlabel">🏆 加農槍解鎖</span>
+    <div class="modecard cannoncard" data-goal="25">25 殺</div>
+    <div class="modecard cannoncard" data-goal="50">50 殺</div>
+    <div class="modecard cannoncard sel" data-goal="100">100 殺</div>
   </div>
   <div id="coopStatus"></div>
   <button class="playbtn" id="playBtn">進入戰鬥</button>
