@@ -17,8 +17,8 @@ const FilmShader = {
     tDiffuse: { value: null },
     time: { value: 0 },
     vigStrength: { value: 0.36 },
-    grainStrength: { value: 0.032 },
-    aberration: { value: 0.0006 },
+    grainStrength: { value: 0.022 },
+    aberration: { value: 0.00035 },
     saturation: { value: 1.08 },
     lift: { value: 0.012 }
   },
@@ -82,9 +82,9 @@ export class PostFX {
       this.composer.addPass(this.bloom);
     }
 
-    // Motion Blur — 可選
+    // Motion Blur — 可選（降低拖影強度，避免畫面模糊）
     if (this.settings.motionBlur) {
-      this.motion = new AfterimagePass(0.3);
+      this.motion = new AfterimagePass(0.16);
       this.composer.addPass(this.motion);
     }
 
@@ -133,7 +133,7 @@ export class PostFX {
     }
 
     if (this.settings.motionBlur && this.motion) {
-      const target = 0.28 + Math.min(1, speed / 9) * 0.5;
+      const target = 0.14 + Math.min(1, speed / 9) * 0.3;   // 最高 0.44（原本 0.78 拖影過重）
       this.motion.uniforms.damp.value += (target - this.motion.uniforms.damp.value) * Math.min(1, dt * 6);
     }
     if (this.film) {

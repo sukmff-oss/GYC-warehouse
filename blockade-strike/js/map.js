@@ -655,10 +655,11 @@ function buildTown() {
   };
 }
 
-// ================= 地图二：沙漠废墟 =================
+// ================= 地图二：沙漠废墟（夜晚模式）=================
 function buildRuins() {
-  scene.fog = new THREE.Fog(0xe2d8c0, 55, 220);
-  buildSky('#e8dabb', 52, 1.2);
+  NIGHT = true;
+  scene.fog = new THREE.Fog(0x0e141f, 50, 210);
+  buildSky('#0e141f', 12, 0.5);
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0xd6c098, (() => { const t = sandTex().clone(); t.needsUpdate = true; t.repeat.set(70, 70); return t; })(), { rough: 0.98 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
@@ -747,15 +748,17 @@ function buildRuins() {
     playerSpawn: new THREE.Vector3(0, 0, 38),
     bounds: { minX: -45, maxX: 45, minZ: -43, maxZ: 43 },
     extent: 50,
+    night: true,                            // 夜晚光照
     bombSite: { x: -30, z: -30, r: 4 },    // 西北角残垣深处
     portalPos: new THREE.Vector3(0, 0, 18)
   };
 }
 
-// ================= 地图三：货运码头 =================
+// ================= 地图三：货运码头（夜晚模式）=================
 function buildDocks() {
-  scene.fog = new THREE.Fog(0xd0d8dc, 60, 235);
-  buildSky('#d8dcd8', 40, 0.9);
+  NIGHT = true;
+  scene.fog = new THREE.Fog(0x0c1219, 55, 215);
+  buildSky('#0c1219', 12, 0.5);
 
   // 地面混凝土
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0x9aa0a2, (() => { const t = concreteTex().clone(); t.needsUpdate = true; t.repeat.set(55, 55); return t; })(), { rough: 0.95 }));
@@ -840,6 +843,7 @@ function buildDocks() {
     playerSpawn: new THREE.Vector3(0, 0, 28),
     bounds: { minX: -49, maxX: 49, minZ: -49, maxZ: 31 },
     extent: 55,
+    night: true,                            // 夜晚光照
     bombSite: { x: 0, z: -40, r: 4.5 },    // 仓库内
     portalPos: new THREE.Vector3(20, 0, 0)
   };
