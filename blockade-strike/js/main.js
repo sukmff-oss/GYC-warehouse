@@ -740,6 +740,7 @@ function respawnPlayer() {
   player.spawn(mapInfo.playerSpawn);
   resetWeapons();
   G.state = 'play';
+  $('vignette').style.opacity = '0';   // 重生後關閉陣亡暗角
   hud.sysmsg('重新部署完成', 1200);
 }
 
