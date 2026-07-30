@@ -241,10 +241,10 @@ function onKill(soldier, weaponName, isHeadshot = false) {
     }
     if (rare) {
       activatePortal('exit');   // 返程传送门
-      hud.sysmsg('返程传送门已开启 · 靠近按 P 离开奇遇', 4000);
+      hud.sysmsg(IS_TOUCH ? '返程传送门已开启 · 靠近点互动键离开奇遇' : '返程传送门已开启 · 靠近按 P 离开奇遇', 4000);
     } else {
       activatePortal('adventure'); // 奇遇传送门
-      hud.sysmsg('🌀 奇遇传送门已开启 · 靠近按 P 进入黄金遗迹', 4500);
+      hud.sysmsg(IS_TOUCH ? '🌀 奇遇传送门已开启 · 靠近点互动键进入黄金遗迹' : '🌀 奇遇传送门已开启 · 靠近按 P 进入黄金遗迹', 4500);
     }
     G.boss = null;
     return;
@@ -443,7 +443,7 @@ function updateBomb(dt) {
     bombG.visible = true;
     bombG.getObjectByName('ring').rotation.z += dt * 0.8;
     if (dSite < site.r && player.alive && G.state === 'play')
-      hud.prompt('按 <b>E</b> 安装 C4 炸弹');
+      hud.prompt(IS_TOUCH ? '点按 <b>互动</b> 安装 C4 炸弹' : '按 <b>E</b> 安装 C4 炸弹');
   } else if (b.state === 'planting') {
     if (dSite > site.r + 1.5 || !player.alive) { // 离开/阵亡中断
       b.state = 'carry';
@@ -690,6 +690,11 @@ if (IS_TOUCH) {
   bind('btnSwap', () => weapon.cycle());
   bind('btnAct', () => doInteract());
   bind('btnPack2', () => togglePack());
+  bind('btnQuit', () => quitToMenu());
+
+  // 阻止 iOS 双指缩放手势 / 双击缩放干扰游戏
+  document.addEventListener('gesturestart', e => e.preventDefault());
+  document.addEventListener('dblclick', e => e.preventDefault());
 }
 
 // ---------- 地图选择 ----------
@@ -905,8 +910,8 @@ function loop() {
     // 传送门交互提示
     if (G.portal.active && player.alive && player.pos.distanceTo(portalG.position) < 6) {
       hud.prompt(G.portal.target === 'adventure'
-        ? '按 <b>P</b> 进入奇遇地图 · 黄金遗迹'
-        : '按 <b>P</b> 离开奇遇地图（结算收获）');
+        ? (IS_TOUCH ? '点按 <b>互动</b> 进入奇遇地图 · 黄金遗迹' : '按 <b>P</b> 进入奇遇地图 · 黄金遗迹')
+        : (IS_TOUCH ? '点按 <b>互动</b> 离开奇遇地图（结算收获）' : '按 <b>P</b> 离开奇遇地图（结算收获）'));
     } else if (!(mapInfo.bombSite && !G.inAdventure && G.bomb.state === 'carry'
       && Math.hypot(player.pos.x - mapInfo.bombSite.x, player.pos.z - mapInfo.bombSite.z) < mapInfo.bombSite.r)) {
       hud.prompt(null);
@@ -967,7 +972,7 @@ function loop() {
       if (b.state === 'planted') hud.objective(`💣 炸弹已安装<br>引爆倒计时 <b>${Math.ceil(b.boomT)}s</b>`);
       else {
         const d = Math.hypot(player.pos.x - site.x, player.pos.z - site.z);
-        hud.objective(`🎯 任务：前往敌方阵营安装 C4<br>距离爆破点 ${Math.round(d)}m · 按 E 安装`);
+        hud.objective(`🎯 任务：前往敌方阵营安装 C4<br>距离爆破点 ${Math.round(d)}m · ${IS_TOUCH ? '点互动键' : '按 E'} 安装`);
       }
     } else hud.objective(null);
     hud.setHP(player.hp, player.armor);

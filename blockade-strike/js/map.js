@@ -875,6 +875,9 @@ export function buildMap(sc, mapId = 'town') {
 
   group = new THREE.Group();
   scene.add(group);
+  batchBegin(group);            // 开始收集同材质盒子（否则建筑墙体不会渲染 → 墙壁"透明"）
   const builder = BUILDERS[mapId] || buildTown;
-  return builder();
+  const info = builder();
+  batchEnd();                   // 合并并真正加入场景
+  return info;
 }
