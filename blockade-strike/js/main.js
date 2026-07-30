@@ -117,6 +117,9 @@ const G = {
   shake: 0,
   streak: 0, lastKillT: -10, firstBlood: false,
   coop: false,             // 多人連線模式
+  cannon: false,           // 持有黃金加農槍（無限子彈）
+  cannonSpawned: false,    // 本局 100 殺加農槍已生成過
+  cannonBoosts: {},        // 加農槍改過的武器 boost（死亡時還原）
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
   boss: null,              // 当前 BOSS 士兵
@@ -294,13 +297,25 @@ function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
   G.kills++; G.scoreB++;
   save.stats.kills++; save.save();
   hud.setScore(G.scoreB, G.scoreR);
+  // 擊殺回血：普通敵人 +20，BOSS +100（誰殺誰補）
+  const healAmt = soldier.isBoss ? 100 : 20;
+  if (mine) player.hp = Math.min(100, player.hp + healAmt);
+  else {
+    const bk = bots.bots.find(b => b.name === killerName);
+    if (bk) bk.hp = Math.min(100, bk.hp + healAmt);
+  }
+  // 累計 100 殺：地圖隨機出現黃金加農槍（無限子彈）
+  if (!G.cannonSpawned && G.kills >= 100) {
+    G.cannonSpawned = true;
+    spawnCannon();
+  }
   if (mine) {
     if (now - G.lastKillT < 4) G.streak++; else G.streak = 1;
     G.lastKillT = now;
   }
   // 連線：廣播擊殺與團隊金幣
   if (G.coop && net.isHost) {
-    net._broadcast({ t: 'kill', k: mine ? 'P1' : killerName, w: weaponName, v: soldier.name, head: isHeadshot });
+    net._broadcast({ t: 'kill', k: mine ? 'P1' : killerName, w: weaponName, v: soldier.name, head: isHeadshot, boss: !!soldier.isBoss });
     net._broadcast({ t: 'gold', n: 10 });
   }
 
@@ -468,11 +483,76 @@ function onPlayerDeath() {
   G.deaths++;
   G.scoreR++;
   G.streak = 0;
+  dropCannon();   // 黃金加農槍隨人物陣亡消失
   hud.setScore(G.scoreB, G.scoreR);
   hud.feed('ENEMY', 'AK-47', 'YOU', false);
   hud.sysmsg('你已陣亡 · 3 秒後重新部署', 3000);
   $('vignette').style.opacity = '1';
   G.respawnT = 3;
+}
+
+// ---------- 黃金加農槍（100 殺獎勵 · 無限子彈 · 陣亡消失）----------
+let cannonG = null;   // 地圖上的拾取物
+
+function spawnCannon(pos = null, remote = false) {
+  removeCannonMesh();
+  let x, z;
+  if (pos) { x = pos[0]; z = pos[1]; }
+  else {
+    const b = mapInfo.bounds;
+    for (let i = 0; i < 40 && x === undefined; i++) {
+      const tx = b.minX + 2 + Math.random() * (b.maxX - b.minX - 4);
+      const tz = b.minZ + 2 + Math.random() * (b.maxZ - b.minZ - 4);
+      let blocked = false;
+      for (const c of colliders) {
+        if (c.max.y < 0.4 || c.min.y > 1.5) continue;
+        if (tx + 0.5 > c.min.x && tx - 0.5 < c.max.x && tz + 0.5 > c.min.z && tz - 0.5 < c.max.z) { blocked = true; break; }
+      }
+      if (!blocked) { x = tx; z = tz; }
+    }
+    if (x === undefined) { x = mapInfo.playerSpawn.x + 4; z = mapInfo.playerSpawn.z + 4; }
+  }
+  cannonG = new THREE.Group();
+  const gold = new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0xaa7a10, emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.25 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 1.1), gold);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 10), gold);
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.06, 0.9);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.2, 12), gold);
+  drum.rotation.x = Math.PI / 2; drum.position.set(0, -0.2, 0.1);
+  cannonG.add(body, barrel, drum);
+  const gc = document.createElement('canvas'); gc.width = gc.height = 64;
+  const gx = gc.getContext('2d');
+  const gg = gx.createRadialGradient(32, 32, 4, 32, 32, 32);
+  gg.addColorStop(0, 'rgba(255,220,120,.9)'); gg.addColorStop(1, 'rgba(255,200,80,0)');
+  gx.fillStyle = gg; gx.fillRect(0, 0, 64, 64);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.scale.set(2.2, 2.2, 1);
+  cannonG.add(glow);
+  cannonG.position.set(x, 1.0, z);
+  scene.add(cannonG);
+  hud.sysmsg('🏆 黃金加農槍出現在地圖某處 · 撿起獲得無限子彈！', 4500);
+  if (!remote && G.coop && net.isHost) net._broadcast({ t: 'cannonSpawn', p: [x, z] });
+}
+
+function removeCannonMesh() { if (cannonG) { scene.remove(cannonG); cannonG = null; } }
+
+function pickupCannon() {
+  G.cannon = true;
+  G.cannonBoosts = {};
+  removeCannonMesh();
+  hud.sysmsg('🏆 撿到黃金加農槍 · 無限子彈火力全開！（陣亡消失）', 4000);
+  audio.kill();
+  if (G.coop) {
+    if (net.isHost) net._broadcast({ t: 'cannonGone' });
+    else net.send({ t: 'cannonTake' });
+  }
+}
+
+function dropCannon() {
+  if (!G.cannon) return;
+  for (const id in G.cannonBoosts) weapon.state[id].boost = G.cannonBoosts[id];
+  G.cannonBoosts = {};
+  G.cannon = false;
 }
 
 // ---------- 传送门（奇遇入口 / 返程）----------
@@ -989,7 +1069,10 @@ net.onEvent = (type, data) => {
       break;
     case 'kill':
       hud.feed(data.k, data.w, data.v, true);
-      if (data.k === net.myName) { hud.killToast(data.head ? 150 : 100); audio.kill(); }
+      if (data.k === net.myName) {
+        player.hp = Math.min(100, player.hp + (data.boss ? 100 : 20));   // 擊殺回血
+        hud.killToast(data.head ? 150 : 100); audio.kill();
+      }
       break;
     case 'gold':
       addGold(data);
@@ -1003,6 +1086,17 @@ net.onEvent = (type, data) => {
     case 'msg':
       hud.sysmsg(data, 2500);
       break;
+    case 'cannonSpawn':   // 房主：100 殺加農槍生成位置同步
+      spawnCannon(data.p, true);
+      break;
+    case 'cannonGone':    // 有人撿走了加農槍
+      removeCannonMesh();
+      break;
+    case 'cannonTake': {  // 房主：加入者撿走加農槍 → 移除並通知全員
+      removeCannonMesh();
+      net._broadcast({ t: 'cannonGone' });
+      break;
+    }
     case 'clientHit': {   // 房主：加入者回報命中
       if (G.state !== 'play') break;
       const s = enemies.soldiers[data.id];
@@ -1060,6 +1154,7 @@ function startGame() {
   G.time = G.mode === 'timed' ? 180 : Infinity;   // 限时局 3 分钟
   G.shake = 0; G.missions = 0;
   G.inAdventure = false; G.boss = null;
+  dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 加農槍重置
   G.bomb.state = 'carry'; G.bomb.plantT = 0;
   deactivatePortal();
   hud.setScore(0, 0);
@@ -1283,9 +1378,22 @@ function loop() {
         hud.objective(`🎯 任務：前往敵方陣營安裝 C4<br>距離爆破點 ${Math.round(d)}m · ${IS_TOUCH ? '點互動鍵' : '按 E'} 安裝`);
       }
     } else hud.objective(null);
+    // 黃金加農槍：漂浮動畫 / 拾取 / 無限子彈火力
+    if (cannonG) {
+      cannonG.rotation.y += dt * 1.5;
+      cannonG.position.y = 1.0 + Math.sin(now * 2) * 0.12;
+      if (!G.cannon && player.alive && Math.hypot(player.pos.x - cannonG.position.x, player.pos.z - cannonG.position.z) < 1.7)
+        pickupCannon();
+    }
+    if (G.cannon) {
+      const cst = weapon.state[weapon.activeId];
+      if (!(weapon.activeId in G.cannonBoosts)) G.cannonBoosts[weapon.activeId] = cst.boost || 1;
+      cst.boost = 3;
+      if (weapon.ammo < weapon.cfg.mag) weapon.ammo = weapon.cfg.mag;   // 無限子彈
+    }
     hud.setHP(player.hp, player.armor);
-    hud.setAmmo(weapon.ammo, weapon.reserve, weapon.reloading > 0);
-    hud.setWeapon(weapon.displayName);
+    hud.setAmmo(weapon.ammo, G.cannon ? '∞' : weapon.reserve, weapon.reloading > 0);
+    hud.setWeapon((G.cannon ? '🏆 黃金加農 · ' : '') + weapon.displayName);
     hud.setGrenades(weapon.grenades);
     const scoped = weapon.cfg.sight === 'scope' && weapon.ads > 0.6;
     $('scope').classList.toggle('on', scoped);

@@ -197,6 +197,8 @@ export class Net {
       this._broadcast({ t: 'vnade', o: d.o, dir: d.dir }, this._idOf(rec));
     } else if (d.t === 'shotfx') {
       this._broadcast({ t: 'shotfx', o: d.o, dir: d.dir }, this._idOf(rec));
+    } else if (d.t === 'cannonTake') {
+      this.onEvent('cannonTake');
     }
   }
 
@@ -219,6 +221,8 @@ export class Net {
       case 'boom': this.onEvent('boom', d); break;
       case 'leave': this._removeRemote(d.id); this.remote.delete(d.id); break;
       case 'msg': this.onEvent('msg', d.text); break;
+      case 'cannonSpawn': this.onEvent('cannonSpawn', d); break;
+      case 'cannonGone': this.onEvent('cannonGone'); break;
     }
   }
 
