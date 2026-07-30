@@ -53,7 +53,7 @@ export class Soldier {
     const dark = new THREE.MeshStandardMaterial({ color: 0x2e2f33, roughness: 0.55, metalness: 0.5 });
     const vest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.95 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x2a241c, roughness: 0.8 });
-    const goggleMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.4, emissive: 0xff2222, emissiveIntensity: 0.6 });
+    const goggleMat = new THREE.MeshStandardMaterial({ color: 0x1a1c20, roughness: 0.4 });
 
     const M = (geo, mt, x, y, z, parent = g) => {
       const m = new THREE.Mesh(geo, mt);
@@ -124,7 +124,6 @@ export class Soldier {
     {
       const mkc = document.createElement('canvas'); mkc.width = mkc.height = 64;
       const mkx = mkc.getContext('2d');
-      mkx.shadowColor = 'rgba(255,40,40,.95)'; mkx.shadowBlur = 12;
       mkx.fillStyle = '#ff3838';
       mkx.beginPath(); mkx.moveTo(14, 16); mkx.lineTo(50, 16); mkx.lineTo(32, 46); mkx.closePath(); mkx.fill();
       this._marker = new THREE.Sprite(new THREE.SpriteMaterial({
