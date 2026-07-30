@@ -30,7 +30,12 @@ const FilmShader = {
     uniform sampler2D tDiffuse;
     uniform float time, vigStrength, grainStrength, aberration, saturation, lift;
     varying vec2 vUv;
-    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7)) + time * 61.7) * 43758.5453); }
+    // 無 sin 雜訊（sin-hash 在大座標下精度崩壞會產生條紋）
+    float hash(vec2 p) {
+      vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.x + p3.y) * p3.z);
+    }
     void main() {
       vec2 uv = vUv;
       vec2 d = uv - 0.5;
@@ -45,7 +50,7 @@ const FilmShader = {
       col += vec3(lift, lift * 0.7, lift * 0.3);
       float vig = 1.0 - vigStrength * smoothstep(0.12, 0.72, r2);
       col *= vig;
-      col += (hash(uv * vec2(1920.0, 1080.0)) - 0.5) * grainStrength;
+      col += (hash(uv * vec2(1920.0, 1080.0) + mod(time, 128.0) * 61.7) - 0.5) * grainStrength;
       gl_FragColor = vec4(col, 1.0);
     }
   `
