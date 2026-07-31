@@ -105,15 +105,23 @@ export class LootManager {
   }
 }
 
-// 拾取结算
+// 拾取结算（背包/倉庫已移除，道具拾取後立即生效）
 export function applyLoot(spec, player, weapon, hud, audio) {
   if (spec.type === 'item') {
     const it = ITEMS[spec.itemId];
-    if (save.addItem(spec.itemId, 1)) {
-      hud.sysmsg(`拾取 ${it.icon} ${it.name} · 已放入背包（B 打开）`, 2200);
-    } else {
-      hud.sysmsg('背包已滿 · 道具未能拾取', 1800);
+    switch (spec.itemId) {
+      case 'medkit':    player.hp = Math.min(100, player.hp + 50); break;
+      case 'armorpack': player.armor = Math.min(100, player.armor + 50); break;
+      case 'nadepack':  weapon.grenades = Math.min(6, weapon.grenades + 2); break;
+      case 'goldbag':   save.addGold(100); hud.gold(save.gold); break;
+      case 'boostcore': {
+        const st = weapon.state[weapon.activeId];
+        st.boost = Math.max(st.boost || 1, 1.2);
+        break;
+      }
+      case 'goldcore':  weapon.state[weapon.activeId].boost = 1.4; break;
     }
+    hud.sysmsg(`拾取 ${it.icon} ${it.name} · ${it.desc}`, 2200);
     audio.kill();
     return;
   }

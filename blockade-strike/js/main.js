@@ -7,7 +7,7 @@ import { EnemyManager } from './enemies.js';
 import { HUD } from './hud.js';
 import { audio } from './audio.js';
 import { LootManager, applyLoot } from './loot.js';
-import { save, ITEMS } from './save.js';
+import { save } from './save.js';
 import { PostFX } from './post.js';
 import { perf, createQualityUI } from './performance-config.js';
 import { ObjectPool } from './lod-mesh.js';
@@ -773,7 +773,6 @@ function doInteract() { // E / 触屏互动键：安装炸弹或进出传送门
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyB') { togglePack(); return; }
   if (G.state === 'menu' || G.state === 'end') return;
   if (e.code === 'Escape' && G.state === 'play') { quitToMenu(); return; }
   if (G.state !== 'play') return;
@@ -891,7 +890,6 @@ if (IS_TOUCH) {
   bind('btnNade', () => weapon.throwGrenade());
   bind('btnSwap', () => weapon.cycle());
   bind('btnAct', () => doInteract());
-  bind('btnPack2', () => togglePack());
   bind('btnQuit', () => quitToMenu());
 
   // 阻止 iOS 双指缩放手势 / 双击缩放干扰游戏
@@ -949,81 +947,6 @@ function refreshStartbar() {
 }
 refreshStartbar();
 hud.gold(save.gold);
-
-// ---------- 背包 / 仓库面板 ----------
-function itemCard(id, n, actions) {
-  const it = ITEMS[id];
-  const div = document.createElement('div');
-  div.className = 'itemcard';
-  div.innerHTML = `<div class="ic" style="color:${it.color}">${it.icon}</div>
-    <div class="nm">${it.name}</div><div class="ds">${it.desc}</div><div class="ct">× ${n}</div>`;
-  for (const [label, fn] of actions) {
-    const b = document.createElement('button');
-    b.textContent = label;
-    b.addEventListener('click', fn);
-    div.appendChild(b);
-  }
-  return div;
-}
-
-function renderPack() {
-  const grid = $('packGrid');
-  grid.innerHTML = '';
-  const ids = Object.keys(save.pack);
-  $('packSub').textContent = `存放拾取的裝備道具 · 可在戰鬥中使用（${save.totalOf(save.pack)}/${24}）`;
-  if (!ids.length) { grid.innerHTML = '<div class="empty">背包空空如也 · 去戰鬥中拾取裝備吧</div>'; return; }
-  for (const id of ids) {
-    grid.appendChild(itemCard(id, save.pack[id], [
-      ['使用', () => useItem(id)],
-      ['存入倉庫', () => { save.toWarehouse(id); renderPack(); }]
-    ]));
-  }
-}
-
-function renderWh() {
-  const grid = $('whGrid');
-  grid.innerHTML = '';
-  const ids = Object.keys(save.wh);
-  $('whSub').textContent = `長期存儲 · 跨對局保留（${save.totalOf(save.wh)}/${60}）`;
-  if (!ids.length) { grid.innerHTML = '<div class="empty">倉庫空空如也 · 背包中的道具可存入</div>'; return; }
-  for (const id of ids) {
-    grid.appendChild(itemCard(id, save.wh[id], [
-      ['取出到背包', () => { save.toPack(id); renderWh(); }]
-    ]));
-  }
-}
-
-function togglePack() {
-  const p = $('packPanel');
-  const opening = !p.classList.contains('on');
-  p.classList.toggle('on', opening);
-  if (opening) {
-    renderPack();
-    if (G.state === 'play' && !IS_TOUCH) document.exitPointerLock?.();
-  }
-}
-
-$('btnPack').addEventListener('click', togglePack);
-$('btnWh').addEventListener('click', () => { renderWh(); $('whPanel').classList.add('on'); });
-document.querySelectorAll('.panelclose').forEach(b =>
-  b.addEventListener('click', () => $(b.dataset.close).classList.remove('on')));
-
-// ---------- 道具使用 ----------
-function useItem(id) {
-  if (!save.removeItem(id, 1)) return;
-  if (id === 'medkit') player.hp = Math.min(100, player.hp + 50);
-  else if (id === 'armorpack') player.armor = Math.min(100, player.armor + 50);
-  else if (id === 'nadepack') weapon.grenades = Math.min(6, weapon.grenades + 2);
-  else if (id === 'boostcore') {
-    const st = weapon.state[weapon.activeId];
-    st.boost = Math.max(st.boost, 1.2);
-  } else if (id === 'goldcore') {
-    weapon.state[weapon.activeId].boost = 1.4;
-  } else if (id === 'goldbag') { save.addGold(100); hud.gold(save.gold); }
-  audio.kill();
-  hud.sysmsg(`已使用 ${ITEMS[id].icon} ${ITEMS[id].name}`, 1600);
-  renderPack();
-}
 
 // ---------- 多人連線 UI ----------
 function updateRoster() {
@@ -1443,4 +1366,4 @@ addEventListener('resize', () => {
 });
 
 // 调试句柄
-window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, useItem, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post };
+window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post };

@@ -2,10 +2,7 @@
 
 const KEY = 'blockade-strike-save-v1';
 
-export const PACK_CAP = 24;
-export const WH_CAP = 60;
-
-// 道具图鉴（背包/仓库中可存放的物品）
+// 道具图鉴（戰鬥中拾取後立即生效）
 export const ITEMS = {
   medkit:    { icon: '💊', name: '醫療包',   desc: '恢復 50 點生命',        color: '#7affa0' },
   armorpack: { icon: '🛡', name: '護甲包',   desc: '恢復 50 點護甲',        color: '#6ab0ff' },
@@ -18,8 +15,6 @@ export const ITEMS = {
 function defaults() {
   return {
     gold: 0,
-    pack: {},   // { itemId: count } 背包
-    wh: {},     // { itemId: count } 仓库
     stats: { kills: 0, boss: 0, missions: 0, adventures: 0 },
   };
 }
@@ -33,8 +28,6 @@ export const save = {
       if (!raw) return;
       const d = JSON.parse(raw);
       if (typeof d.gold === 'number') this.gold = d.gold;
-      if (d.pack && typeof d.pack === 'object') this.pack = d.pack;
-      if (d.wh && typeof d.wh === 'object') this.wh = d.wh;
       if (d.stats && typeof d.stats === 'object')
         Object.assign(this.stats, d.stats);
     } catch (e) { /* 损坏的存档从头开始 */ }
@@ -43,7 +36,7 @@ export const save = {
   save() {
     try {
       localStorage.setItem(KEY, JSON.stringify({
-        gold: this.gold, pack: this.pack, wh: this.wh, stats: this.stats,
+        gold: this.gold, stats: this.stats,
       }));
     } catch (e) { /* 存储不可用时静默 */ }
   },
@@ -51,48 +44,6 @@ export const save = {
   addGold(n) {
     this.gold = Math.max(0, this.gold + n);
     this.save();
-  },
-
-  totalOf(obj) {
-    let n = 0;
-    for (const k in obj) n += obj[k];
-    return n;
-  },
-
-  addItem(id, n = 1) {
-    if (!ITEMS[id]) return false;
-    if (this.totalOf(this.pack) + n > PACK_CAP) return false;  // 背包已满
-    this.pack[id] = (this.pack[id] || 0) + n;
-    this.save();
-    return true;
-  },
-
-  removeItem(id, n = 1) {
-    if ((this.pack[id] || 0) < n) return false;
-    this.pack[id] -= n;
-    if (this.pack[id] <= 0) delete this.pack[id];
-    this.save();
-    return true;
-  },
-
-  toWarehouse(id) {
-    if (!this.pack[id]) return false;
-    if (this.totalOf(this.wh) + 1 > WH_CAP) return false;
-    this.pack[id]--;
-    if (this.pack[id] <= 0) delete this.pack[id];
-    this.wh[id] = (this.wh[id] || 0) + 1;
-    this.save();
-    return true;
-  },
-
-  toPack(id) {
-    if (!this.wh[id]) return false;
-    if (this.totalOf(this.pack) + 1 > PACK_CAP) return false;
-    this.wh[id]--;
-    if (this.wh[id] <= 0) delete this.wh[id];
-    this.pack[id] = (this.pack[id] || 0) + 1;
-    this.save();
-    return true;
   },
 };
 

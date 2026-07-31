@@ -163,7 +163,6 @@
   #btnSwap { right:28%; bottom:29%; width:56px; height:56px; font-size:12px; }
   #btnAct { right:17%; bottom:45%; width:60px; height:60px; font-size:13px;
     background:rgba(126,200,255,.22); border-color:rgba(126,200,255,.5); }
-  #btnPack2 { left:5%; bottom:34%; width:54px; height:54px; font-size:12px; }
   #btnQuit { left:50%; top:52px; transform:translateX(-50%);
     width:54px; height:30px; border-radius:8px; font-size:12px; }
 
@@ -306,26 +305,6 @@
     background:rgba(10,14,20,.5); padding:7px 11px; border-radius:6px;
     border-left:3px solid #5db2ff; }
 
-  /* ===== 背包 / 仓库 ===== */
-  .panel { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-    background:rgba(5,8,14,.82); z-index:30; }
-  .panel.on { display:flex; }
-  .panelbox { width:520px; max-width:92vw; max-height:82vh; overflow:auto; background:#141a26;
-    border:1px solid rgba(255,210,122,.35); border-radius:12px; padding:22px 26px; }
-  .panelbox h2 { color:#ffd27a; font:18px sans-serif; margin:0 0 4px; letter-spacing:3px; }
-  .panelbox .sub { color:#8fa2bd; font:12px sans-serif; margin-bottom:14px; }
-  .itemgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
-  .itemcard { background:#1c2432; border:1px solid rgba(255,255,255,.12); border-radius:8px;
-    padding:10px 12px; color:#dfe6f0; font:13px sans-serif; }
-  .itemcard .ic { font-size:20px; }
-  .itemcard .nm { font-weight:bold; margin:4px 0 2px; }
-  .itemcard .ds { color:#8fa2bd; font-size:11px; min-height:15px; }
-  .itemcard .ct { color:#ffd27a; margin-top:2px; }
-  .itemcard button { margin-top:6px; margin-right:6px; padding:4px 10px; font-size:12px; cursor:pointer;
-    background:#2a3a52; color:#cfe0ff; border:1px solid rgba(255,255,255,.2); border-radius:5px; }
-  .itemcard button:hover { background:#3a4c6a; }
-  .panelclose { float:right; background:none; border:none; color:#8fa2bd; font-size:22px; cursor:pointer; }
-  .empty { color:#5a6a82; text-align:center; padding:30px 0; font:13px sans-serif; }
   #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
   .sbtn { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,210,122,.4); cursor:pointer;
     color:#ffd27a; font:14px sans-serif; background:rgba(255,176,74,.08); }
@@ -389,7 +368,6 @@
   <div class="tbtn" id="btnNade">手雷</div>
   <div class="tbtn" id="btnSwap">換槍</div>
   <div class="tbtn" id="btnAct">互動</div>
-  <div class="tbtn" id="btnPack2">背包</div>
   <div class="tbtn" id="btnQuit">退出</div>
 </div>
 
@@ -398,7 +376,7 @@
   <div class="title">連線<em>突擊</em></div>
   <div class="subtitle">BLOCKADE STRIKE · 連線合作</div>
   <div class="keys deskkeys">
-    <b>W A S D</b> 移動   <b>Shift</b> 疾跑   <b>空格</b> 跳躍   <b>G</b> 手雷   <b>Z</b> 狙擊變倍   <b>B</b> 背包<br/>
+    <b>W A S D</b> 移動   <b>Shift</b> 疾跑   <b>空格</b> 跳躍   <b>G</b> 手雷   <b>Z</b> 狙擊變倍<br/>
     <b>左键</b> 射擊   <b>右键</b> 瞄準   <b>R</b> 換彈   <b>E / P</b> 安裝炸彈 / 傳送門   <b>1~0</b> 切換 10 種武器
   </div>
   <div class="keys touchkeys">
@@ -428,31 +406,9 @@
   <div id="coopStatus"></div>
   <button class="playbtn" id="playBtn">進入戰鬥</button>
   <div id="startbar">
-    <button class="sbtn" id="btnPack">背包 [B]</button>
-    <button class="sbtn" id="btnWh">倉庫</button>
     <span id="startgold">💰 0</span>
   </div>
   <div id="startstats"></div>
-</div>
-
-<!-- 背包 -->
-<div class="panel" id="packPanel">
-  <div class="panelbox">
-    <button class="panelclose" data-close="packPanel">×</button>
-    <h2>背包</h2>
-    <div class="sub" id="packSub">存放拾取的裝備道具 · 可在戰鬥中使用</div>
-    <div class="itemgrid" id="packGrid"></div>
-  </div>
-</div>
-
-<!-- 仓库 -->
-<div class="panel" id="whPanel">
-  <div class="panelbox">
-    <button class="panelclose" data-close="whPanel">×</button>
-    <h2>倉庫</h2>
-    <div class="sub" id="whSub">長期存儲 · 跨對局保留</div>
-    <div class="itemgrid" id="whGrid"></div>
-  </div>
 </div>
 
 <!-- 结算界面 -->
