@@ -1,8 +1,16 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { colliders, enemySpawns, patrolPoints, isNight } from './map.js';
 import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
+
+// ===== 3D 士兵模組（three.js 官方 Soldier.glb，CC 範例素材）=====
+// 全域只載入一次；載入失敗則靜默回退方塊模型
+const soldierModelP = new Promise((resolve) => {
+  new GLTFLoader().load('./assets/models/soldier.glb', resolve, undefined, () => resolve(null));
+});
 
 const NAMES = ['VIPER', 'JACKAL', 'COBRA', 'FALCON', 'GHOST', 'HYENA', 'RAZOR', 'WOLF', 'SNAKE', 'TALON', 'BEAR', 'HAWK'];
 const UNIFORMS = [0x8a7a52, 0x6b6a45, 0x4a5240, 0x7a6248];  // CS歹徒：沙漠褐 / 橄欖綠 / 游擊灰綠 / 土棕
@@ -45,6 +53,9 @@ export class Soldier {
 
   _build() {
     const g = new THREE.Group();
+    const bg = new THREE.Group();           // 方塊身體（GLB 載入後整組隱藏，僅留隱形命中體）
+    g.add(bg);
+    this.boxGroup = bg;
     // 外观随机：军服 / 防弹衣配色（夜晚自動提亮，敵人在暗夜中更突出）
     const nb = isNight() ? 1.55 : 1;
     const uniCol = UNIFORMS[(Math.random() * UNIFORMS.length) | 0];
@@ -62,7 +73,7 @@ export class Soldier {
     const shemagh = new THREE.MeshStandardMaterial({ color: 0xcfc4a4, roughness: 0.95 });     // 沙漠頭巾
     const wood = new THREE.MeshStandardMaterial({ color: 0x6a4a2c, roughness: 0.8 });         // AK 木件
 
-    const M = (geo, mt, x, y, z, parent = g) => {
+    const M = (geo, mt, x, y, z, parent = bg) => {
       const m = new THREE.Mesh(geo, mt);
       m.position.set(x, y, z); m.castShadow = true;
       parent.add(m); return m;
@@ -70,8 +81,8 @@ export class Soldier {
 
     // ===== 腿部（髋部组 + 可摆动小腿）=====
     this.legsM = M(new THREE.BoxGeometry(0.4, 0.3, 0.26), uniD, 0, 0.98, 0);  // 髋（命中区）
-    this.legL = new THREE.Group(); this.legL.position.set(-0.115, 0.86, 0); g.add(this.legL);
-    this.legR = new THREE.Group(); this.legR.position.set(0.115, 0.86, 0); g.add(this.legR);
+    this.legL = new THREE.Group(); this.legL.position.set(-0.115, 0.86, 0); bg.add(this.legL);
+    this.legR = new THREE.Group(); this.legR.position.set(0.115, 0.86, 0); bg.add(this.legR);
     const mkLeg = (grp, side) => {
       M(new THREE.BoxGeometry(0.16, 0.5, 0.18), uni, 0, -0.25, 0, grp);                    // 大腿
       M(new THREE.BoxGeometry(0.07, 0.15, 0.08), uniD, side * 0.09, -0.28, 0.02, grp);     // 工作褲側袋
@@ -95,8 +106,8 @@ export class Soldier {
       M(new THREE.BoxGeometry(0.09, 0.11, 0.05), uniD, -0.19 + i * 0.13, 1.48 - i * 0.13, 0.19);
 
     // ===== 手臂（肩组可摆动 / 交战前指）=====
-    this.armL = new THREE.Group(); this.armL.position.set(-0.33, 1.56, 0); g.add(this.armL);
-    this.armR = new THREE.Group(); this.armR.position.set(0.33, 1.56, 0); g.add(this.armR);
+    this.armL = new THREE.Group(); this.armL.position.set(-0.33, 1.56, 0); bg.add(this.armL);
+    this.armR = new THREE.Group(); this.armR.position.set(0.33, 1.56, 0); bg.add(this.armR);
     const mkArm = (grp) => {
       M(new THREE.SphereGeometry(0.1, 8, 8), uniD, 0, 0.02, 0, grp);              // 肩甲
       M(new THREE.BoxGeometry(0.13, 0.34, 0.14), uni, 0, -0.2, 0, grp);           // 上臂（短袖作戰服）
@@ -134,7 +145,7 @@ export class Soldier {
     }
 
     // ===== AK 步槍（木槍托/木護木/彈匣/瞄具）=====
-    const gun = new THREE.Group(); gun.position.set(0.16, 1.34, 0.28); g.add(gun);
+    const gun = new THREE.Group(); gun.position.set(0.16, 1.34, 0.28); bg.add(gun);
     M(new THREE.BoxGeometry(0.06, 0.1, 0.42), dark, 0, 0, 0.1, gun);             // 机匣
     const barrel = M(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6), dark, 0, 0.01, 0.48, gun);
     barrel.rotation.x = Math.PI / 2;
@@ -169,6 +180,8 @@ export class Soldier {
     this.legsM.userData = { soldier: this, part: 'body' };
     this.group = g;
     this.scene.add(g);
+    // GLB 士兵模組載入完成後換裝（方塊身體保留為隱形命中體）
+    soldierModelP.then(gltf => { if (gltf) this._attachGlb(gltf); });
 
     // === LOD 簡化模型 ===
     this._lodMesh = new THREE.Mesh(
@@ -179,6 +192,48 @@ export class Soldier {
     this._lodMesh.visible = false;
     this._lodMesh.userData = { soldier: this, part: 'body' };
     this.scene.add(this._lodMesh);
+  }
+
+  // ===== 換裝 GLB 士兵（SkinnedMesh 需 SkeletonUtils.clone；方塊轉為隱形命中體）=====
+  _attachGlb(gltf) {
+    if (this._glb || !this.group) return;
+    const model = SkeletonUtils.clone(gltf.scene);
+    const night = isNight();
+    model.traverse(o => {
+      if (o.isMesh) {
+        o.castShadow = true; o.frustumCulled = false;  // 蒙皮邊界會亂跳，關閉剔除
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) {
+          if (!m) continue;
+          // 夜晚：低亮度自發光勾出輪廓（不能超過 Bloom 閾值，也不能把 color 推成 HDR）
+          if (night && m.emissive) m.emissive.setRGB(0.055, 0.06, 0.075);
+        }
+      }
+    });
+    // Soldier.glb 原生即 ~1.7m（three.js 範例不縮放）；蒙皮模型不能用幾何包盒推算尺寸
+    model.scale.setScalar(1);
+    model.position.y = 0;
+    model.rotation.y = Math.PI;   // GLB 面朝 -Z，轉向與 group 的 +Z 前向一致
+    this.group.add(model);
+    this.boxGroup.visible = false;   // 方塊身體隱藏（raycast 不受 visible 影響，命中體照舊）
+    // 動畫：Idle / Walk / Run
+    this.mixer = new THREE.AnimationMixer(model);
+    this._actions = {};
+    for (const clip of gltf.animations) this._actions[clip.name] = this.mixer.clipAction(clip);
+    this._curAnim = null;
+    this._glb = true;
+  }
+
+  _setAnim(name) {
+    if (this._curAnim === name || !this._actions) return;
+    const next = this._actions[name];
+    if (!next) return;
+    const prev = this._curAnim ? this._actions[this._curAnim] : null;
+    next.reset();
+    next.time = Math.random() * next.getClip().duration;   // 錯開相位，避免整隊齊步走
+    if (prev) { next.crossFadeFrom(prev, 0.18, false); }
+    next.play();
+    this._curAnim = name;
   }
 
   spawn(playerPos) {
@@ -367,17 +422,23 @@ export class Soldier {
     } else this._stuckT = 0;
     this._lastX = this.pos.x; this._lastZ = this.pos.z;
 
-    // ===== 程序化动画：行走摆动 / 交战持枪 / 受击后仰 =====
-    const lerp = Math.min(1, dt * 10);
-    if (this.moving) this.walkPh += dt * spd * 3.4;
-    const sw = this.moving ? 1 : 0;
-    this.legL.rotation.x += (Math.sin(this.walkPh) * 0.55 * sw - this.legL.rotation.x) * lerp;
-    this.legR.rotation.x += (-Math.sin(this.walkPh) * 0.55 * sw - this.legR.rotation.x) * lerp;
-    const armTarget = this.state === 'engage'
-      ? -1.05 + Math.sin(now * 2 + this.walkPh) * 0.03           // 持枪前指 + 呼吸微晃
-      : Math.sin(this.walkPh + Math.PI) * 0.32 * sw;             // 巡逻摆臂
-    this.armL.rotation.x += (armTarget - this.armL.rotation.x) * lerp;
-    this.armR.rotation.x = this.armL.rotation.x;
+    // ===== 動畫：GLB 模組用 Idle/Walk/Run；方塊模型走程序化擺動 =====
+    if (this._glb) {
+      const want = !this.moving ? 'Idle' : (this.state === 'engage' ? 'Run' : 'Walk');
+      this._setAnim(want);
+      if (this.mixer) this.mixer.update(dt);
+    } else {
+      const lerp = Math.min(1, dt * 10);
+      if (this.moving) this.walkPh += dt * spd * 3.4;
+      const sw = this.moving ? 1 : 0;
+      this.legL.rotation.x += (Math.sin(this.walkPh) * 0.55 * sw - this.legL.rotation.x) * lerp;
+      this.legR.rotation.x += (-Math.sin(this.walkPh) * 0.55 * sw - this.legR.rotation.x) * lerp;
+      const armTarget = this.state === 'engage'
+        ? -1.05 + Math.sin(now * 2 + this.walkPh) * 0.03           // 持枪前指 + 呼吸微晃
+        : Math.sin(this.walkPh + Math.PI) * 0.32 * sw;             // 巡逻摆臂
+      this.armL.rotation.x += (armTarget - this.armL.rotation.x) * lerp;
+      this.armR.rotation.x = this.armL.rotation.x;
+    }
     // 受击后仰
     if (this.flinchT > 0) this.flinchT -= dt;
     this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
