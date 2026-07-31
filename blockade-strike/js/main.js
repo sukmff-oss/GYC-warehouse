@@ -120,10 +120,10 @@ const G = {
   shake: 0,
   streak: 0, lastKillT: -10, firstBlood: false,
   coop: false,             // 多人連線模式
-  cannon: false,           // 持有黃金加農槍（無限子彈）
-  cannonSpawned: false,    // 本局 100 殺加農槍已生成過
+  cannon: false,           // 持有紅色加農槍（無限子彈）
+  cannonSpawned: false,    // 本局 25 殺加農槍已生成過
   cannonBoosts: {},        // 加農槍改過的武器 boost（死亡時還原）
-  cannonGoal: 100,         // 加農槍解鎖殺數（25 / 50 / 100）
+  cannonGoal: 25,          // 紅色加農槍解鎖殺數（固定 25 殺）
   gatling: false,          // 持有黃金加特林（50 殺獎勵 · 陣亡消失）
   gatlingSpawned: false,   // 本局 50 殺加特林已生成過
   gatlingPrev: null,       // 拾取加特林前的武器（陣亡時換回）
@@ -311,7 +311,7 @@ function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
     const bk = bots.bots.find(b => b.name === killerName);
     if (bk) bk.hp = Math.min(100, bk.hp + healAmt);
   }
-  // 累計殺數達標：地圖隨機出現黃金加農槍（無限子彈）
+  // 累計殺數達標：地圖隨機出現紅色加農槍（無限子彈）
   if (!G.cannonSpawned && G.kills >= G.cannonGoal) {
     G.cannonSpawned = true;    spawnCannon();
   }
@@ -493,7 +493,7 @@ function onPlayerDeath() {
   G.deaths++;
   G.scoreR++;
   G.streak = 0;
-  dropCannon();   // 黃金加農槍隨人物陣亡消失
+  dropCannon();   // 紅色加農槍隨人物陣亡消失
   dropGatling();  // 黃金加特林隨人物陣亡消失
   vehicles.onPlayerDeath(player);   // 陣亡自動下車
   hud.setScore(G.scoreB, G.scoreR);
@@ -503,7 +503,7 @@ function onPlayerDeath() {
   G.respawnT = 3;
 }
 
-// ---------- 黃金加農槍（100 殺獎勵 · 無限子彈 · 陣亡消失）----------
+// ---------- 紅色加農槍（25 殺獎勵 · 無限子彈 · 陣亡消失）----------
 let cannonG = null;   // 地圖上的拾取物
 
 function spawnCannon(pos = null, remote = false) {
@@ -525,24 +525,24 @@ function spawnCannon(pos = null, remote = false) {
     if (x === undefined) { x = mapInfo.playerSpawn.x + 4; z = mapInfo.playerSpawn.z + 4; }
   }
   cannonG = new THREE.Group();
-  const gold = new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0xaa7a10, emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.25 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 1.1), gold);
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 10), gold);
+  const red = new THREE.MeshStandardMaterial({ color: 0xe03a2e, emissive: 0x8a1008, emissiveIntensity: 0.9, metalness: 0.85, roughness: 0.3 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.26, 1.1), red);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 10), red);
   barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.06, 0.9);
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.2, 12), gold);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.2, 12), red);
   drum.rotation.x = Math.PI / 2; drum.position.set(0, -0.2, 0.1);
   cannonG.add(body, barrel, drum);
   const gc = document.createElement('canvas'); gc.width = gc.height = 64;
   const gx = gc.getContext('2d');
   const gg = gx.createRadialGradient(32, 32, 4, 32, 32, 32);
-  gg.addColorStop(0, 'rgba(255,220,120,.9)'); gg.addColorStop(1, 'rgba(255,200,80,0)');
+  gg.addColorStop(0, 'rgba(255,110,90,.9)'); gg.addColorStop(1, 'rgba(255,60,40,0)');
   gx.fillStyle = gg; gx.fillRect(0, 0, 64, 64);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   glow.scale.set(2.2, 2.2, 1);
   cannonG.add(glow);
   cannonG.position.set(x, 1.0, z);
   scene.add(cannonG);
-  hud.sysmsg('🏆 黃金加農槍出現在地圖某處 · 撿起獲得無限子彈！', 4500);
+  hud.sysmsg('🏆 紅色加農槍出現在地圖某處 · 撿起獲得無限子彈！', 4500);
   if (!remote && G.coop && net.isHost) net._broadcast({ t: 'cannonSpawn', p: [x, z] });
 }
 
@@ -552,7 +552,7 @@ function pickupCannon() {
   G.cannon = true;
   G.cannonBoosts = {};
   removeCannonMesh();
-  hud.sysmsg('🏆 撿到黃金加農槍 · 無限子彈火力全開！（陣亡消失）', 4000);
+  hud.sysmsg('🏆 撿到紅色加農槍 · 無限子彈火力全開！（陣亡消失）', 4000);
   audio.kill();
   if (G.coop) {
     if (net.isHost) net._broadcast({ t: 'cannonGone' });
@@ -1030,26 +1030,50 @@ setInterval(() => {
   const mm = String(Math.floor(r.remainMs / 60000)).padStart(2, '0');
   const ss = String(Math.floor((r.remainMs % 60000) / 1000)).padStart(2, '0');
   $('rotNext').textContent = `${mm}:${ss} 後自動換圖（${MAP_ROTATION.map(m => m[1]).join(' → ')}）`;
-  if (r.mapId !== G.mapId && G.state === 'menu') applyRotation(true);   // 選單中到點即換
+  if (r.mapId === G.mapId) return;
+  if (G.state === 'menu') applyRotation(true);   // 選單中到點即換
+  else if ((G.state === 'play' || G.state === 'dead') && (!G.coop || net.isHost)) {
+    switchMapLive(r.mapId, r.env);               // 遊戲中無縫換圖（比分保留）
+    if (G.coop && net.connected) net._broadcast({ t: 'mapLive', mapId: r.mapId, env: r.env });
+  }
 }, 1000);
-// 加農槍解鎖難度（25 / 50 / 100 殺）
-document.querySelectorAll('.cannoncard').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.cannoncard').forEach(c => c.classList.remove('sel'));
-    card.classList.add('sel');
-    G.cannonGoal = +card.dataset.goal;
-  });
-});
 
-// ---------- 模式选择（自由局 / 限时局）----------
-document.querySelectorAll('.modecard').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.modecard').forEach(c => c.classList.remove('sel'));
-    card.classList.add('sel');
-    G.mode = card.dataset.mode;
-  });
-});
-
+// 遊戲中無縫換圖：保留比分/殺數/金幣，只重建戰場
+function switchMapLive(mapId, env) {
+  G.mapId = mapId; G.env = env;
+  net.mapId = mapId; net.env = env;
+  if (player.driving) vehicles.exit(player, bots.bots, hud);   // 先下車
+  mapInfo = buildMap(scene, mapId, env);
+  vehicles.clear();
+  if (mapId === 'taipei') vehicles.spawnTaipei();
+  player.setBounds(mapInfo.bounds);
+  enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
+  if (bots.count) { bots.setBounds(mapInfo.bounds); bots.reset(mapInfo.playerSpawn); }
+  hud.setMap(mapInfo);
+  dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 新圖可再次出現加農槍
+  dropGatling(); removeGatlingMesh(); G.gatlingSpawned = false;
+  player.spawn(mapInfo.playerSpawn);
+  for (const n of nades) scene.remove(n.mesh);
+  nades.length = 0;
+  enemies.removeBosses();
+  if (G.coop && !net.isHost) {
+    enemies.reset(0, mapInfo.bounds, mapInfo.playerSpawn);
+    enemies.clearBullets();
+    net.clearGhosts();
+  } else {
+    enemies.reset(mapId === 'taipei' ? 18 : 12, mapInfo.bounds, mapInfo.playerSpawn);
+    enemies.clearBullets();
+    enemies.spawnAll(player.pos);
+    if (mapInfo.bombSite && !G.coop)
+      G.boss = enemies.spawnBoss(new THREE.Vector3(mapInfo.bombSite.x + 4, 0, mapInfo.bombSite.z + 4), {});
+  }
+  G.bomb.state = 'carry'; G.bomb.plantT = 0;
+  deactivatePortal();
+  setupBomb();
+  applyMapEnv(mapInfo);
+  const nm = MAP_ROTATION.find(m => m[0] === mapId)?.[1] || mapId;
+  hud.sysmsg(`🌙 戰場轉移 · 本輪地圖：${nm}（比分保留）`, 5000);
+}
 // ---------- 开始界面金币 / 统计 ----------
 function refreshStartbar() {
   $('startgold').textContent = '💰 ' + save.gold;
@@ -1133,6 +1157,10 @@ net.onEvent = (type, data) => {
       G.mapId = data.mapId;
       if (data.env) G.env = data.env;
       break;
+    case 'mapLive':   // 房主遊戲中換圖 → 加入者同步無縫換圖
+      if (G.state === 'play' || G.state === 'dead') switchMapLive(data.mapId, data.env || 'night');
+      else { G.mapId = data.mapId; if (data.env) G.env = data.env; }
+      break;
     case 'start':
       if (G.state === 'menu' || G.state === 'end') startGame();
       break;
@@ -1158,7 +1186,7 @@ net.onEvent = (type, data) => {
     case 'msg':
       hud.sysmsg(data, 2500);
       break;
-    case 'cannonSpawn':   // 房主：100 殺加農槍生成位置同步
+    case 'cannonSpawn':   // 房主：25 殺加農槍生成位置同步
       spawnCannon(data.p, true);
       break;
     case 'cannonGone':    // 有人撿走了加農槍
@@ -1239,7 +1267,7 @@ function startGame() {
   G.state = 'play';
   G.lbSubmitted = false;   // 本局排行榜尚未上傳
   G.scoreB = 0; G.scoreR = 0; G.kills = 0; G.deaths = 0; G.shots = 0; G.hits = 0;
-  G.time = G.mode === 'timed' ? 180 : Infinity;   // 限时局 3 分钟
+  G.time = Infinity;   // 不限時（每 30 分鐘輪播換圖，比分保留）
   G.shake = 0; G.missions = 0;
   G.inAdventure = false; G.boss = null;
   dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 加農槍重置
@@ -1260,7 +1288,7 @@ function startGame() {
     enemies.clearBullets();
     net.clearGhosts();
   } else {
-    enemies.reset(12, mapInfo.bounds, mapInfo.playerSpawn);
+    enemies.reset(G.mapId === 'taipei' ? 18 : 12, mapInfo.bounds, mapInfo.playerSpawn);   // 大地圖敵人加量
     enemies.clearBullets();
     enemies.spawnAll(player.pos);
   }
@@ -1304,7 +1332,7 @@ function endRound(fromAdventure = false) {
   } else {
     const win = G.scoreB >= G.scoreR;
     $('endTitle').textContent = G.scoreB === G.scoreR ? '平局' : (win ? '勝 利' : '戰 敗');
-    $('endTitle').style.color = win ? '#ffd27a' : '#ff6a5d';
+    $('endTitle').style.color = win ? '#c89400' : '#ff3b30';
     $('endScore').innerHTML = `<span class="b">${G.scoreB}</span> &nbsp;:&nbsp; <span class="r">${G.scoreR}</span>`;
     const acc = G.shots ? Math.round(G.hits / G.shots * 100) : 0;
     $('endStats').textContent = `擊殺 ${G.kills} · 陣亡 ${G.deaths} · 命中率 ${acc}% · 爆破任務 ${G.missions} 次`;
@@ -1418,7 +1446,7 @@ function loop() {
               if (killed) onKill(s, weapon.cfg.name, a.head);
             }
           }
-          // 黃金加農：命中點小範圍爆炸
+          // 紅色加農：命中點小範圍爆炸
           if (G.cannon) {
             const s0 = res.hits[0].soldier;
             const bp = s0.pos.clone(); bp.y += 1.2;
@@ -1482,8 +1510,10 @@ function loop() {
       hud.drawMinimap(player, (G.coop && !net.isHost) ? net.ghosts.filter(Boolean) : enemies.soldiers, now);
     hud.drawCompass(player);
     if (G.inAdventure) hud.setTimer(G.adventureT);
-    else if (G.mode === 'timed') hud.setTimer(G.time);
-    else $('timer').textContent = '∞';
+    else {   // 中央計時改顯示「下一張地圖」倒數
+      const r = rotationInfo();
+      $('timer').textContent = `${Math.floor(r.remainMs / 60000)}:${String(Math.floor((r.remainMs % 60000) / 1000)).padStart(2, '0')}`;
+    }
     hud.protect(player.alive ? player.protectT : 0);
     // 任务指引
     if (G.inAdventure) {
@@ -1498,7 +1528,7 @@ function loop() {
         hud.objective(`🎯 任務：前往敵方陣營安裝 C4<br>距離爆破點 ${Math.round(d)}m · ${IS_TOUCH ? '點互動鍵' : '按 E'} 安裝`);
       }
     } else hud.objective(null);
-    // 黃金加農槍：漂浮動畫 / 拾取 / 無限子彈火力
+    // 紅色加農槍：漂浮動畫 / 拾取 / 無限子彈火力
     if (cannonG) {
       cannonG.rotation.y += dt * 1.5;
       cannonG.position.y = 1.0 + Math.sin(now * 2) * 0.12;
@@ -1529,7 +1559,7 @@ function loop() {
     }
     hud.setHP(player.hp, player.armor);
     hud.setAmmo(weapon.ammo, G.cannon ? '∞' : weapon.reserve, weapon.reloading > 0);
-    hud.setWeapon((G.cannon ? '🏆 黃金加農 · ' : '') + weapon.displayName);
+    hud.setWeapon((G.cannon ? '🏆 紅色加農 · ' : '') + weapon.displayName);
     hud.setGrenades(weapon.grenades);
     const scoped = weapon.cfg.sight === 'scope' && weapon.ads > 0.6;
     $('scope').classList.toggle('on', scoped);

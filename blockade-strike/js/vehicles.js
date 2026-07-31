@@ -8,10 +8,10 @@ import * as THREE from 'three';
 import { colliders } from './map.js';
 
 const TYPES = {
-  car:     { name: '汽車',         maxF: 16, maxR: 5, accel: 11, turn: 1.7, r: 2.0, seatY: 0.55, seatZ: 0.2 },
+  car:     { name: '汽車',         maxF: 20, maxR: 5, accel: 12, turn: 1.7, r: 2.0, seatY: 0.55, seatZ: 0.2 },
   scooter: { name: '機車',         maxF: 11, maxR: 4, accel: 9,  turn: 2.4, r: 1.0, seatY: 0.75, seatZ: 0 },
   bicycle: { name: '腳踏車',       maxF: 6,  maxR: 2, accel: 6,  turn: 3.0, r: 0.8, seatY: 0.8,  seatZ: 0 },
-  jeep:    { name: '50機槍吉普車', maxF: 14, maxR: 5, accel: 10, turn: 1.9, r: 2.1, seatY: 0.75, seatZ: 0.6, gun: true },
+  jeep:    { name: '50機槍吉普車', maxF: 16, maxR: 5, accel: 11, turn: 1.9, r: 2.1, seatY: 0.75, seatZ: 0.6, gun: true },
 };
 
 function boxM(g, w, h, d, mat, x, y, z, rx = 0, rz = 0) {
@@ -114,19 +114,29 @@ export class VehicleManager {
     return v;
   }
 
-  // 台北101街道配置：汽車/機車/腳踏車 + 隨機一台金色吉普
+  // 台北101街道配置（加大市區）：汽車/機車/腳踏車散佈各道路 + 隨機一台金色吉普
   spawnTaipei() {
-    this._spawn('car', 4.2, -30, 0);
-    this._spawn('car', -4.2, 5, Math.PI);
-    this._spawn('car', -35, 4.5, Math.PI / 2);
-    this._spawn('car', 30, -4.5, -Math.PI / 2);
-    this._spawn('scooter', 8, -58, 0.3);
-    this._spawn('scooter', -8, -56, -0.2);
-    this._spawn('scooter', 10, 15, 0.1);
-    this._spawn('bicycle', 12, -64, 0);
-    this._spawn('bicycle', -12, -64, 0);
-    this._spawn('bicycle', 6, 70, 0.5);
-    const spots = [[0, -48, 0], [-25, 2, Math.PI / 2], [25, 42, -Math.PI / 2]];
+    this._spawn('car', 3, -80, 0);
+    this._spawn('car', -3, 40, Math.PI);
+    this._spawn('car', -77.5, -30, 0);
+    this._spawn('car', 42.5, 80, Math.PI);
+    this._spawn('car', -60, -57.5, Math.PI / 2);
+    this._spawn('car', 70, 2.5, Math.PI / 2);
+    this._spawn('car', -20, 122.5, -Math.PI / 2);
+    this._spawn('car', 30, -122.5, Math.PI / 2);
+    this._spawn('scooter', 8, -100, 0.3);
+    this._spawn('scooter', -8, -20, -0.2);
+    this._spawn('scooter', -37.5, 60, 0.1);
+    this._spawn('scooter', 77.5, -60, 0);
+    this._spawn('scooter', 10, 140, 0.4);
+    this._spawn('scooter', -10, -140, 0);
+    this._spawn('bicycle', 12, -132, 0);
+    this._spawn('bicycle', -12, -132, 0);
+    this._spawn('bicycle', 6, 160, 0.5);
+    this._spawn('bicycle', -6, 100, 0);
+    this._spawn('bicycle', 82.5, 20, 0);
+    this._spawn('bicycle', -82.5, -90, 0);
+    const spots = [[0, -110, 0], [-77.5, 60, 0], [40, 57.5, -Math.PI / 2], [77.5, -60, Math.PI], [-40, -57.5, Math.PI / 2]];
     const [jx, jz, jy] = spots[(Math.random() * spots.length) | 0];   // 隨機位置
     this._spawn('jeep', jx, jz, jy);
   }

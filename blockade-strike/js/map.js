@@ -1006,23 +1006,22 @@ function buildAdventure() {
 }
 
 // ---------- 入口 ----------
-// ---------- 台北 101（城市街道 + 載具）----------
+// ---------- 台北 101（加大 200% 城市街道 + 載具自由開車）----------
 function buildTaipei() {
   applySkyEnv({ night: 0x0d1420, sunset: 0x4a2a33, day: 0xbccfda });
 
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0x8f9396, (() => { const t = asphaltTex().clone(); t.needsUpdate = true; t.repeat.set(60, 60); return t; })(), { rough: 0.97 }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), texMat(0x8f9396, (() => { const t = asphaltTex().clone(); t.needsUpdate = true; t.repeat.set(140, 140); return t; })(), { rough: 0.97 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
 
-  // 道路網：東西主幹道 + 南北大道（通往 101 廣場）+ 兩條次要東西路
-  road(0, 0, 130, 14, 0x4a4e54);        // 東西主幹道
-  road(0, 5, 12, 100, 0x4a4e54);        // 南北大道（z -45~55）
-  road(0, -38, 130, 8, 0x565a60);       // 北側次要路
-  road(0, 42, 130, 8, 0x565a60);        // 南側次要路
-  // 101 前人行道廣場
-  box(40, 0.08, 21, 0xb8b2a4, 0, 0.04, -55.5, { solid: false, tex: concreteTex() });
+  // ===== 道路網（市區加大：5 條南北大道 × 5 條東西幹道，自由開車）=====
+  for (const rx of [-80, -40, 40, 80]) road(rx, 27, 10, 306, 0x4a4e54);   // 南北向（z -120~174）
+  road(0, 0, 12, 360, 0x4a4e54);                                          // 中央大道直通 101（z -180~180）
+  for (const rz of [-120, -60, 0, 60, 120]) road(0, rz, 240, 10, 0x565a60);   // 東西向
+  // 101 前廣場人行道
+  box(46, 0.08, 30, 0xb8b2a4, 0, 0.04, -141, { solid: false, tex: concreteTex() });
 
   // ===== 台北 101（竹節式塔身 + 裙樓 + 尖頂）=====
-  const TX = 0, TZ = -80;
+  const TX = 0, TZ = -168;
   box(34, 12, 26, 0x9aa2ac, TX, 6, TZ, { tex: concreteTex(), bump: 0.6 });   // 裙樓
   minimapRects.push({ x: TX, z: TZ, w: 34, d: 26 });
   box(34.2, 2.2, 26.2, 0x6a92a8, TX, 3.2, TZ, { solid: false, emis: 0x2a4a5a, emisI: 0.3 });   // 玻璃帷幕帶
@@ -1037,59 +1036,69 @@ function buildTaipei() {
   box(tw * 0.6, 5, tw * 0.6, 0x9aa4ac, TX, ty + 2.5, TZ, { solid: false });   // 尖頂
   box(0.5, 12, 0.5, 0xc23a2a, TX, ty + 11, TZ, { solid: false, emis: 0xc23a2a, emisI: 0.8 });   // 天線
 
-  // 周邊城市街廓（避開道路與 101 廣場）
-  building(-18, -20, 14, 18, 5, 1);
-  building(18, -20, 14, 18, 6, -1);
-  building(-20, 20, 14, 16, 4, 1);
-  building(20, 20, 14, 16, 5, -1);
-  building(-26, -48, 10, 10, 6, 1);
-  building(26, -48, 10, 10, 7, -1);
-  building(-40, -20, 16, 22, 7, 1);
-  building(40, -20, 16, 22, 8, -1);
-  building(-40, 20, 14, 18, 5, 1);
-  building(40, 20, 14, 18, 6, -1);
-  building(-30, 60, 16, 14, 4, 1);
-  building(30, 60, 16, 14, 5, -1);
-  building(-12, 62, 12, 12, 3, 1);
-  building(12, 62, 12, 12, 3, -1);
+  // ===== 街廓（6×4 街區，每格 2 棟；少量空地停車場）=====
+  const xBands = [[-118, -86], [-74, -46], [-34, -6], [6, 34], [46, 74], [86, 118]];
+  const zBands = [[-114, -66], [-54, -6], [6, 54], [66, 114]];
+  for (const [x0, x1] of xBands) {
+    for (const [z0, z1] of zBands) {
+      if (Math.random() < 0.15) {   // 空地：停車場 / 工事
+        crate(x0 + 8, z0 + 10, 1.1); crate(x1 - 8, z1 - 10, 1);
+        barrier((x0 + x1) / 2, (z0 + z1) / 2, Math.PI / 2);
+        sandbags(x0 + 6, z1 - 8, 3.5);
+        continue;
+      }
+      const w = x1 - x0, d = z1 - z0, cz = (z0 + z1) / 2;
+      const bw = (w - 8) / 2;
+      building(x0 + 2 + bw / 2, cz, bw, d - 10, 3 + (Math.random() * 7 | 0), -1);   // 門面朝西側道路
+      building(x1 - 2 - bw / 2, cz, bw, d - 10, 3 + (Math.random() * 7 | 0), 1);    // 門面朝東側道路
+    }
+  }
+  // 南側街廓（z 126~174，較矮建築群）
+  for (const [x0, x1] of xBands) {
+    if (Math.random() < 0.2) { palm((x0 + x1) / 2 - 6, 150); palm((x0 + x1) / 2 + 6, 158); continue; }
+    building((x0 + x1) / 2, 150, (x1 - x0) - 12, 36, 2 + (Math.random() * 3 | 0), x0 < 0 ? 1 : -1);
+  }
 
   // 邊界
-  box(3, 4.5, 194, 0x8a8f96, -62, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
-  box(3, 4.5, 194, 0x8a8f96, 62, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
-  box(127, 4.5, 3, 0x8a8f96, 0, 2.25, -97, { tex: concreteTex(), bump: 0.8 });
-  box(127, 4.5, 3, 0x8a8f96, 0, 2.25, 97, { tex: concreteTex(), bump: 0.8 });
+  box(3, 4.5, 368, 0x8a8f96, -122, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
+  box(3, 4.5, 368, 0x8a8f96, 122, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
+  box(248, 4.5, 3, 0x8a8f96, 0, 2.25, -182, { tex: concreteTex(), bump: 0.8 });
+  box(248, 4.5, 3, 0x8a8f96, 0, 2.25, 182, { tex: concreteTex(), bump: 0.8 });
 
-  // 街道家具與掩體
-  for (const lz of [-30, -10, 10, 30, 50]) streetlight(-8.6, lz, 0);
-  for (const lz of [-20, 0, 20, 40]) streetlight(8.6, lz, Math.PI);
-  for (const lx of [-40, -20, 20, 40]) streetlight(lx, 8.6, Math.PI / 2);
-  palm(-14, -56); palm(14, -56); palm(-10, 30); palm(10, 30);
-  sandbags(0, -48, 4); sandbags(-16, -8, 3.5); sandbags(16, 12, 4);
-  barrier(-8, -30); barrier(8, -14); barrier(-8, 16); barrier(8, 48);
-  crate(-10, -42, 1.1); crate(10.5, -44, 1); crate(-14, 8, 1); crate(14, -2, 1.2);
-  crate(-24, 36, 1); crate(24, -28, 1);
+  // 街道家具：路口路燈 + 中央大道行道樹
+  for (const rx of [-80, -40, 0, 40, 80])
+    for (const rz of [-120, -60, 0, 60, 120])
+      streetlight(rx + 7, rz + 7, Math.PI / 4);
+  for (const lz of [-100, -60, -20, 20, 60, 100, 140]) { palm(-9, lz); palm(9, lz + 12); }
+  sandbags(0, -128, 4); sandbags(-16, -8, 3.5); sandbags(16, 12, 4);
+  barrier(-8, -30); barrier(8, -14); barrier(-8, 46); barrier(8, 88);
+  crate(-10, -52, 1.1); crate(10.5, -54, 1); crate(-14, 8, 1); crate(14, -2, 1.2);
+  crate(-24, 66, 1); crate(24, -68, 1);
 
   enemySpawns.push(
-    new THREE.Vector3(0, 0, -60), new THREE.Vector3(-14, 0, -40),
-    new THREE.Vector3(14, 0, -40), new THREE.Vector3(-30, 0, 0),
-    new THREE.Vector3(30, 0, 0), new THREE.Vector3(0, 0, 30),
-    new THREE.Vector3(-20, 0, 55), new THREE.Vector3(20, 0, 55),
-    new THREE.Vector3(-45, 0, -45), new THREE.Vector3(45, 0, -45)
+    new THREE.Vector3(0, 0, -120), new THREE.Vector3(-40, 0, -60),
+    new THREE.Vector3(40, 0, -60), new THREE.Vector3(-80, 0, 0),
+    new THREE.Vector3(80, 0, 0), new THREE.Vector3(0, 0, 30),
+    new THREE.Vector3(-40, 0, 120), new THREE.Vector3(40, 0, 120),
+    new THREE.Vector3(-80, 0, -120), new THREE.Vector3(80, 0, -120),
+    new THREE.Vector3(0, 0, 160), new THREE.Vector3(-80, 0, 90),
+    new THREE.Vector3(80, 0, 90), new THREE.Vector3(0, 0, -150)
   );
   patrolPoints.push(
-    new THREE.Vector3(0, 0, -40), new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(-25, 0, 0), new THREE.Vector3(25, 0, 0),
-    new THREE.Vector3(0, 0, 40), new THREE.Vector3(-30, 0, -38),
-    new THREE.Vector3(30, 0, 42), new THREE.Vector3(0, 0, -58),
-    new THREE.Vector3(0, 0, 60)
+    new THREE.Vector3(0, 0, -60), new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(-40, 0, 0), new THREE.Vector3(40, 0, 0),
+    new THREE.Vector3(0, 0, 60), new THREE.Vector3(-80, 0, -60),
+    new THREE.Vector3(80, 0, 60), new THREE.Vector3(0, 0, -120),
+    new THREE.Vector3(-40, 0, 120), new THREE.Vector3(40, 0, -120),
+    new THREE.Vector3(0, 0, 120), new THREE.Vector3(-80, 0, 120)
   );
   return {
-    playerSpawn: new THREE.Vector3(0, 0, 88),
-    bounds: { minX: -60, maxX: 60, minZ: -95, maxZ: 95 },
-    extent: 98,
+    playerSpawn: new THREE.Vector3(0, 0, 172),
+    bounds: { minX: -120, maxX: 120, minZ: -180, maxZ: 180 },
+    extent: 200,
     night: true,
-    bombSite: { x: 0, z: -62, r: 5 },          // 101 廣場
-    portalPos: new THREE.Vector3(10, 0, 20)
+    bombSite: { x: 0, z: -138, r: 6 },          // 101 廣場
+    portalPos: new THREE.Vector3(12, 0, 24)
   };
 }
 

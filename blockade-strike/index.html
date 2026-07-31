@@ -173,8 +173,8 @@
 
   /* 地图轮播（唯读显示 · 每 30 分钟自动换图 · 固定夕阳） */
   #maproster { margin-top:26px; text-align:center; pointer-events:auto; }
-  #rotMap { color:#ffd27a; font:16px sans-serif; letter-spacing:2px; }
-  #rotNext { color:#8fa2bd; font:12px sans-serif; margin-top:6px; letter-spacing:1px; }
+  #rotMap { color:#1d1d1f; font:600 16px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; }
+  #rotNext { color:#6e6e73; font:12.5px -apple-system,"PingFang TC",sans-serif; margin-top:6px; letter-spacing:.5px; }
 
   /* 移动端响应式 */
   @media (max-width: 900px) {
@@ -229,31 +229,31 @@
     text-align:center; z-index:6; }
   #sysmsg.show { opacity:1; }
 
-  /* ============ 开始 / 结算界面 ============ */
+  /* ============ 开始 / 结算界面（仿 Apple 風格） ============ */
   .screen { position:fixed; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; z-index:10;
-    background:radial-gradient(ellipse at 50% 35%, #2a3242 0%, #14181f 60%, #0a0c10 100%);
+    align-items:center; justify-content:center; z-index:10; overflow-y:auto;
+    background:#f5f5f7; color:#1d1d1f;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Microsoft JhengHei",sans-serif;
     transition:opacity .5s; }
   .screen.hidden { opacity:0; pointer-events:none; }
-  .title { color:#fff; font-size:52px; font-weight:900; letter-spacing:10px;
-    text-shadow:0 4px 30px rgba(90,160,255,.35); }
-  .title em { font-style:normal; color:#ffb04a; }
-  .subtitle { color:#8fa2bd; margin-top:10px; letter-spacing:5px; font-size:14px; }
-  .keys { margin-top:34px; color:#aab8cc; font-size:13.5px; line-height:2.1;
-    text-align:center; letter-spacing:1px; }
-  .keys b { color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:4px;
-    padding:1px 8px; margin:0 3px; font-weight:600; background:rgba(255,255,255,.06); }
-  .playbtn { margin-top:38px; pointer-events:auto; cursor:pointer;
-    background:linear-gradient(180deg,#ff9d3c,#f07b1d); color:#1a1206;
-    font-size:19px; font-weight:800; letter-spacing:6px; padding:15px 74px;
-    border:none; border-radius:6px; box-shadow:0 8px 30px rgba(240,123,29,.4);
-    transition:transform .15s, box-shadow .15s; }
-  .playbtn:hover { transform:translateY(-2px) scale(1.03);
-    box-shadow:0 12px 38px rgba(240,123,29,.55); }
-  #endTitle { color:#fff; font-size:44px; font-weight:900; letter-spacing:8px; }
-  #endScore { color:#cdd8e8; font-size:20px; margin-top:16px; letter-spacing:2px; }
-  #endScore .b{color:#5db2ff}#endScore .r{color:#ff6a5d}
-  #endStats { color:#8fa2bd; margin-top:10px; font-size:14px; letter-spacing:1px; }
+  .title { color:#1d1d1f; font-size:56px; font-weight:700; letter-spacing:2px; }
+  .title em { font-style:normal; color:#0071e3; }
+  .subtitle { color:#6e6e73; margin-top:8px; letter-spacing:3px; font-size:15px; font-weight:500; }
+  .keys { margin-top:30px; color:#6e6e73; font-size:13px; line-height:2.1;
+    text-align:center; letter-spacing:.5px; }
+  .keys b { color:#1d1d1f; border:1px solid #d2d2d7; border-radius:980px;
+    padding:1px 10px; margin:0 3px; font-weight:600; background:#fff; }
+  .playbtn { margin-top:34px; pointer-events:auto; cursor:pointer;
+    background:#0071e3; color:#fff;
+    font-size:19px; font-weight:600; letter-spacing:3px; padding:14px 68px;
+    border:none; border-radius:980px;
+    transition:background .2s, transform .15s; }
+  .playbtn:hover { background:#0077ed; transform:scale(1.02); }
+  .playbtn:active { transform:scale(.98); }
+  #endTitle { color:#1d1d1f; font-size:44px; font-weight:700; letter-spacing:4px; }
+  #endScore { color:#1d1d1f; font-size:20px; margin-top:16px; letter-spacing:2px; }
+  #endScore .b{color:#0071e3}#endScore .r{color:#ff3b30}
+  #endStats { color:#6e6e73; margin-top:10px; font-size:14px; letter-spacing:1px; }
 
   /* ===== V5：金币 / 保护 / BOSS / 任务 / 交互 ===== */
   #goldbox { position:absolute; right:16px; top:14px; color:#ffd27a; font:bold 16px Consolas,monospace;
@@ -277,48 +277,41 @@
     color:#fff; font:bold 16px sans-serif; background:rgba(10,14,20,.65); padding:8px 20px;
     border-radius:8px; border:1px solid rgba(255,255,255,.35); }
 
-  /* ===== 模式选择 ===== */
-  #modeselect { display:flex; gap:12px; margin-top:16px; }
-  #envselect { display:flex; gap:12px; margin-top:12px; }
-  #cannonselect { display:flex; gap:12px; margin-top:12px; align-items:center; }
-  .cannonlabel { color:#8fa2bd; font:12.5px sans-serif; letter-spacing:1px; }
-  .modecard { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.25); cursor:pointer;
-    color:#cfd8e8; font:14px sans-serif; background:rgba(255,255,255,.05); transition:.2s; }
-  .modecard.sel { border-color:#ffb04a; color:#ffb04a; background:rgba(255,176,74,.12); }
-
   /* ===== 連線合作（自動配房） ===== */
-  #coopStatus { margin-top:10px; color:#8fa2bd; font-size:12.5px; letter-spacing:1px;
+  #coopStatus { margin-top:10px; color:#6e6e73; font-size:12.5px; letter-spacing:1px;
     min-height:16px; }
   #coopinfo { position:absolute; left:22px; top:196px; display:none;
     color:#e8ecf2; font:12px sans-serif; line-height:1.8;
     background:rgba(10,14,20,.5); padding:7px 11px; border-radius:6px;
     border-left:3px solid #5db2ff; }
 
-  /* ===== 世界殺敵排行 ===== */
+  /* ===== 世界殺敵排行（Apple 卡片風） ===== */
   #lbBox { margin-top:18px; width:min(480px, 92vw); pointer-events:auto;
-    background:rgba(10,14,22,.55); border:1px solid rgba(255,210,122,.25); border-radius:10px; padding:12px 16px; }
-  #lbTitle { color:#ffd27a; font:14px sans-serif; letter-spacing:2px; margin-bottom:8px; }
-  #lbList { font:12.5px sans-serif; color:#cfd8e8; max-height:180px; overflow:auto; }
-  .lbrow { display:flex; gap:8px; padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.06); }
-  .lbrow .rk { width:26px; color:#8fa2bd; }
+    background:#fff; border:1px solid #d2d2d7; border-radius:18px; padding:14px 18px;
+    box-shadow:0 4px 24px rgba(0,0,0,.06); }
+  #lbTitle { color:#1d1d1f; font:600 14px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; margin-bottom:8px; }
+  #lbList { font:12.5px -apple-system,"PingFang TC",sans-serif; color:#1d1d1f; max-height:180px; overflow:auto; }
+  .lbrow { display:flex; gap:8px; padding:3px 0; border-bottom:1px solid #f0f0f2; }
+  .lbrow .rk { width:26px; color:#6e6e73; }
   .lbrow .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .lbrow .kl { color:#ffd27a; width:64px; text-align:right; }
-  .lbrow .mp { color:#8fa2bd; width:72px; text-align:right; font-size:11px; }
-  .lbrow.g1 .rk, .lbrow.g1 .nm { color:#ffd700; }
-  .lbrow.g2 .rk, .lbrow.g2 .nm { color:#c0c0c0; }
-  .lbrow.g3 .rk, .lbrow.g3 .nm { color:#cd7f32; }
-  .lbrow.me .nm { color:#7affa0; }
-  #lbNameRow { margin-top:8px; color:#8fa2bd; font:12px sans-serif; }
-  #lbName { background:#1a2230; border:1px solid rgba(255,255,255,.2); color:#e8ecf2; border-radius:5px; padding:3px 8px; font:12px sans-serif; width:110px; }
-  #lbNameSave { background:#2a3a52; color:#cfe0ff; border:1px solid rgba(255,255,255,.2); border-radius:5px; padding:3px 10px; font:12px sans-serif; cursor:pointer; }
+  .lbrow .kl { color:#0071e3; width:64px; text-align:right; font-weight:600; }
+  .lbrow .mp { color:#6e6e73; width:72px; text-align:right; font-size:11px; }
+  .lbrow.g1 .rk, .lbrow.g1 .nm { color:#c89400; font-weight:700; }
+  .lbrow.g2 .rk, .lbrow.g2 .nm { color:#8e8e93; font-weight:600; }
+  .lbrow.g3 .rk, .lbrow.g3 .nm { color:#b0784a; font-weight:600; }
+  .lbrow.me .nm { color:#34c759; font-weight:700; }
+  #lbNameRow { margin-top:8px; color:#6e6e73; font:12px -apple-system,"PingFang TC",sans-serif; }
+  #lbName { background:#f5f5f7; border:1px solid #d2d2d7; color:#1d1d1f; border-radius:980px; padding:4px 12px; font:12px -apple-system,"PingFang TC",sans-serif; width:110px; }
+  #lbNameSave { background:#e8e8ed; color:#1d1d1f; border:none; border-radius:980px; padding:4px 14px; font:12px -apple-system,"PingFang TC",sans-serif; cursor:pointer; }
+  #lbNameSave:hover { background:#dedee3; }
 
   #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
-  .sbtn { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,210,122,.4); cursor:pointer;
-    color:#ffd27a; font:14px sans-serif; background:rgba(255,176,74,.08); }
-  .sbtn:hover { background:rgba(255,176,74,.2); }
-  #startgold { color:#ffd27a; font:bold 16px Consolas,monospace; }
-  #startstats { color:#8fa2bd; font:12px sans-serif; margin-top:8px; }
-  #endGold { color:#ffd27a; font:bold 15px sans-serif; margin-top:8px; }
+  .sbtn { padding:8px 18px; border-radius:980px; border:1px solid #d2d2d7; cursor:pointer;
+    color:#0071e3; font:14px -apple-system,"PingFang TC",sans-serif; background:#fff; }
+  .sbtn:hover { background:#f5f5f7; }
+  #startgold { color:#b07800; font:600 16px -apple-system,"PingFang TC",sans-serif; }
+  #startstats { color:#6e6e73; font:12px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
+  #endGold { color:#b07800; font:600 15px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
 </style>
 <script src="https://www.kimi.com/sdk-seed.js" defer=""></script></head>
 <body>
@@ -392,17 +385,7 @@
   </div>
   <div id="maproster">
     <div id="rotMap">🌙 本輪地圖：小鎮街道（夜晚）</div>
-    <div id="rotNext">每 30 分鐘自動換圖</div>
-  </div>
-  <div id="modeselect">
-    <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
-    <div class="modecard" data-mode="timed">限時局 · 3 分鐘</div>
-  </div>
-  <div id="cannonselect">
-    <span class="cannonlabel">🏆 加農槍解鎖</span>
-    <div class="modecard cannoncard" data-goal="25">25 殺</div>
-    <div class="modecard cannoncard" data-goal="50">50 殺</div>
-    <div class="modecard cannoncard sel" data-goal="100">100 殺</div>
+    <div id="rotNext">每 30 分鐘自動換圖 · 不限時</div>
   </div>
   <div id="coopStatus"></div>
   <button class="playbtn" id="playBtn">進入戰鬥</button>
