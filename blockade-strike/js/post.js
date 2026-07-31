@@ -17,7 +17,7 @@ const FilmShader = {
     tDiffuse: { value: null },
     time: { value: 0 },
     vigStrength: { value: 0.36 },
-    grainStrength: { value: 0.022 },
+    grainStrength: { value: 0.010 },
     aberration: { value: 0.00035 },
     saturation: { value: 1.08 },
     lift: { value: 0.012 }
