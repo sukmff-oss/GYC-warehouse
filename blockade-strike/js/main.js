@@ -1005,10 +1005,10 @@ if (IS_TOUCH) {
 
 // ---------- 地圖輪播（每 30 分鐘自動換圖 · 固定夕陽 · 免選地圖）----------
 const MAP_ROTATION = [
+  ['taipei', '台北101'],   // 第一棒：整點/偶數時段起手就是新地圖
   ['town',  '小鎮街道'],
   ['ruins', '沙漠廢墟'],
   ['docks', '貨運碼頭'],
-  ['taipei', '台北101'],
 ];
 const ROT_MS = 30 * 60 * 1000;
 function rotationInfo() {
