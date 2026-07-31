@@ -6,11 +6,16 @@ import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
 
-// ===== 3D 士兵模組（three.js 官方 Soldier.glb，CC 範例素材）=====
-// 全域只載入一次；載入失敗則靜默回退方塊模型
-const soldierModelP = new Promise((resolve) => {
-  new GLTFLoader().load('./assets/models/soldier.glb', resolve, undefined, () => resolve(null));
-});
+// ===== 3D 人物模組（兩款隨機混用；載入失敗靜默回退方塊模型）=====
+// ① three.js 官方 Soldier.glb（戰術士兵）② KayKit Rogue_Hooded.glb（連帽歹徒，CC0）
+const MODEL_DEFS = [
+  { url: './assets/models/soldier.glb',      scale: 1,    names: { idle: 'Idle', walk: 'Walk',      run: 'Run' } },
+  { url: './assets/models/rogue_hooded.glb', scale: 0.95, names: { idle: 'Idle', walk: 'Walking_A', run: 'Running_A', death: 'Death_A' } },
+];
+const _gl = new GLTFLoader();
+const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
+  _gl.load(d.url, gltf => res({ gltf, def: d }), undefined, () => res(null));
+})));
 
 const NAMES = ['VIPER', 'JACKAL', 'COBRA', 'FALCON', 'GHOST', 'HYENA', 'RAZOR', 'WOLF', 'SNAKE', 'TALON', 'BEAR', 'HAWK'];
 const UNIFORMS = [0x8a7a52, 0x6b6a45, 0x4a5240, 0x7a6248];  // CS歹徒：沙漠褐 / 橄欖綠 / 游擊灰綠 / 土棕
@@ -180,8 +185,12 @@ export class Soldier {
     this.legsM.userData = { soldier: this, part: 'body' };
     this.group = g;
     this.scene.add(g);
-    // GLB 士兵模組載入完成後換裝（方塊身體保留為隱形命中體）
-    soldierModelP.then(gltf => { if (gltf) this._attachGlb(gltf); });
+    // GLB 人物模組載入完成後換裝（方塊身體保留為隱形命中體）；兩款造型隨機混用
+    this._modelIdx = (Math.random() * MODEL_DEFS.length) | 0;
+    modelListP.then(list => {
+      const m = list[this._modelIdx] || list.find(x => x);
+      if (m) this._attachGlb(m.gltf, m.def);
+    });
 
     // === LOD 簡化模型 ===
     this._lodMesh = new THREE.Mesh(
@@ -194,8 +203,8 @@ export class Soldier {
     this.scene.add(this._lodMesh);
   }
 
-  // ===== 換裝 GLB 士兵（SkinnedMesh 需 SkeletonUtils.clone；方塊轉為隱形命中體）=====
-  _attachGlb(gltf) {
+  // ===== 換裝 GLB 人物（SkinnedMesh 需 SkeletonUtils.clone；方塊轉為隱形命中體）=====
+  _attachGlb(gltf, def) {
     if (this._glb || !this.group) return;
     const model = SkeletonUtils.clone(gltf.scene);
     const night = isNight();
@@ -210,22 +219,24 @@ export class Soldier {
         }
       }
     });
-    // Soldier.glb 原生即 ~1.7m（three.js 範例不縮放）；蒙皮模型不能用幾何包盒推算尺寸
-    model.scale.setScalar(1);
+    // 蒙皮模型不能用幾何包盒推算尺寸，用各模組的手動比例
+    model.scale.setScalar(def.scale);
     model.position.y = 0;
     model.rotation.y = Math.PI;   // GLB 面朝 -Z，轉向與 group 的 +Z 前向一致
     this.group.add(model);
     this.boxGroup.visible = false;   // 方塊身體隱藏（raycast 不受 visible 影響，命中體照舊）
-    // 動畫：Idle / Walk / Run
+    // 動畫（各模組的邏輯名 → 實際 clip 名）
     this.mixer = new THREE.AnimationMixer(model);
     this._actions = {};
     for (const clip of gltf.animations) this._actions[clip.name] = this.mixer.clipAction(clip);
+    this._animNames = def.names;
     this._curAnim = null;
     this._glb = true;
   }
 
-  _setAnim(name) {
-    if (this._curAnim === name || !this._actions) return;
+  _setAnim(logical) {
+    const name = this._animNames ? this._animNames[logical] : logical;
+    if (this._curAnim === name || !this._actions || !name) return;
     const next = this._actions[name];
     if (!next) return;
     const prev = this._curAnim ? this._actions[this._curAnim] : null;
@@ -274,6 +285,9 @@ export class Soldier {
     this.state = 'patrol';
     this.group.visible = true;
     this.group.rotation.set(0, 0, 0);
+    // 重生後動畫歸位（清掉死亡動畫的停格）
+    if (this._glb) { this._glbDeath = false; this._curAnim = null; this._setAnim('idle'); }
+    if (this._marker) this._marker.visible = true;
     this._pickPatrol();
     this._sync();
   }
@@ -322,6 +336,19 @@ export class Soldier {
     if (this.hp <= 0) {
       this.state = 'dead'; this.deadT = 0;
       this.respawnAt = 1.5 + Math.random() * 1.5;   // 快速刷新：1.5~3s 后随机点重生
+      // GLB 模組有死亡動畫就播放（KayKit Death_A），否則沿用整體倒地
+      const dn = this._animNames?.death;
+      if (dn && this._actions?.[dn]) {
+        const a = this._actions[dn];
+        this.mixer.stopAllAction();
+        a.reset();
+        a.setLoop(THREE.LoopOnce, 1);
+        a.clampWhenFinished = true;
+        a.play();
+        this._curAnim = dn;
+        this._glbDeath = true;
+      }
+      if (this._marker) this._marker.visible = false;   // 屍體不再頂著紅色標記
       return true;
     }
     // 被打后进入交战
@@ -336,12 +363,17 @@ export class Soldier {
   update(dt, player, now, fx) {
     if (this.state === 'dead') {
       this.deadT += dt;
-      // 倒地
-      const t = Math.min(1, this.deadT / 0.35);
-      this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
-      this.group.position.y = -t * 0.25;
+      if (this._glbDeath) {
+        // 播放 GLB 死亡動畫，不再整體翻倒
+        if (this.mixer) this.mixer.update(dt);
+      } else {
+        // 倒地
+        const t = Math.min(1, this.deadT / 0.35);
+        this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
+        this.group.position.y = -t * 0.25;
+      }
       if (this.deadT > 2.2) this.group.visible = false;
-      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this.spawn(player.pos); }
+      if (!this.noRespawn && this.deadT > this.respawnAt) { this._fallDir = 0; this._glbDeath = false; this.spawn(player.pos); }
       return;
     }
 
@@ -422,9 +454,9 @@ export class Soldier {
     } else this._stuckT = 0;
     this._lastX = this.pos.x; this._lastZ = this.pos.z;
 
-    // ===== 動畫：GLB 模組用 Idle/Walk/Run；方塊模型走程序化擺動 =====
+    // ===== 動畫：GLB 模組用 idle/walk/run 邏輯名；方塊模型走程序化擺動 =====
     if (this._glb) {
-      const want = !this.moving ? 'Idle' : (this.state === 'engage' ? 'Run' : 'Walk');
+      const want = !this.moving ? 'idle' : (this.state === 'engage' ? 'run' : 'walk');
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
     } else {
