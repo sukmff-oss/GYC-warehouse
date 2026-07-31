@@ -298,14 +298,18 @@ export class Net {
       while (dy < -Math.PI) dy += Math.PI * 2;
       a.yaw += dy * lerp;
       a.moving = !!st.mv;
-      if (a.moving) {
+      if (a._glb) {
+        a._setAnim(a.moving ? 'run' : 'idle');
+        if (a.mixer) a.mixer.update(dt);
+      } else if (a.moving) {
         a.walkPh += dt * 9;
         a.legL.rotation.x = Math.sin(a.walkPh) * 0.55;
         a.legR.rotation.x = -Math.sin(a.walkPh) * 0.55;
+        a.armL.rotation.x = -1.05; a.armR.rotation.x = -1.05;   // 持槍前指
       } else {
         a.legL.rotation.x *= 0.8; a.legR.rotation.x *= 0.8;
+        a.armL.rotation.x = -1.05; a.armR.rotation.x = -1.05;   // 持槍前指
       }
-      a.armL.rotation.x = -1.05; a.armR.rotation.x = -1.05;   // 持槍前指
       a.group.visible = st.hp > 0;
       a._sync();
     };
@@ -366,26 +370,35 @@ export class Net {
       while (dy < -Math.PI) dy += Math.PI * 2;
       g.yaw += dy * lerp;
       g.hp = T.hp;
-      if (!T.alive && g.state !== 'dead') { g.state = 'dead'; g.deadT = 0; g._fallDir = Math.random() < .5 ? 1 : -1; }
+      if (!T.alive && g.state !== 'dead') { g.damage(999, 'body', 0); g._fallDir = Math.random() < .5 ? 1 : -1; }
       if (g.state === 'dead') {
         g.deadT += dt;
-        const t = Math.min(1, g.deadT / 0.35);
-        g.group.rotation.z = t * Math.PI / 2 * g._fallDir;
-        g.group.position.y = -t * 0.25;
+        if (g._glbDeath) {
+          if (g.mixer) g.mixer.update(dt);
+        } else {
+          const t = Math.min(1, g.deadT / 0.35);
+          g.group.rotation.z = t * Math.PI / 2 * g._fallDir;
+          g.group.position.y = -t * 0.25;
+        }
         if (g.deadT > 2.2) g.group.visible = false;
         if (T.alive) {   // 房主端已重生
           g.state = 'patrol'; g.deadT = 0; g.group.visible = true;
           g.group.rotation.set(0, 0, 0); g.group.position.y = 0;
           g.pos.set(T.x, 0, T.z);
+          if (g._glb) { g._glbDeath = false; g._curAnim = null; g._setAnim('idle'); }
+          if (g._marker) g._marker.visible = true;
         }
       } else {
         g.moving = T.mv;
-        if (g.moving) {
+        if (g._glb) {
+          g._setAnim(g.moving ? 'run' : 'idle');
+          if (g.mixer) g.mixer.update(dt);
+        } else if (g.moving) {
           g.walkPh += dt * 9;
           g.legL.rotation.x = Math.sin(g.walkPh) * 0.55;
           g.legR.rotation.x = -Math.sin(g.walkPh) * 0.55;
-        } else { g.legL.rotation.x *= 0.8; g.legR.rotation.x *= 0.8; }
-        g.armL.rotation.x = -1.05; g.armR.rotation.x = -1.05;
+          g.armL.rotation.x = -1.05; g.armR.rotation.x = -1.05;
+        } else { g.legL.rotation.x *= 0.8; g.legR.rotation.x *= 0.8; g.armL.rotation.x = -1.05; g.armR.rotation.x = -1.05; }
       }
       if (g.state !== 'dead') g._sync();
       else { g.group.position.x = g.pos.x; g.group.position.z = g.pos.z; }

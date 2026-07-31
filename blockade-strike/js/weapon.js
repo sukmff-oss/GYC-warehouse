@@ -1,7 +1,17 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { colliders } from './map.js';
 import { audio } from './audio.js';
 import { gunMetalTex, gunWoodTex, texMat } from './textures.js';
+
+// ===== 3D 槍模（Quaternius CC0 + CreativeTrio CC0；gatling 保留黃金方塊造型）=====
+const GUN_GLB_IDS = ['ak', 'm4', 'mp5', 'p90', 'm870', 'awp', 'm82', 'm249', 'deagle', 'rpg'];
+const gunGlbP = (() => {
+  const loader = new GLTFLoader();
+  return Promise.all(GUN_GLB_IDS.map(id => new Promise(res => {
+    loader.load('./assets/models/guns/' + id + '.glb', g => res([id, g]), undefined, () => res([id, null]));
+  })));
+})();
 
 // ---------- 武器配置（10 种） ----------
 export const WEAPON_ORDER = ['ak', 'm4', 'mp5', 'p90', 'm870', 'awp', 'm82', 'm249', 'deagle', 'rpg'];
@@ -96,6 +106,43 @@ export class Weapon {
     this.gun.position.copy(this.hipPos);
     for (const k in this.mags) this.mags[k].userData.y0 = this.mags[k].position.y;
     this._buildFlash();
+    // GLB 槍模載入後換裝（方塊槍保留為備案，載入失敗不影響遊戲）
+    gunGlbP.then(list => {
+      for (const [id, gltf] of list) if (gltf) this._attachGunGlb(id, gltf);
+    });
+  }
+
+  // ===== 換裝 GLB 槍模：正規化尺寸/朝向後掛進槍組，藏掉方塊零件 =====
+  _attachGunGlb(id, gltf) {
+    const g = this.guns[id];
+    if (!g || g.userData.glb) return;
+    const cfg = WEAPONS[id];
+    const model = gltf.scene.clone(true);
+    model.traverse(o => {
+      o.frustumCulled = false; o.castShadow = false;
+      // 視模離場景光遠，加一點自發光免得黑成剪影
+      if (o.isMesh) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) if (m && m.emissive) m.emissive.setRGB(0.035, 0.035, 0.04);
+      }
+    });
+    // Quaternius 槍口原生朝 +X（四角度截圖實測確認），轉 +90° 對齊視模前向 -Z
+    const wrap = new THREE.Group();
+    wrap.add(model);
+    model.rotation.y = Math.PI / 2;
+    // 量測 → 縮放到原方塊槍長度、中心對齊槍身中段（縮放後中心要乘回 k）
+    const box = new THREE.Box3().setFromObject(wrap);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const longest = Math.max(size.x, size.y, size.z) || 1;
+    const target = cfg.pistol ? 0.38 : Math.abs(cfg.muzzleZ) + 0.32;   // 手槍用真實尺寸，步槍/狙擊對齊原方塊槍長
+    const k = target / longest;
+    wrap.scale.setScalar(k);
+    wrap.position.set(-center.x * k, -center.y * k, -center.z * k + (cfg.muzzleZ + 0.24) * 0.5);
+    g.add(wrap);
+    // 藏掉方塊零件（含手套/瞄具；瞄準對齊仍走 cfg.sightH）
+    for (const c of g.children) if (c !== wrap) c.visible = false;
+    g.userData.glb = wrap;
   }
 
   get cfg() { return WEAPONS[this.activeId]; }

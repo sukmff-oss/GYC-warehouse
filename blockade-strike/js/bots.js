@@ -57,6 +57,7 @@ class BotMate extends Soldier {
     this.hp = 100; this.alive = true; this.state = 'patrol';
     this.group.visible = true; this.group.rotation.set(0, 0, 0);
     this.group.position.y = 0;
+    if (this._glb) { this._glbDeath = false; this._curAnim = null; this._setAnim('idle'); }
     this._sync();
   }
 
@@ -68,6 +69,18 @@ class BotMate extends Soldier {
       this.hp = 0; this.alive = false; this.state = 'dead'; this.deadT = 0;
       this.hasGatling = false;                 // 黃金加特林死亡立即消失
       if (this.goldBand) this.goldBand.visible = false;
+      // GLB 模組有死亡動畫就播放
+      const dn = this._animNames?.death;
+      if (dn && this._actions?.[dn]) {
+        const a = this._actions[dn];
+        this.mixer.stopAllAction();
+        a.reset();
+        a.setLoop(THREE.LoopOnce, 1);
+        a.clampWhenFinished = true;
+        a.play();
+        this._curAnim = dn;
+        this._glbDeath = true;
+      }
       return true;   // 陣亡
     }
     return false;
@@ -77,9 +90,13 @@ class BotMate extends Soldier {
   update(dt, ctx) {
     if (this.state === 'dead') {
       this.deadT += dt;
-      const t = Math.min(1, this.deadT / 0.35);
-      this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
-      this.group.position.y = -t * 0.25;
+      if (this._glbDeath) {
+        if (this.mixer) this.mixer.update(dt);
+      } else {
+        const t = Math.min(1, this.deadT / 0.35);
+        this.group.rotation.z = t * Math.PI / 2 * (this._fallDir || (this._fallDir = Math.random() < .5 ? 1 : -1));
+        this.group.position.y = -t * 0.25;
+      }
       if (this.deadT > 1.2) this.group.visible = false;
       return;
     }
@@ -184,15 +201,21 @@ class BotMate extends Soldier {
     } else this._stuckT = 0;
     this._lastX = this.pos.x; this._lastZ = this.pos.z;
 
-    // 動畫
-    const lerp = Math.min(1, dt * 10);
-    if (this.moving) this.walkPh += dt * spd * 3.4;
-    const sw = this.moving ? 1 : 0;
-    this.legL.rotation.x += (Math.sin(this.walkPh) * 0.55 * sw - this.legL.rotation.x) * lerp;
-    this.legR.rotation.x += (-Math.sin(this.walkPh) * 0.55 * sw - this.legR.rotation.x) * lerp;
-    const armTarget = tgt ? -1.05 : Math.sin(this.walkPh + Math.PI) * 0.32 * sw;
-    this.armL.rotation.x += (armTarget - this.armL.rotation.x) * lerp;
-    this.armR.rotation.x = this.armL.rotation.x;
+    // 動畫：GLB 模組用邏輯動畫；方塊模型走程序化擺動
+    if (this._glb) {
+      const want = !this.moving ? 'idle' : (tgt ? 'run' : 'walk');
+      this._setAnim(want);
+      if (this.mixer) this.mixer.update(dt);
+    } else {
+      const lerp = Math.min(1, dt * 10);
+      if (this.moving) this.walkPh += dt * spd * 3.4;
+      const sw = this.moving ? 1 : 0;
+      this.legL.rotation.x += (Math.sin(this.walkPh) * 0.55 * sw - this.legL.rotation.x) * lerp;
+      this.legR.rotation.x += (-Math.sin(this.walkPh) * 0.55 * sw - this.legR.rotation.x) * lerp;
+      const armTarget = tgt ? -1.05 : Math.sin(this.walkPh + Math.PI) * 0.32 * sw;
+      this.armL.rotation.x += (armTarget - this.armL.rotation.x) * lerp;
+      this.armR.rotation.x = this.armL.rotation.x;
+    }
     if (this.flinchT > 0) this.flinchT -= dt;
     this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
     this._sync();
