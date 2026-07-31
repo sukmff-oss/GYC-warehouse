@@ -108,7 +108,7 @@ const bots = new BotManager(scene);   // BOT 隊友（房主開房自動加入�
 const G = {
   state: 'menu',
   mapId: 'town',
-  env: 'night',            // day 白天 | sunset 夕陽 | night 夜晚
+  env: 'sunset',          // 固定夕陽（地圖輪播由 rotationInfo 決定）
   mode: 'free',            // free 自由局 | timed 限时局（3 分钟）
   scoreB: 0, scoreR: 0,
   kills: 0, deaths: 0, shots: 0, hits: 0,
@@ -897,30 +897,34 @@ if (IS_TOUCH) {
   document.addEventListener('dblclick', e => e.preventDefault());
 }
 
-// ---------- 地图选择 ----------
-document.querySelectorAll('.mapcard').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.mapcard').forEach(c => c.classList.remove('sel'));
-    card.classList.add('sel');
-    G.mapId = card.dataset.map;
-    if (G.coop && net.isHost && net.connected) {   // 房主換圖同步給加入者
-      net.mapId = G.mapId;
-      net._broadcast({ t: 'map', mapId: G.mapId, env: G.env });
-    }
-  });
-});
-// 時段選擇（白天 / 夕陽 / 夜晚）
-document.querySelectorAll('.envcard').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.envcard').forEach(c => c.classList.remove('sel'));
-    card.classList.add('sel');
-    G.env = card.dataset.env;
-    if (G.coop && net.isHost && net.connected) {   // 房主換時段同步給加入者
-      net.env = G.env;
-      net._broadcast({ t: 'map', mapId: G.mapId, env: G.env });
-    }
-  });
-});
+// ---------- 地圖輪播（每 30 分鐘自動換圖 · 固定夕陽 · 免選地圖）----------
+const MAP_ROTATION = [
+  ['town',  '小鎮街道'],
+  ['ruins', '沙漠廢墟'],
+  ['docks', '貨運碼頭'],
+];
+const ROT_MS = 30 * 60 * 1000;
+function rotationInfo() {
+  const slot = Math.floor(Date.now() / ROT_MS);   // 以epoch對齊，所有玩家看到同一張圖
+  const [mapId, name] = MAP_ROTATION[slot % MAP_ROTATION.length];
+  return { mapId, name, env: 'sunset', remainMs: (slot + 1) * ROT_MS - Date.now() };
+}
+function applyRotation(broadcast = false) {
+  const r = rotationInfo();
+  G.mapId = r.mapId; G.env = r.env;
+  net.mapId = r.mapId; net.env = r.env;
+  $('rotMap').textContent = `🌇 本輪地圖：${r.name}（夕陽）`;
+  if (broadcast && G.coop && net.isHost && net.connected)   // 房主同步給加入者
+    net._broadcast({ t: 'map', mapId: r.mapId, env: r.env });
+}
+applyRotation();
+setInterval(() => {
+  const r = rotationInfo();
+  const mm = String(Math.floor(r.remainMs / 60000)).padStart(2, '0');
+  const ss = String(Math.floor((r.remainMs % 60000) / 1000)).padStart(2, '0');
+  $('rotNext').textContent = `${mm}:${ss} 後自動換圖（小鎮街道 → 沙漠廢墟 → 貨運碼頭）`;
+  if (r.mapId !== G.mapId && G.state === 'menu') applyRotation(true);   // 選單中到點即換
+}, 1000);
 // 加農槍解鎖難度（25 / 50 / 100 殺）
 document.querySelectorAll('.cannoncard').forEach(card => {
   card.addEventListener('click', () => {
@@ -977,8 +981,6 @@ net.onEvent = (type, data) => {
       net.rosterCount = 2;
       G.mapId = data.mapId;
       if (data.env) G.env = data.env;
-      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === data.mapId));
-      document.querySelectorAll('.envcard').forEach(c => c.classList.toggle('sel', c.dataset.env === G.env));
       if (G.state === 'menu' || G.state === 'end') startGame();   // 加入公共房後直接進場
       break;
     case 'full':   // 公共房已滿 5 位玩家 → 本局離線進行
@@ -991,8 +993,6 @@ net.onEvent = (type, data) => {
     case 'map':
       G.mapId = data.mapId;
       if (data.env) G.env = data.env;
-      document.querySelectorAll('.mapcard').forEach(c => c.classList.toggle('sel', c.dataset.map === G.mapId));
-      document.querySelectorAll('.envcard').forEach(c => c.classList.toggle('sel', c.dataset.env === G.env));
       break;
     case 'start':
       if (G.state === 'menu' || G.state === 'end') startGame();
@@ -1077,6 +1077,7 @@ function autoMatch() {
 // ---------- 开始 / 重开 ----------
 function startGame() {
   audio.init(); audio.resume();
+  if (!G.coop || net.isHost) applyRotation();   // 開局直接用當前輪值地圖（加入者跟隨房主）
   mapInfo = buildMap(scene, G.mapId, G.env);
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);

@@ -171,19 +171,10 @@
   body.touch .touchkeys { display:block; }
   body.touch .deskkeys { display:none; }
 
-  /* 地图选择 */
-  #mapselect { display:flex; gap:16px; margin-top:30px; }
-  .mapcard { width:132px; padding:12px 0 10px; border-radius:8px; text-align:center;
-    cursor:pointer; pointer-events:auto; color:#cdd8e8; font-size:14px;
-    letter-spacing:2px; border:2px solid rgba(255,255,255,.15);
-    background:rgba(255,255,255,.04); transition:all .18s; }
-  .mapcard:hover { border-color:rgba(255,176,74,.5); transform:translateY(-2px); }
-  .mapcard.sel { border-color:#ffb04a; color:#ffb04a;
-    background:rgba(255,176,74,.1); box-shadow:0 4px 20px rgba(255,176,74,.25); }
-  .mapcard .ico { height:52px; margin:0 10px 10px; border-radius:5px; }
-  .mapcard[data-map="town"] .ico { background:linear-gradient(160deg,#d8c9a8 40%,#8a8478 40% 60%,#cbb894 60%); }
-  .mapcard[data-map="ruins"] .ico { background:linear-gradient(160deg,#d6c098 45%,#bcb2a0 45% 65%,#9a8468 65%); }
-  .mapcard[data-map="docks"] .ico { background:linear-gradient(160deg,#9aa0a2 45%,#8a4a3a 45% 58%,#3a5a7a 58% 72%,#2a6a8a 72%); }
+  /* 地图轮播（唯读显示 · 每 30 分钟自动换图 · 固定夕阳） */
+  #maproster { margin-top:26px; text-align:center; pointer-events:auto; }
+  #rotMap { color:#ffd27a; font:16px sans-serif; letter-spacing:2px; }
+  #rotNext { color:#8fa2bd; font:12px sans-serif; margin-top:6px; letter-spacing:1px; }
 
   /* 移动端响应式 */
   @media (max-width: 900px) {
@@ -203,8 +194,6 @@
     .feed { font-size:11px; padding:4px 8px; }
     .title { font-size:34px; letter-spacing:6px; }
     .keys { font-size:12px; padding:0 20px; }
-    #mapselect { gap:8px; margin-top:20px; }
-    .mapcard { width:96px; font-size:12px; }
     .playbtn { padding:12px 50px; font-size:16px; margin-top:24px; }
   }
 
@@ -383,15 +372,9 @@
     <b>左搖桿</b> 移動（推滿疾跑）  <b>右側滑動</b> 轉視角<br/>
     <b>開火 / 開鏡 / 跳 / 換彈 / 手雷 / 換槍</b> 點按右側按鈕  <b>互動</b> 安裝炸彈 · 進出傳送門
   </div>
-  <div id="mapselect">
-    <div class="mapcard sel" data-map="town"><div class="ico"></div>小鎮街道</div>
-    <div class="mapcard" data-map="ruins"><div class="ico"></div>沙漠廢墟</div>
-    <div class="mapcard" data-map="docks"><div class="ico"></div>貨運碼頭</div>
-  </div>
-  <div id="envselect">
-    <div class="modecard envcard" data-env="day">☀️ 白天</div>
-    <div class="modecard envcard" data-env="sunset">🌇 夕陽</div>
-    <div class="modecard envcard sel" data-env="night">🌙 夜晚</div>
+  <div id="maproster">
+    <div id="rotMap">🌇 本輪地圖：小鎮街道（夕陽）</div>
+    <div id="rotNext">每 30 分鐘自動換圖</div>
   </div>
   <div id="modeselect">
     <div class="modecard sel" data-mode="free">自由局 · 不限時</div>
