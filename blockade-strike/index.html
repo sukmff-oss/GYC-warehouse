@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-TW"><head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>連線突擊 · BLOCKADE STRIKE</title>
+<title>拯救台北101 · SAVE TAIPEI 101</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden; background:#0a0c10;
@@ -173,8 +173,8 @@
 
   /* 地图轮播（唯读显示 · 每 30 分钟自动换图 · 固定夕阳） */
   #maproster { margin-top:26px; text-align:center; pointer-events:auto; }
-  #rotMap { color:#1d1d1f; font:600 16px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; }
-  #rotNext { color:#6e6e73; font:12.5px -apple-system,"PingFang TC",sans-serif; margin-top:6px; letter-spacing:.5px; }
+  #rotMap { color:#f5f5f7; font:600 16px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; }
+  #rotNext { color:#dcdce1; font:12.5px -apple-system,"PingFang TC",sans-serif; margin-top:6px; letter-spacing:.5px; }
 
   /* 移动端响应式 */
   @media (max-width: 900px) {
@@ -229,31 +229,33 @@
     text-align:center; z-index:6; }
   #sysmsg.show { opacity:1; }
 
-  /* ============ 开始 / 结算界面（仿 Apple 風格） ============ */
+  /* ============ 开始 / 结算界面（仿 Apple 風格 · 金屬灰） ============ */
   .screen { position:fixed; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; z-index:10; overflow-y:auto;
-    background:#f5f5f7; color:#1d1d1f;
+    background:linear-gradient(165deg, #8f9298 0%, #74777d 40%, #5a5d63 75%, #4a4d53 100%);
+    color:#f5f5f7;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Microsoft JhengHei",sans-serif;
     transition:opacity .5s; }
   .screen.hidden { opacity:0; pointer-events:none; }
-  .title { color:#1d1d1f; font-size:56px; font-weight:700; letter-spacing:2px; }
-  .title em { font-style:normal; color:#0071e3; }
-  .subtitle { color:#6e6e73; margin-top:8px; letter-spacing:3px; font-size:15px; font-weight:500; }
-  .keys { margin-top:30px; color:#6e6e73; font-size:13px; line-height:2.1;
+  .title { color:#f5f5f7; font-size:56px; font-weight:700; letter-spacing:2px;
+    text-shadow:0 2px 12px rgba(0,0,0,.25); }
+  .title em { font-style:normal; color:#0a84ff; }
+  .subtitle { color:#e5e5ea; margin-top:8px; letter-spacing:3px; font-size:15px; font-weight:500; }
+  .keys { margin-top:30px; color:#e5e5ea; font-size:13px; line-height:2.1;
     text-align:center; letter-spacing:.5px; }
-  .keys b { color:#1d1d1f; border:1px solid #d2d2d7; border-radius:980px;
-    padding:1px 10px; margin:0 3px; font-weight:600; background:#fff; }
+  .keys b { color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:980px;
+    padding:1px 10px; margin:0 3px; font-weight:600; background:rgba(255,255,255,.14); }
   .playbtn { margin-top:34px; pointer-events:auto; cursor:pointer;
-    background:#0071e3; color:#fff;
+    background:#0a84ff; color:#fff;
     font-size:19px; font-weight:600; letter-spacing:3px; padding:14px 68px;
-    border:none; border-radius:980px;
+    border:none; border-radius:980px; box-shadow:0 6px 20px rgba(10,132,255,.35);
     transition:background .2s, transform .15s; }
-  .playbtn:hover { background:#0077ed; transform:scale(1.02); }
+  .playbtn:hover { background:#2a95ff; transform:scale(1.02); }
   .playbtn:active { transform:scale(.98); }
-  #endTitle { color:#1d1d1f; font-size:44px; font-weight:700; letter-spacing:4px; }
-  #endScore { color:#1d1d1f; font-size:20px; margin-top:16px; letter-spacing:2px; }
-  #endScore .b{color:#0071e3}#endScore .r{color:#ff3b30}
-  #endStats { color:#6e6e73; margin-top:10px; font-size:14px; letter-spacing:1px; }
+  #endTitle { color:#f5f5f7; font-size:44px; font-weight:700; letter-spacing:4px; }
+  #endScore { color:#f5f5f7; font-size:20px; margin-top:16px; letter-spacing:2px; }
+  #endScore .b{color:#64b5ff}#endScore .r{color:#ff6961}
+  #endStats { color:#e5e5ea; margin-top:10px; font-size:14px; letter-spacing:1px; }
 
   /* ===== V5：金币 / 保护 / BOSS / 任务 / 交互 ===== */
   #goldbox { position:absolute; right:16px; top:14px; color:#ffd27a; font:bold 16px Consolas,monospace;
@@ -278,7 +280,7 @@
     border-radius:8px; border:1px solid rgba(255,255,255,.35); }
 
   /* ===== 連線合作（自動配房） ===== */
-  #coopStatus { margin-top:10px; color:#6e6e73; font-size:12.5px; letter-spacing:1px;
+  #coopStatus { margin-top:10px; color:#e5e5ea; font-size:12.5px; letter-spacing:1px;
     min-height:16px; }
   #coopinfo { position:absolute; left:22px; top:196px; display:none;
     color:#e8ecf2; font:12px sans-serif; line-height:1.8;
@@ -306,12 +308,12 @@
   #lbNameSave:hover { background:#dedee3; }
 
   #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
-  .sbtn { padding:8px 18px; border-radius:980px; border:1px solid #d2d2d7; cursor:pointer;
-    color:#0071e3; font:14px -apple-system,"PingFang TC",sans-serif; background:#fff; }
-  .sbtn:hover { background:#f5f5f7; }
-  #startgold { color:#b07800; font:600 16px -apple-system,"PingFang TC",sans-serif; }
-  #startstats { color:#6e6e73; font:12px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
-  #endGold { color:#b07800; font:600 15px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
+  .sbtn { padding:8px 18px; border-radius:980px; border:1px solid rgba(255,255,255,.4); cursor:pointer;
+    color:#fff; font:14px -apple-system,"PingFang TC",sans-serif; background:rgba(255,255,255,.14); }
+  .sbtn:hover { background:rgba(255,255,255,.24); }
+  #startgold { color:#ffd27a; font:600 16px -apple-system,"PingFang TC",sans-serif; }
+  #startstats { color:#e5e5ea; font:12px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
+  #endGold { color:#ffd27a; font:600 15px -apple-system,"PingFang TC",sans-serif; margin-top:8px; }
 </style>
 <script src="https://www.kimi.com/sdk-seed.js" defer=""></script></head>
 <body>
@@ -373,8 +375,8 @@
 
 <!-- 开始界面 -->
 <div class="screen" id="startScreen">
-  <div class="title">連線<em>突擊</em></div>
-  <div class="subtitle">BLOCKADE STRIKE · 連線合作</div>
+  <div class="title">拯救<em>台北101</em></div>
+  <div class="subtitle">SAVE TAIPEI 101 · 連線合作</div>
   <div class="keys deskkeys">
     <b>W A S D</b> 移動   <b>Shift</b> 疾跑   <b>空格</b> 跳躍   <b>G</b> 手雷   <b>Z</b> 狙擊變倍<br/>
     <b>左键</b> 射擊   <b>右键</b> 瞄準   <b>R</b> 換彈   <b>E / P</b> 上下車 / 炸彈 / 傳送門   <b>1~0</b> 切換 10 種武器

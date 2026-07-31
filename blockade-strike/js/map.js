@@ -54,8 +54,8 @@ function box(w, h, d, color, x, y, z, opts = {}) {
   } else {
     material = mat(color, opts.rough ?? 0.95, opts.metal ?? 0);
   }
-  // 使用 Mesh 合併（當非旋轉且非透明時）
-  if (!opts.ry && !opts.rz && !opts.rx && opts.solid !== false && !opts.alpha && !opts.noBatch) {
+  // 使用 Mesh 合併（當非旋轉且非透明時；指定 parent 時保持獨立 mesh）
+  if (!opts.ry && !opts.rz && !opts.rx && opts.solid !== false && !opts.alpha && !opts.noBatch && !opts.parent) {
     batchBox(w, h, d, material, x, y, z, opts);
   } else {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
@@ -65,7 +65,7 @@ function box(w, h, d, color, x, y, z, opts = {}) {
     if (opts.rx) m.rotation.x = opts.rx;
     m.castShadow = opts.cast !== false;
     m.receiveShadow = true;
-    group.add(m);
+    (opts.parent || group).add(m);
   }
   if (opts.solid !== false && !opts.ry && !opts.rz && !opts.rx) {
     colliders.push({
@@ -1006,41 +1006,46 @@ function buildAdventure() {
 }
 
 // ---------- 入口 ----------
-// ---------- 台北 101（加大 200% 城市街道 + 載具自由開車）----------
+// ---------- 台北 101（加大 200% 城市街道 + 載具自由開車 · 101 矗立地圖正中）----------
 function buildTaipei() {
   applySkyEnv({ night: 0x0d1420, sunset: 0x4a2a33, day: 0xbccfda });
 
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), texMat(0x8f9396, (() => { const t = asphaltTex().clone(); t.needsUpdate = true; t.repeat.set(140, 140); return t; })(), { rough: 0.97 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
 
-  // ===== 道路網（市區加大：5 條南北大道 × 5 條東西幹道，自由開車）=====
-  for (const rx of [-80, -40, 40, 80]) road(rx, 27, 10, 306, 0x4a4e54);   // 南北向（z -120~174）
-  road(0, 0, 12, 360, 0x4a4e54);                                          // 中央大道直通 101（z -180~180）
-  for (const rz of [-120, -60, 0, 60, 120]) road(0, rz, 240, 10, 0x565a60);   // 東西向
-  // 101 前廣場人行道
-  box(46, 0.08, 30, 0xb8b2a4, 0, 0.04, -141, { solid: false, tex: concreteTex() });
+  // ===== 道路網（環繞正中 101 廣場 · 自由開車）=====
+  for (const rx of [-80, -40, 40, 80]) road(rx, 0, 10, 360, 0x4a4e54);   // 南北向（全線）
+  road(0, 102, 12, 156, 0x4a4e54);                                      // 中央大道南段（z 24~180）
+  road(0, -102, 12, 156, 0x4a4e54);                                     // 中央大道北段（z -180~-24）
+  for (const rz of [-120, -60, 60, 120]) road(0, rz, 240, 10, 0x565a60);   // 東西向
+  // 101 前廣場（地圖正中）
+  box(56, 0.08, 56, 0xb8b2a4, 0, 0.04, 0, { solid: false, tex: concreteTex() });
 
-  // ===== 台北 101（竹節式塔身 + 裙樓 + 尖頂）=====
-  const TX = 0, TZ = -168;
-  box(34, 12, 26, 0x9aa2ac, TX, 6, TZ, { tex: concreteTex(), bump: 0.6 });   // 裙樓
-  minimapRects.push({ x: TX, z: TZ, w: 34, d: 26 });
-  box(34.2, 2.2, 26.2, 0x6a92a8, TX, 3.2, TZ, { solid: false, emis: 0x2a4a5a, emisI: 0.3 });   // 玻璃帷幕帶
+  // ===== 台北 101（地圖正中間 · 獨立群組，守護失敗可倒塌）=====
+  const tower = new THREE.Group();
+  group.add(tower);
+  const T = (w, h, d, c, x, y, z, o = {}) => box(w, h, d, c, x, y, z, { ...o, parent: tower });
+  T(34, 12, 26, 0x9aa2ac, 0, 6, 0, { tex: concreteTex(), bump: 0.6 });   // 裙樓
+  minimapRects.push({ x: 0, z: 0, w: 34, d: 26 });
+  T(34.2, 2.2, 26.2, 0x6a92a8, 0, 3.2, 0, { solid: false, emis: 0x2a4a5a, emisI: 0.3 });   // 玻璃帷幕帶
   let tw = 17, ty = 12;
   for (let i = 0; i < 8; i++) {   // 八節竹節塔身（下寬上窄、節節外挑）
     const segH = 7.5;
-    box(tw, segH, tw, 0x5f8a76, TX, ty + segH / 2, TZ, { solid: i < 2, emis: 0x1a3a2a, emisI: 0.25 });
-    box(tw + 1.4, 1.0, tw + 1.4, 0xc8b890, TX, ty + segH - 0.3, TZ, { solid: false });          // 斗拱外挑
-    box(tw + 1.5, 0.35, tw + 1.5, 0xffd9a0, TX, ty + segH + 0.15, TZ, { solid: false, emis: 0xffb05a, emisI: 1.0 });  // 節頂燈帶
+    T(tw, segH, tw, 0x5f8a76, 0, ty + segH / 2, 0, { solid: i < 2, emis: 0x1a3a2a, emisI: 0.25 });
+    T(tw + 1.4, 1.0, tw + 1.4, 0xc8b890, 0, ty + segH - 0.3, 0, { solid: false });          // 斗拱外挑
+    T(tw + 1.5, 0.35, tw + 1.5, 0xffd9a0, 0, ty + segH + 0.15, 0, { solid: false, emis: 0xffb05a, emisI: 1.0 });  // 節頂燈帶
     ty += segH; tw *= 0.92;
   }
-  box(tw * 0.6, 5, tw * 0.6, 0x9aa4ac, TX, ty + 2.5, TZ, { solid: false });   // 尖頂
-  box(0.5, 12, 0.5, 0xc23a2a, TX, ty + 11, TZ, { solid: false, emis: 0xc23a2a, emisI: 0.8 });   // 天線
+  T(tw * 0.6, 5, tw * 0.6, 0x9aa4ac, 0, ty + 2.5, 0, { solid: false });   // 尖頂
+  T(0.5, 12, 0.5, 0xc23a2a, 0, ty + 11, 0, { solid: false, emis: 0xc23a2a, emisI: 0.8 });   // 天線
 
-  // ===== 街廓（6×4 街區，每格 2 棟；少量空地停車場）=====
+  // ===== 街廓（6×4 街區，中央 2×2 讓位給 101 廣場；少量空地停車場）=====
   const xBands = [[-118, -86], [-74, -46], [-34, -6], [6, 34], [46, 74], [86, 118]];
-  const zBands = [[-114, -66], [-54, -6], [6, 54], [66, 114]];
+  const zBands = [[-114, -66], [-54, -30], [30, 54], [66, 114]];
   for (const [x0, x1] of xBands) {
     for (const [z0, z1] of zBands) {
+      const centerBlock = (x0 === -34 || x0 === 6) && (z0 === -54 || z0 === 30);
+      if (centerBlock) continue;   // 101 廣場周邊留空
       if (Math.random() < 0.15) {   // 空地：停車場 / 工事
         crate(x0 + 8, z0 + 10, 1.1); crate(x1 - 8, z1 - 10, 1);
         barrier((x0 + x1) / 2, (z0 + z1) / 2, Math.PI / 2);
@@ -1067,25 +1072,25 @@ function buildTaipei() {
 
   // 街道家具：路口路燈 + 中央大道行道樹
   for (const rx of [-80, -40, 0, 40, 80])
-    for (const rz of [-120, -60, 0, 60, 120])
+    for (const rz of [-120, -60, 60, 120])
       streetlight(rx + 7, rz + 7, Math.PI / 4);
-  for (const lz of [-100, -60, -20, 20, 60, 100, 140]) { palm(-9, lz); palm(9, lz + 12); }
-  sandbags(0, -128, 4); sandbags(-16, -8, 3.5); sandbags(16, 12, 4);
-  barrier(-8, -30); barrier(8, -14); barrier(-8, 46); barrier(8, 88);
-  crate(-10, -52, 1.1); crate(10.5, -54, 1); crate(-14, 8, 1); crate(14, -2, 1.2);
+  for (const lz of [-160, -120, -80, -40, 40, 80, 120, 160]) { palm(-9, lz); palm(9, lz + 14); }
+  sandbags(-20, 20, 4); sandbags(20, -20, 4); sandbags(-20, -20, 3.5); sandbags(20, 20, 3.5);
+  barrier(-8, 46); barrier(8, 88); barrier(-8, -46); barrier(8, -88);
+  crate(-10, 32, 1.1); crate(10.5, -32, 1); crate(-14, 8, 1); crate(14, -2, 1.2);
   crate(-24, 66, 1); crate(24, -68, 1);
 
   enemySpawns.push(
     new THREE.Vector3(0, 0, -120), new THREE.Vector3(-40, 0, -60),
     new THREE.Vector3(40, 0, -60), new THREE.Vector3(-80, 0, 0),
-    new THREE.Vector3(80, 0, 0), new THREE.Vector3(0, 0, 30),
+    new THREE.Vector3(80, 0, 0), new THREE.Vector3(0, 0, 60),
     new THREE.Vector3(-40, 0, 120), new THREE.Vector3(40, 0, 120),
     new THREE.Vector3(-80, 0, -120), new THREE.Vector3(80, 0, -120),
     new THREE.Vector3(0, 0, 160), new THREE.Vector3(-80, 0, 90),
-    new THREE.Vector3(80, 0, 90), new THREE.Vector3(0, 0, -150)
+    new THREE.Vector3(80, 0, 90), new THREE.Vector3(0, 0, -60)
   );
   patrolPoints.push(
-    new THREE.Vector3(0, 0, -60), new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -60), new THREE.Vector3(0, 0, 24),
     new THREE.Vector3(-40, 0, 0), new THREE.Vector3(40, 0, 0),
     new THREE.Vector3(0, 0, 60), new THREE.Vector3(-80, 0, -60),
     new THREE.Vector3(80, 0, 60), new THREE.Vector3(0, 0, -120),
@@ -1097,8 +1102,10 @@ function buildTaipei() {
     bounds: { minX: -120, maxX: 120, minZ: -180, maxZ: 180 },
     extent: 200,
     night: true,
-    bombSite: { x: 0, z: -138, r: 6 },          // 101 廣場
-    portalPos: new THREE.Vector3(12, 0, 24)
+    bombSite: null,                          // 本圖改為守護任務：敵方 C4 攻塔
+    c4Door: { x: 0, z: 16 },                 // 台北 101 正門（南側）
+    tower,                                   // 101 群組（倒塌動畫用）
+    portalPos: new THREE.Vector3(12, 0, 40)
   };
 }
 

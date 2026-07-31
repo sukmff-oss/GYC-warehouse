@@ -127,6 +127,7 @@ const G = {
   gatling: false,          // 持有黃金加特林（50 殺獎勵 · 陣亡消失）
   gatlingSpawned: false,   // 本局 50 殺加特林已生成過
   gatlingPrev: null,       // 拾取加特林前的武器（陣亡時換回）
+  rotationHold: -1,        // 101 倒塌提前換圖後，暫停本輪 slot 的輪播干預
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
   boss: null,              // 当前 BOSS 士兵
@@ -788,6 +789,156 @@ function updateBomb(dt) {
   }
 }
 
+// ---------- 守護台北101：敵方 C4 攻塔（每 5 分鐘安置 · 3 次引爆大樓倒塌換圖）----------
+const defend = { c4T: 300, planted: false, boomT: 0, beepT: 0, defuseT: 0, fails: 0, collapsing: 0, smoke: [] };
+const enemyC4 = new THREE.Group();   // 敵方 C4（紅色警示燈 + 紅圈）
+{
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.2, 0.34),
+    new THREE.MeshStandardMaterial({ color: 0x3a2a28, roughness: 0.5, metalness: 0.5, emissive: 0x5a0808, emissiveIntensity: 0.6 }));
+  body.position.y = 0.13;
+  const led = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06),
+    new THREE.MeshBasicMaterial({ color: 0xff2020 }));
+  led.position.set(0.14, 0.26, 0); led.name = 'led';
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.1, 32),
+    new THREE.MeshBasicMaterial({ color: 0xff3a2a, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; ring.name = 'ring';
+  enemyC4.add(body, led, ring);
+  enemyC4.visible = false;
+  scene.add(enemyC4);
+}
+function resetDefend() {
+  defend.c4T = 300; defend.planted = false; defend.defuseT = 0;
+  defend.fails = 0; defend.collapsing = 0;
+  enemyC4.visible = false;
+  for (const s of defend.smoke) scene.remove(s);
+  defend.smoke.length = 0;
+}
+function spawnCollapseSmoke() {
+  const cc = document.createElement('canvas'); cc.width = cc.height = 128;
+  const cx = cc.getContext('2d');
+  const rg = cx.createRadialGradient(64, 64, 6, 64, 64, 64);
+  rg.addColorStop(0, 'rgba(70,70,75,.85)'); rg.addColorStop(0.6, 'rgba(50,50,55,.5)'); rg.addColorStop(1, 'rgba(40,40,45,0)');
+  cx.fillStyle = rg; cx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(cc);
+  for (let i = 0; i < 14; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.85, depthWrite: false }));
+    const a = Math.random() * Math.PI * 2, r = Math.random() * 16;
+    sp.position.set(Math.cos(a) * r, Math.random() * 8 + 2, Math.sin(a) * r);
+    const s = 14 + Math.random() * 18;
+    sp.scale.set(s, s, 1);
+    sp.userData.rise = 2.5 + Math.random() * 3;
+    sp.userData.grow = 2 + Math.random() * 2.5;
+    scene.add(sp);
+    defend.smoke.push(sp);
+  }
+}
+function startCollapse() {
+  defend.collapsing = 4.5;
+  G.shake = 2.5;
+  audio.boom(0);
+  hud.celebrate('TAIPEI 101 DOWN', '台北101倒塌 · 拯救失敗', 3);
+  hud.sysmsg('💥 敵方連續引爆 3 次 · 台北101倒塌了……戰場即將轉移', 6000);
+  hud.objective(null);
+  spawnCollapseSmoke();
+  // 連環爆炸
+  for (let i = 0; i < 6; i++)
+    setTimeout(() => {
+      explodeVisual(new THREE.Vector3((Math.random() - .5) * 20, 2 + Math.random() * 14, (Math.random() - .5) * 16));
+      audio.boom(0.4);
+    }, i * 380);
+}
+function updateCollapse(dt) {
+  defend.collapsing -= dt;
+  const t = mapInfo.tower;
+  if (t) {
+    const k = Math.max(0, defend.collapsing / 4.5);   // 1 → 0
+    t.rotation.x = (1 - k) * 1.05;        // 向前傾倒
+    t.position.y = -(1 - k) * 5;          // 下陷
+    t.scale.y = Math.max(0.22, k);        // 壓扁
+  }
+  for (const sp of defend.smoke) {
+    sp.position.y += sp.userData.rise * dt;
+    sp.scale.x += sp.userData.grow * dt; sp.scale.y += sp.userData.grow * dt;
+    sp.material.opacity = Math.max(0, Math.min(0.85, defend.collapsing / 4.5 + 0.2));
+  }
+  G.shake = Math.max(G.shake, 0.7);
+  if (defend.collapsing <= 0) {
+    defend.collapsing = 0;
+    G.rotationHold = Math.floor(Date.now() / ROT_MS);   // 本輪暫停輪播干預
+    const idx = MAP_ROTATION.findIndex(m => m[0] === G.mapId);
+    const [nextId] = MAP_ROTATION[(idx + 1) % MAP_ROTATION.length];
+    switchMapLive(nextId, 'night');
+    if (G.coop && net.isHost && net.connected) net._broadcast({ t: 'mapLive', mapId: nextId, env: 'night' });
+  }
+}
+function updateDefend(dt) {
+  if (G.mapId !== 'taipei' || G.inAdventure || !mapInfo.c4Door) { if (enemyC4.visible) enemyC4.visible = false; return; }
+  if (G.coop && !net.isHost) { if (enemyC4.visible) enemyC4.visible = false; return; }   // 加入者跟隨房主廣播
+  if (defend.collapsing > 0) { updateCollapse(dt); return; }
+  const door = mapInfo.c4Door;
+  if (!defend.planted) {
+    defend.c4T -= dt;
+    if (defend.c4T <= 0) {
+      defend.planted = true; defend.boomT = 45; defend.beepT = 0; defend.defuseT = 0;
+      enemyC4.position.set(door.x, 0, door.z);
+      enemyC4.visible = true;
+      audio.plant();
+      hud.sysmsg('⚠️ 爆炸警告：敵人在台北101門口安置 C4！45 秒內拆除！', 6000);
+      hud.celebrate('WARNING', '敵方 C4 已安置於 101 門口 · 限時拆除', 2);
+      if (G.coop && net.isHost && net.connected) net._broadcast({ t: 'msg', text: '⚠️ 敵方 C4 已安置於 101 門口！前往拆除！' });
+    }
+    return;
+  }
+  // 已安置：引爆倒數 + LED 閃爍 + 紅圈脈動
+  defend.boomT -= dt;
+  defend.beepT -= dt;
+  if (defend.beepT <= 0) {
+    defend.beepT = Math.max(0.14, defend.boomT / 45);
+    audio.beep(defend.boomT < 8);
+    const led = enemyC4.getObjectByName('led');
+    led.material.color.set(led.material.color.getHex() === 0xff2020 ? 0x440000 : 0xff2020);
+  }
+  enemyC4.getObjectByName('ring').rotation.z += dt * 2;
+  const ringM = enemyC4.getObjectByName('ring').material;
+  ringM.opacity = 0.35 + 0.3 * Math.abs(Math.sin(now * 4));
+  hud.objective(`🚨 <b>敵方 C4 引爆倒數 ${Math.ceil(defend.boomT)}s</b><br>前往 101 門口按 <b>E</b> 拆除（大樓受損 ${defend.fails}/3 · 滿 3 次倒塌）`);
+  // 拆除互動
+  const d = Math.hypot(player.pos.x - door.x, player.pos.z - door.z);
+  if (defend.defuseT > 0) {
+    if (d > 3.4 || !player.alive) {
+      defend.defuseT = 0; hud.plantBar(null); hud.sysmsg('拆除已中斷', 1400);
+    } else {
+      defend.defuseT -= dt;
+      hud.plantBar(1 - defend.defuseT / 3);
+      if (defend.defuseT <= 0) {
+        defend.planted = false; defend.c4T = 300;
+        enemyC4.visible = false;
+        hud.plantBar(null);
+        addGold(100);
+        hud.celebrate('C4 DEFUSED', '成功拆除 C4 · 台北101安全 · 金幣 +100', 2);
+        audio.voice('victory');
+        if (G.coop && net.isHost && net.connected) net._broadcast({ t: 'msg', text: '✅ C4 已拆除 · 台北101安全' });
+      }
+    }
+  } else if (d < 3.2 && player.alive && G.state === 'play') {
+    hud.prompt(IS_TOUCH ? '點按 <b>互動</b> 拆除 C4' : '按 <b>E</b> 拆除 C4');
+  }
+  if (defend.boomT <= 0) {
+    enemyC4.visible = false;
+    defend.planted = false; defend.c4T = 300; defend.defuseT = 0;
+    hud.plantBar(null);
+    defend.fails++;
+    explode(new THREE.Vector3(door.x, 0.5, door.z), '敵方 C4', 9, 55);
+    G.shake = 1.4;
+    if (G.coop && net.isHost && net.connected) net._broadcast({ t: 'msg', text: `💥 敵方 C4 引爆！台北101受損 ${defend.fails}/3` });
+    if (defend.fails >= 3) startCollapse();
+    else {
+      hud.sysmsg(`💥 C4 引爆！台北101受損 ${defend.fails}/3 · 滿 3 次大樓倒塌`, 5000);
+      hud.celebrate('101 UNDER ATTACK', `大樓受損 ${defend.fails}/3`, 1);
+    }
+  }
+}
+
 // ---------- 奇遇地图 ----------
 function enterAdventure() {
   deactivatePortal();
@@ -865,6 +1016,12 @@ function doInteract() { // E / 触屏互动键：上下車、安装炸弹或进�
   if (G.portal.active && player.pos.distanceTo(portalG.position) < 6) {
     if (G.portal.target === 'adventure') enterAdventure();
     else exitAdventure();
+    return;
+  }
+  if (!G.inAdventure && G.mapId === 'taipei' && defend.planted && defend.defuseT <= 0
+    && Math.hypot(player.pos.x - mapInfo.c4Door.x, player.pos.z - mapInfo.c4Door.z) < 3.2) {
+    defend.defuseT = 3;   // 拆除敵方 C4（3 秒）
+    hud.sysmsg('拆除 C4 中……保持站位', 2000);
     return;
   }
   if (!G.inAdventure && site && G.bomb.state === 'carry'
@@ -1031,6 +1188,7 @@ setInterval(() => {
   const ss = String(Math.floor((r.remainMs % 60000) / 1000)).padStart(2, '0');
   $('rotNext').textContent = `${mm}:${ss} 後自動換圖（${MAP_ROTATION.map(m => m[1]).join(' → ')}）`;
   if (r.mapId === G.mapId) return;
+  if (G.rotationHold === Math.floor(Date.now() / ROT_MS)) return;   // 101 倒塌提前換圖中，本輪不干預
   if (G.state === 'menu') applyRotation(true);   // 選單中到點即換
   else if ((G.state === 'play' || G.state === 'dead') && (!G.coop || net.isHost)) {
     switchMapLive(r.mapId, r.env);               // 遊戲中無縫換圖（比分保留）
@@ -1069,6 +1227,7 @@ function switchMapLive(mapId, env) {
   }
   G.bomb.state = 'carry'; G.bomb.plantT = 0;
   deactivatePortal();
+  resetDefend();   // 守護101狀態重置
   setupBomb();
   applyMapEnv(mapInfo);
   const nm = MAP_ROTATION.find(m => m[0] === mapId)?.[1] || mapId;
@@ -1276,6 +1435,7 @@ function startGame() {
   weapon.state.gatling.reserve = WEAPONS.gatling.reserve;
   G.bomb.state = 'carry'; G.bomb.plantT = 0;
   deactivatePortal();
+  resetDefend();   // 守護101狀態重置
   hud.setScore(0, 0);
   hud.gold(save.gold);
   player.spawn(mapInfo.playerSpawn);
@@ -1518,6 +1678,10 @@ function loop() {
     // 任务指引
     if (G.inAdventure) {
       hud.objective(`🌀 奇遇 · 黃金遺跡<br>拾取稀有裝備，擊殺遠古守衛<br>剩餘 ${Math.ceil(G.adventureT)}s`);
+    } else if (G.mapId === 'taipei') {
+      if (!defend.planted && defend.collapsing <= 0)
+        hud.objective(`🏙️ 守護台北101<br>殲滅敵軍 · 阻止敵方 C4 引爆<br>大樓受損 ${defend.fails}/3 · 滿 3 次倒塌`);
+      // C4 已安置時由 updateDefend 顯示引爆倒數
     } else if (G.coop) {
       hud.objective(`👥 合作模式 · 你是 ${net.isHost ? 'P1（房主）' : net.myName}<br>合力殲滅敵軍 · 金幣團隊共享`);
     } else if (mapInfo.bombSite && !G.coop) {
@@ -1528,6 +1692,8 @@ function loop() {
         hud.objective(`🎯 任務：前往敵方陣營安裝 C4<br>距離爆破點 ${Math.round(d)}m · ${IS_TOUCH ? '點互動鍵' : '按 E'} 安裝`);
       }
     } else hud.objective(null);
+    // 守護台北101：敵方 C4 攻塔邏輯（需在任務指引之後，引爆倒數優先顯示）
+    updateDefend(dt);
     // 紅色加農槍：漂浮動畫 / 拾取 / 無限子彈火力
     if (cannonG) {
       cannonG.rotation.y += dt * 1.5;
@@ -1581,4 +1747,4 @@ addEventListener('resize', () => {
 });
 
 // 调试句柄
-window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post, spawnGatling, pickupGatling, dropGatling, bots, vehicles };
+window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post, spawnGatling, pickupGatling, dropGatling, bots, vehicles, defend };
