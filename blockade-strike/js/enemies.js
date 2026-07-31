@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { colliders, enemySpawns, patrolPoints } from './map.js';
+import { colliders, enemySpawns, patrolPoints, isNight } from './map.js';
 import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
@@ -35,20 +35,26 @@ export class Soldier {
     this.noRespawn = false;
     this.playerSpawn = null;    // 玩家出生点（禁区）
     this.bounds = { minX: -28.5, maxX: 28.5, minZ: -90, maxZ: 90 };
+    this._stuckT = 0;           // 卡住偵測：想移動但位移過小的累計時間
+    this._lastX = 0; this._lastZ = 0;
+    this._detourT = 0;          // 繞行計時（卡住時橫向繞過障礙）
+    this._detourDir = 1;
     this._build();
     this.hitMeshes = [this.headM, this.torsoM, this.legsM];
   }
 
   _build() {
     const g = new THREE.Group();
-    // 外观随机：军服 / 防弹衣配色
+    // 外观随机：军服 / 防弹衣配色（夜晚自動提亮，敵人在暗夜中更突出）
+    const nb = isNight() ? 1.55 : 1;
     const uniCol = UNIFORMS[(Math.random() * UNIFORMS.length) | 0];
     const vestCol = VESTS[(Math.random() * VESTS.length) | 0];
-    const uni = new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.92 });
-    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75), roughness: 0.95 });
+    const uni = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.92 });
+    const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75 * nb), roughness: 0.95 });
     const skin = new THREE.MeshStandardMaterial({ color: [0xc9a184, 0xa87f62, 0x8a6a50][(Math.random() * 3) | 0], roughness: 0.85 });
+    if (isNight()) skin.color.multiplyScalar(1.2);
     const dark = new THREE.MeshStandardMaterial({ color: 0x2e2f33, roughness: 0.55, metalness: 0.5 });
-    const vest = new THREE.MeshStandardMaterial({ color: vestCol, roughness: 0.95 });
+    const vest = new THREE.MeshStandardMaterial({ color: new THREE.Color(vestCol).multiplyScalar(nb), roughness: 0.95 });
     const boot = new THREE.MeshStandardMaterial({ color: 0x2a241c, roughness: 0.8 });
     const glove = new THREE.MeshStandardMaterial({ color: 0x33302a, roughness: 0.9 });        // 露指手套
     const mask = new THREE.MeshStandardMaterial({ color: MASKS[(Math.random() * MASKS.length) | 0], roughness: 0.95 });
@@ -141,6 +147,20 @@ export class Soldier {
     // 体型微差
     g.scale.setScalar(0.94 + Math.random() * 0.14);
 
+    // 敵人頭頂標記：紅色倒三角，遠距離 / 夜晚清楚可辨
+    {
+      const mkc = document.createElement('canvas'); mkc.width = mkc.height = 64;
+      const mkx = mkc.getContext('2d');
+      mkx.fillStyle = '#ff3838';
+      mkx.beginPath(); mkx.moveTo(14, 16); mkx.lineTo(50, 16); mkx.lineTo(32, 46); mkx.closePath(); mkx.fill();
+      this._marker = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(mkc), transparent: true, depthWrite: false, fog: false, opacity: 0.92
+      }));
+      this._marker.scale.set(0.6, 0.6, 1);
+      this._marker.position.y = 2.35;
+      g.add(this._marker);
+    }
+
     this.walkPh = Math.random() * 7;
     this.flinchT = 0;
     this.moving = false;
@@ -153,7 +173,7 @@ export class Soldier {
     // === LOD 簡化模型 ===
     this._lodMesh = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 1.7, 0.35),
-      new THREE.MeshStandardMaterial({ color: uniCol, roughness: 0.95 })
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.95 })
     );
     this._lodMesh.position.copy(g.position);
     this._lodMesh.visible = false;
@@ -180,9 +200,20 @@ export class Soldier {
       const far = enemySpawns.filter(p => p.distanceTo(playerPos) > 20
         && (!ps || p.distanceTo(ps) > 25));
       const pool = far.length ? far : enemySpawns;
-      this.pos.copy(pool[(Math.random() * pool.length) | 0]);
-      this.pos.x += (Math.random() - .5) * 3;
-      this.pos.z += (Math.random() - .5) * 3;
+      // 出生點 + 隨機偏移後必須不在掩體內，否則換點重試（避免卡進建築物）
+      for (let i = 0; i < 14 && !placed; i++) {
+        const p = pool[(Math.random() * pool.length) | 0];
+        const x = p.x + (Math.random() - .5) * 3, z = p.z + (Math.random() - .5) * 3;
+        if (!this._blocked(x, z)) { this.pos.set(x, 0, z); placed = true; }
+      }
+      if (!placed) {   // 兜底：全圖隨機找空點
+        for (let i = 0; i < 24 && !placed; i++) {
+          const x = this.bounds.minX + 2 + Math.random() * (this.bounds.maxX - this.bounds.minX - 4);
+          const z = this.bounds.minZ + 2 + Math.random() * (this.bounds.maxZ - this.bounds.minZ - 4);
+          if (!this._blocked(x, z)) { this.pos.set(x, 0, z); placed = true; }
+        }
+      }
+      if (!placed) this.pos.copy(pool[0]);
     }
     this.hp = 100;
     this.state = 'patrol';
@@ -193,8 +224,12 @@ export class Soldier {
   }
 
   _pickPatrol() {
-    const p = patrolPoints[(Math.random() * patrolPoints.length) | 0];
-    this.target.copy(p);
+    // 巡邏目標不能在建築物/掩體內，多試幾次避開壞點
+    for (let i = 0; i < 8; i++) {
+      const p = patrolPoints[(Math.random() * patrolPoints.length) | 0];
+      if (!this._blocked(p.x, p.z)) { this.target.copy(p); return; }
+    }
+    this.target.copy(patrolPoints[0]);
   }
 
   _sync() {
@@ -282,7 +317,13 @@ export class Soldier {
       // 走位：保持距离 + 横移
       this.strafeT -= dt;
       if (this.strafeT <= 0) { this.strafeT = 0.8 + Math.random() * 1.2; this.strafeDir = Math.random() < .5 ? -1 : 1; }
-      if (canSee) {
+      if (this._detourT > 0) {
+        // 卡住繞行：沿障礙切線方向走一段
+        this._detourT -= dt;
+        const ml = dist || 1;
+        this._move(dt, -dz / ml * this._detourDir + dx / ml * 0.25, dx / ml * this._detourDir + dz / ml * 0.25, spd);
+        this.moving = true;
+      } else if (canSee) {
         const px = -dz / (dist || 1) * this.strafeDir, pz = dx / (dist || 1) * this.strafeDir;
         let mx = px, mz = pz;
         if (dist > 30) { mx += dx / dist * 0.8; mz += dz / dist * 0.8; }
@@ -314,6 +355,18 @@ export class Soldier {
         }
       }
     }
+    // ===== 卡住偵測：想動卻動不了 → 換巡邏點或橫向繞行 =====
+    if (this.moving) {
+      const moved = Math.hypot(this.pos.x - this._lastX, this.pos.z - this._lastZ);
+      if (moved < 0.3 * spd * dt) this._stuckT += dt; else this._stuckT = 0;
+      if (this._stuckT > 1.0) {
+        this._stuckT = 0;
+        if (this.state === 'patrol') this._pickPatrol();
+        else { this._detourT = 0.9; this._detourDir = Math.random() < .5 ? -1 : 1; }
+      }
+    } else this._stuckT = 0;
+    this._lastX = this.pos.x; this._lastZ = this.pos.z;
+
     // ===== 程序化动画：行走摆动 / 交战持枪 / 受击后仰 =====
     const lerp = Math.min(1, dt * 10);
     if (this.moving) this.walkPh += dt * spd * 3.4;
