@@ -229,10 +229,10 @@
     text-align:center; z-index:6; }
   #sysmsg.show { opacity:1; }
 
-  /* ============ 开始 / 结算界面（仿 Apple 風格 · 金屬灰） ============ */
+  /* ============ 开始 / 结算界面（仿 Apple 風格 · 金屬深灰） ============ */
   .screen { position:fixed; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; z-index:10; overflow-y:auto;
-    background:linear-gradient(165deg, #8f9298 0%, #74777d 40%, #5a5d63 75%, #4a4d53 100%);
+    background:linear-gradient(165deg, #4b4e54 0%, #35383d 40%, #24262a 75%, #18191c 100%);
     color:#f5f5f7;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Microsoft JhengHei",sans-serif;
     transition:opacity .5s; }
@@ -287,25 +287,25 @@
     background:rgba(10,14,20,.5); padding:7px 11px; border-radius:6px;
     border-left:3px solid #5db2ff; }
 
-  /* ===== 世界殺敵排行（Apple 卡片風） ===== */
+  /* ===== 世界殺敵排行（黑色卡片風） ===== */
   #lbBox { margin-top:18px; width:min(480px, 92vw); pointer-events:auto;
-    background:#fff; border:1px solid #d2d2d7; border-radius:18px; padding:14px 18px;
-    box-shadow:0 4px 24px rgba(0,0,0,.06); }
-  #lbTitle { color:#1d1d1f; font:600 14px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; margin-bottom:8px; }
-  #lbList { font:12.5px -apple-system,"PingFang TC",sans-serif; color:#1d1d1f; max-height:180px; overflow:auto; }
-  .lbrow { display:flex; gap:8px; padding:3px 0; border-bottom:1px solid #f0f0f2; }
-  .lbrow .rk { width:26px; color:#6e6e73; }
+    background:#1c1c1e; border:1px solid #3a3a3c; border-radius:18px; padding:14px 18px;
+    box-shadow:0 4px 24px rgba(0,0,0,.4); }
+  #lbTitle { color:#f5f5f7; font:600 14px -apple-system,"PingFang TC",sans-serif; letter-spacing:1px; margin-bottom:8px; }
+  #lbList { font:12.5px -apple-system,"PingFang TC",sans-serif; color:#e5e5ea; max-height:180px; overflow:auto; }
+  .lbrow { display:flex; gap:8px; padding:3px 0; border-bottom:1px solid #2c2c2e; }
+  .lbrow .rk { width:26px; color:#8e8e93; }
   .lbrow .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .lbrow .kl { color:#0071e3; width:64px; text-align:right; font-weight:600; }
-  .lbrow .mp { color:#6e6e73; width:72px; text-align:right; font-size:11px; }
-  .lbrow.g1 .rk, .lbrow.g1 .nm { color:#c89400; font-weight:700; }
-  .lbrow.g2 .rk, .lbrow.g2 .nm { color:#8e8e93; font-weight:600; }
-  .lbrow.g3 .rk, .lbrow.g3 .nm { color:#b0784a; font-weight:600; }
-  .lbrow.me .nm { color:#34c759; font-weight:700; }
-  #lbNameRow { margin-top:8px; color:#6e6e73; font:12px -apple-system,"PingFang TC",sans-serif; }
-  #lbName { background:#f5f5f7; border:1px solid #d2d2d7; color:#1d1d1f; border-radius:980px; padding:4px 12px; font:12px -apple-system,"PingFang TC",sans-serif; width:110px; }
-  #lbNameSave { background:#e8e8ed; color:#1d1d1f; border:none; border-radius:980px; padding:4px 14px; font:12px -apple-system,"PingFang TC",sans-serif; cursor:pointer; }
-  #lbNameSave:hover { background:#dedee3; }
+  .lbrow .kl { color:#64b5ff; width:64px; text-align:right; font-weight:600; }
+  .lbrow .mp { color:#8e8e93; width:72px; text-align:right; font-size:11px; }
+  .lbrow.g1 .rk, .lbrow.g1 .nm { color:#ffd60a; font-weight:700; }
+  .lbrow.g2 .rk, .lbrow.g2 .nm { color:#aeaeb2; font-weight:600; }
+  .lbrow.g3 .rk, .lbrow.g3 .nm { color:#c98a5e; font-weight:600; }
+  .lbrow.me .nm { color:#32d74b; font-weight:700; }
+  #lbNameRow { margin-top:8px; color:#8e8e93; font:12px -apple-system,"PingFang TC",sans-serif; }
+  #lbName { background:#2c2c2e; border:1px solid #3a3a3c; color:#f5f5f7; border-radius:980px; padding:4px 12px; font:12px -apple-system,"PingFang TC",sans-serif; width:110px; }
+  #lbNameSave { background:#3a3a3c; color:#f5f5f7; border:none; border-radius:980px; padding:4px 14px; font:12px -apple-system,"PingFang TC",sans-serif; cursor:pointer; }
+  #lbNameSave:hover { background:#48484a; }
 
   #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
   .sbtn { padding:8px 18px; border-radius:980px; border:1px solid rgba(255,255,255,.4); cursor:pointer;

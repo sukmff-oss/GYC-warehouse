@@ -1235,7 +1235,7 @@ function switchMapLive(mapId, env) {
 }
 // ---------- 开始界面金币 / 统计 ----------
 function refreshStartbar() {
-  $('startgold').textContent = '💰 ' + save.gold;
+  $('startgold').textContent = save.gold;   // 金額純數字，不顯示符號
   const st = save.stats;
   $('startstats').textContent = `生涯：擊殺 ${st.kills} · BOSS ${st.boss} · 爆破任務 ${st.missions} · 奇遇 ${st.adventures}`;
   renderLeaderboard();
@@ -1493,7 +1493,7 @@ function endRound(fromAdventure = false) {
   if (fromAdventure) {
     $('endTitle').textContent = '奇 遇 結 束';
     $('endTitle').style.color = '#ffd27a';
-    $('endScore').innerHTML = `<span class="b">+${G.advGold}</span> 💰`;
+    $('endScore').innerHTML = `<span class="b">+${G.advGold}</span>`;
     $('endStats').textContent = `黃金遺跡收穫：金幣 ${G.advGold} · 道具裝備 ${G.advItems} 件`;
   } else {
     const win = G.scoreB >= G.scoreR;
@@ -1504,7 +1504,7 @@ function endRound(fromAdventure = false) {
     $('endStats').textContent = `擊殺 ${G.kills} · 陣亡 ${G.deaths} · 命中率 ${acc}% · 爆破任務 ${G.missions} 次`;
     if (G.scoreB > G.scoreR) audio.voice('victory');
   }
-  $('endGold').textContent = `💰 當前金幣 ${save.gold}（已自動存檔）`;
+  $('endGold').textContent = `當前金幣 ${save.gold}（已自動存檔）`;
   submitRoundKills();   // 上傳本局殺敵到世界排行
   save.save();
   $('endScreen').classList.remove('hidden');
