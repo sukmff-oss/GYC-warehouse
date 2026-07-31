@@ -37,6 +37,7 @@ class BotMate extends Soldier {
     if (this._marker) this._marker.visible = false;   // BOT 隊友不顯示敵人標記
     // 黃金加特林持有者標記（50 殺獎勵槍，死亡立即消失）
     this.hasGatling = false;
+    this.riding = false;   // 乘坐載具中（吉普車槍手，AI 由載具系統接管）
     const gb = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.13, 0.16),
       new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0xaa7a10, emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.3 }));
     gb.position.set(0.33, 1.5, 0);
@@ -82,6 +83,7 @@ class BotMate extends Soldier {
       if (this.deadT > 1.2) this.group.visible = false;
       return;
     }
+    if (this.riding) { this._sync(); return; }   // 乘坐載具中：位置由載具系統控制
     const R = this.role;
     const { player, enemies, now } = ctx;
     const spd = R.speed;
@@ -284,7 +286,7 @@ export class BotManager {
     ctx.bots = this.bots;
     for (const b of this.bots) {
       b.update(dt, ctx);
-      if (!b.alive && b.deadT > 6) { b._fallDir = 0; b.placeNear(ctx.player.pos); }   // 陣亡 6 秒後重生
+      if (!b.alive && b.deadT > 6) { b._fallDir = 0; b.riding = false; b.placeNear(ctx.player.pos); }   // 陣亡 6 秒後重生
     }
     for (let i = this._tracers.length - 1; i >= 0; i--) {
       const t = this._tracers[i];

@@ -14,6 +14,7 @@ import { perf, createQualityUI } from './performance-config.js';
 import { ObjectPool } from './lod-mesh.js';
 import { Net } from './net.js';
 import { BotManager } from './bots.js';
+import { VehicleManager } from './vehicles.js';
 
 const IS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (IS_TOUCH) document.body.classList.add('touch');
@@ -104,6 +105,7 @@ hud.setMap(mapInfo);
 applyMapEnv(mapInfo);   // 初始地圖（小鎮夜晚）光照
 const net = new Net(scene);   // P2P 連線（預設單機，不連線）
 const bots = new BotManager(scene);   // BOT 隊友（房主開房自動加入）
+const vehicles = new VehicleManager(scene);   // 載具系統（台北101地圖）
 
 // ---------- 游戏状态 ----------
 const G = {
@@ -493,6 +495,7 @@ function onPlayerDeath() {
   G.streak = 0;
   dropCannon();   // 黃金加農槍隨人物陣亡消失
   dropGatling();  // 黃金加特林隨人物陣亡消失
+  vehicles.onPlayerDeath(player);   // 陣亡自動下車
   hud.setScore(G.scoreB, G.scoreR);
   hud.feed('ENEMY', 'AK-47', 'YOU', false);
   hud.sysmsg('你已陣亡 · 3 秒後重新部署', 3000);
@@ -855,8 +858,9 @@ document.addEventListener('mouseup', e => {
   if (e.button === 2) G.adsHeld = false;
 });
 document.addEventListener('contextmenu', e => e.preventDefault());
-function doInteract() { // E / 触屏互动键：安装炸弹或进出传送门
+function doInteract() { // E / 触屏互动键：上下車、安装炸弹或进出传送门
   if (G.state !== 'play' || !player.alive) return;
+  if (vehicles.playerV) { vehicles.interact(player, bots.bots, hud); return; }   // 下車
   const site = mapInfo.bombSite;
   if (G.portal.active && player.pos.distanceTo(portalG.position) < 6) {
     if (G.portal.target === 'adventure') enterAdventure();
@@ -868,7 +872,9 @@ function doInteract() { // E / 触屏互动键：安装炸弹或进出传送门
     G.bomb.state = 'planting';
     G.bomb.plantT = 3;
     hud.sysmsg('安裝炸彈中……保持站位', 2000);
+    return;
   }
+  vehicles.interact(player, bots.bots, hud);   // 上車（附近有載具時）
 }
 
 document.addEventListener('keydown', e => {
@@ -1002,6 +1008,7 @@ const MAP_ROTATION = [
   ['town',  '小鎮街道'],
   ['ruins', '沙漠廢墟'],
   ['docks', '貨運碼頭'],
+  ['taipei', '台北101'],
 ];
 const ROT_MS = 30 * 60 * 1000;
 function rotationInfo() {
@@ -1022,7 +1029,7 @@ setInterval(() => {
   const r = rotationInfo();
   const mm = String(Math.floor(r.remainMs / 60000)).padStart(2, '0');
   const ss = String(Math.floor((r.remainMs % 60000) / 1000)).padStart(2, '0');
-  $('rotNext').textContent = `${mm}:${ss} 後自動換圖（小鎮街道 → 沙漠廢墟 → 貨運碼頭）`;
+  $('rotNext').textContent = `${mm}:${ss} 後自動換圖（${MAP_ROTATION.map(m => m[1]).join(' → ')}）`;
   if (r.mapId !== G.mapId && G.state === 'menu') applyRotation(true);   // 選單中到點即換
 }, 1000);
 // 加農槍解鎖難度（25 / 50 / 100 殺）
@@ -1222,6 +1229,9 @@ function startGame() {
   audio.init(); audio.resume();
   if (!G.coop || net.isHost) applyRotation();   // 開局直接用當前輪值地圖（加入者跟隨房主）
   mapInfo = buildMap(scene, G.mapId, G.env);
+  vehicles.clear();
+  if (G.mapId === 'taipei') vehicles.spawnTaipei();   // 台北101：街道載具 + 金色吉普
+  player.driving = false;
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
   if (bots.count) { bots.setBounds(mapInfo.bounds); bots.reset(mapInfo.playerSpawn); }   // BOT 隊友重新部署
@@ -1346,8 +1356,18 @@ function loop() {
     // 任务系统
     updateBomb(dt);
     updatePortal(dt);
-    // 传送门交互提示
-    if (G.portal.active && player.alive && player.pos.distanceTo(portalG.position) < 6) {
+    // 載具系統（台北101：駕駛 / 輾壓 / 吉普槍手）
+    vehicles.update(dt, {
+      player, enemies, bots: bots.bots, bounds: mapInfo.bounds, now,
+      isHost: !G.coop || net.isHost,
+      onKill: (s, wname) => onKill(s, wname, false),
+      tracer: (from, to, hit, color) => bots.tracer(from, to, hit, color),
+    });
+    // 載具 / 传送门交互提示
+    const vehPrompt = player.alive ? vehicles.getPrompt(player) : null;
+    if (vehPrompt) {
+      hud.prompt(vehPrompt);
+    } else if (G.portal.active && player.alive && player.pos.distanceTo(portalG.position) < 6) {
       hud.prompt(G.portal.target === 'adventure'
         ? (IS_TOUCH ? '點按 <b>互動</b> 進入奇遇地圖 · 黃金遺跡' : '按 <b>P</b> 進入奇遇地圖 · 黃金遺跡')
         : (IS_TOUCH ? '點按 <b>互動</b> 離開奇遇地圖（結算收穫）' : '按 <b>P</b> 離開奇遇地圖（結算收穫）'));
@@ -1366,8 +1386,8 @@ function loop() {
       G.shake *= Math.pow(0.001, dt);
     }
 
-    // 开火
-    if (G.firing && G.state === 'play') {
+    // 开火（駕駛載具中無法使用手持武器）
+    if (G.firing && G.state === 'play' && !player.driving) {
       if (weapon.ammo <= 0 && weapon.reloading <= 0) weapon.startReload();
       const ht = (G.coop && !net.isHost)
         ? (o, d, m) => net.hitTestGhosts(o, d, m)          // 加入者：打同步殘影
@@ -1531,4 +1551,4 @@ addEventListener('resize', () => {
 });
 
 // 调试句柄
-window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post, spawnGatling, pickupGatling, dropGatling, bots };
+window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post, spawnGatling, pickupGatling, dropGatling, bots, vehicles };

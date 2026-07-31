@@ -25,6 +25,7 @@ export class Player {
     this._stepT = 0;
     this.touchMove = { f: 0, s: 0 };   // 手机摇杆
     this.touchSprint = false;
+    this.driving = false;              // 駕駛載具中（位置由載具系統控制）
     this.bounds = { minX: -28.5, maxX: 28.5, minZ: -90, maxZ: 90 };
 
     document.addEventListener('keydown', e => { this.keys[e.code] = true; });
@@ -94,6 +95,12 @@ export class Player {
   update(dt, ads) {
     if (!this.alive) return;
     if (this.protectT > 0) this.protectT -= dt;
+    if (this.driving) {   // 駕駛載具中：位置由載具系統控制，只更新相機
+      this.vel.set(0, 0, 0);
+      this.onGround = true;
+      this._camera(dt, ads, 0);
+      return;
+    }
     const k = this.keys;
     let f = (k['KeyW'] ? 1 : 0) - (k['KeyS'] ? 1 : 0) + this.touchMove.f;
     let s = (k['KeyD'] ? 1 : 0) - (k['KeyA'] ? 1 : 0) + this.touchMove.s;
@@ -146,6 +153,10 @@ export class Player {
     // 由 main 依据 lastDamageT 处理
 
     // 相机
+    this._camera(dt, ads, hSpeed);
+  }
+
+  _camera(dt, ads, hSpeed) {
     this.recoilPitch *= Math.pow(0.0001, dt); // 后坐力回弹
     this.landDip = (this.landDip || 0) * Math.pow(0.001, dt);   // 落地缓冲回弹
     // 侧移侧倾（strafe lean）

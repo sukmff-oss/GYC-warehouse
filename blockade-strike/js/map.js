@@ -1006,7 +1006,94 @@ function buildAdventure() {
 }
 
 // ---------- 入口 ----------
-const BUILDERS = { town: buildTown, ruins: buildRuins, docks: buildDocks, adventure: buildAdventure };
+// ---------- 台北 101（城市街道 + 載具）----------
+function buildTaipei() {
+  applySkyEnv({ night: 0x0d1420, sunset: 0x4a2a33, day: 0xbccfda });
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), texMat(0x8f9396, (() => { const t = asphaltTex().clone(); t.needsUpdate = true; t.repeat.set(60, 60); return t; })(), { rough: 0.97 }));
+  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; group.add(ground);
+
+  // 道路網：東西主幹道 + 南北大道（通往 101 廣場）+ 兩條次要東西路
+  road(0, 0, 130, 14, 0x4a4e54);        // 東西主幹道
+  road(0, 5, 12, 100, 0x4a4e54);        // 南北大道（z -45~55）
+  road(0, -38, 130, 8, 0x565a60);       // 北側次要路
+  road(0, 42, 130, 8, 0x565a60);        // 南側次要路
+  // 101 前人行道廣場
+  box(40, 0.08, 21, 0xb8b2a4, 0, 0.04, -55.5, { solid: false, tex: concreteTex() });
+
+  // ===== 台北 101（竹節式塔身 + 裙樓 + 尖頂）=====
+  const TX = 0, TZ = -80;
+  box(34, 12, 26, 0x9aa2ac, TX, 6, TZ, { tex: concreteTex(), bump: 0.6 });   // 裙樓
+  minimapRects.push({ x: TX, z: TZ, w: 34, d: 26 });
+  box(34.2, 2.2, 26.2, 0x6a92a8, TX, 3.2, TZ, { solid: false, emis: 0x2a4a5a, emisI: 0.3 });   // 玻璃帷幕帶
+  let tw = 17, ty = 12;
+  for (let i = 0; i < 8; i++) {   // 八節竹節塔身（下寬上窄、節節外挑）
+    const segH = 7.5;
+    box(tw, segH, tw, 0x5f8a76, TX, ty + segH / 2, TZ, { solid: i < 2, emis: 0x1a3a2a, emisI: 0.25 });
+    box(tw + 1.4, 1.0, tw + 1.4, 0xc8b890, TX, ty + segH - 0.3, TZ, { solid: false });          // 斗拱外挑
+    box(tw + 1.5, 0.35, tw + 1.5, 0xffd9a0, TX, ty + segH + 0.15, TZ, { solid: false, emis: 0xffb05a, emisI: 1.0 });  // 節頂燈帶
+    ty += segH; tw *= 0.92;
+  }
+  box(tw * 0.6, 5, tw * 0.6, 0x9aa4ac, TX, ty + 2.5, TZ, { solid: false });   // 尖頂
+  box(0.5, 12, 0.5, 0xc23a2a, TX, ty + 11, TZ, { solid: false, emis: 0xc23a2a, emisI: 0.8 });   // 天線
+
+  // 周邊城市街廓（避開道路與 101 廣場）
+  building(-18, -20, 14, 18, 5, 1);
+  building(18, -20, 14, 18, 6, -1);
+  building(-20, 20, 14, 16, 4, 1);
+  building(20, 20, 14, 16, 5, -1);
+  building(-26, -48, 10, 10, 6, 1);
+  building(26, -48, 10, 10, 7, -1);
+  building(-40, -20, 16, 22, 7, 1);
+  building(40, -20, 16, 22, 8, -1);
+  building(-40, 20, 14, 18, 5, 1);
+  building(40, 20, 14, 18, 6, -1);
+  building(-30, 60, 16, 14, 4, 1);
+  building(30, 60, 16, 14, 5, -1);
+  building(-12, 62, 12, 12, 3, 1);
+  building(12, 62, 12, 12, 3, -1);
+
+  // 邊界
+  box(3, 4.5, 194, 0x8a8f96, -62, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
+  box(3, 4.5, 194, 0x8a8f96, 62, 2.25, 0, { tex: concreteTex(), bump: 0.8 });
+  box(127, 4.5, 3, 0x8a8f96, 0, 2.25, -97, { tex: concreteTex(), bump: 0.8 });
+  box(127, 4.5, 3, 0x8a8f96, 0, 2.25, 97, { tex: concreteTex(), bump: 0.8 });
+
+  // 街道家具與掩體
+  for (const lz of [-30, -10, 10, 30, 50]) streetlight(-8.6, lz, 0);
+  for (const lz of [-20, 0, 20, 40]) streetlight(8.6, lz, Math.PI);
+  for (const lx of [-40, -20, 20, 40]) streetlight(lx, 8.6, Math.PI / 2);
+  palm(-14, -56); palm(14, -56); palm(-10, 30); palm(10, 30);
+  sandbags(0, -48, 4); sandbags(-16, -8, 3.5); sandbags(16, 12, 4);
+  barrier(-8, -30); barrier(8, -14); barrier(-8, 16); barrier(8, 48);
+  crate(-10, -42, 1.1); crate(10.5, -44, 1); crate(-14, 8, 1); crate(14, -2, 1.2);
+  crate(-24, 36, 1); crate(24, -28, 1);
+
+  enemySpawns.push(
+    new THREE.Vector3(0, 0, -60), new THREE.Vector3(-14, 0, -40),
+    new THREE.Vector3(14, 0, -40), new THREE.Vector3(-30, 0, 0),
+    new THREE.Vector3(30, 0, 0), new THREE.Vector3(0, 0, 30),
+    new THREE.Vector3(-20, 0, 55), new THREE.Vector3(20, 0, 55),
+    new THREE.Vector3(-45, 0, -45), new THREE.Vector3(45, 0, -45)
+  );
+  patrolPoints.push(
+    new THREE.Vector3(0, 0, -40), new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(-25, 0, 0), new THREE.Vector3(25, 0, 0),
+    new THREE.Vector3(0, 0, 40), new THREE.Vector3(-30, 0, -38),
+    new THREE.Vector3(30, 0, 42), new THREE.Vector3(0, 0, -58),
+    new THREE.Vector3(0, 0, 60)
+  );
+  return {
+    playerSpawn: new THREE.Vector3(0, 0, 88),
+    bounds: { minX: -60, maxX: 60, minZ: -95, maxZ: 95 },
+    extent: 98,
+    night: true,
+    bombSite: { x: 0, z: -62, r: 5 },          // 101 廣場
+    portalPos: new THREE.Vector3(10, 0, 20)
+  };
+}
+
+const BUILDERS = { town: buildTown, ruins: buildRuins, docks: buildDocks, taipei: buildTaipei, adventure: buildAdventure };
 
 export function buildMap(sc, mapId = 'town', env = 'night') {
   scene = sc;
