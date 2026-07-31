@@ -1468,11 +1468,17 @@ function startGame() {
   if (IS_TOUCH) $('touchui').classList.add('ingame');
   else renderer.domElement.requestPointerLock();
 }
-$('playBtn').addEventListener('click', () => {
+// 修復：按鈕點擊後殘留焦點 → 遊戲中按空白鍵（跳躍）誤觸按鈕重新開局
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName === 'BUTTON') e.preventDefault();
+}, true);
+$('playBtn').addEventListener('click', (e) => {
+  e.currentTarget.blur();   // 移除焦點，避免空白鍵誤觸
   if (net.connected) startGame();   // 已在公共房（重開一局）
   else autoMatch();                 // 進遊戲自動配房
 });
-$('againBtn').addEventListener('click', () => {
+$('againBtn').addEventListener('click', (e) => {
+  e.currentTarget.blur();
   $('endScreen').classList.add('hidden');
   $('startScreen').classList.remove('hidden');
   G.state = 'menu';
