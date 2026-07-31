@@ -532,9 +532,21 @@ export class EnemyManager {
     return { t: h.distance, soldier: h.object.userData.soldier, part: h.object.userData.part, point: h.point };
   }
 
-  update(dt, player, now, fx) {
-    for (const s of this.soldiers) s.update(dt, player, now, fx);
-    this.updateBullets(dt, player, fx);
+  update(dt, targets, now, fx) {
+    // main.js 在合作/BOT 局會傳「目標陣列」（玩家 + 遠端玩家 + BOT 殘影），單人局傳玩家本人
+    const list = Array.isArray(targets) ? targets.filter(t => t && t.pos) : [targets];
+    const primary = list[0];
+    for (const s of this.soldiers) {
+      // 每名敵人追最近的存活目標（alive 明確為 false 才排除）
+      let tgt = primary, bd = Infinity;
+      for (const t of list) {
+        if (t.alive === false) continue;
+        const d = s.pos.distanceTo(t.pos);
+        if (d < bd) { bd = d; tgt = t; }
+      }
+      if (tgt) s.update(dt, tgt, now, fx);
+    }
+    if (primary) this.updateBullets(dt, primary, fx);
     // 敌方曳光
     for (let i = this.tracers.length - 1; i >= 0; i--) {
       const t = this.tracers[i];
