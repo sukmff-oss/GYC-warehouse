@@ -35,6 +35,14 @@ class BotMate extends Soldier {
     band.position.set(-0.33, 1.5, 0);
     this.group.add(band);
     if (this._marker) this._marker.visible = false;   // BOT 隊友不顯示敵人標記
+    // 黃金加特林持有者標記（50 殺獎勵槍，死亡立即消失）
+    this.hasGatling = false;
+    const gb = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.13, 0.16),
+      new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0xaa7a10, emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.3 }));
+    gb.position.set(0.33, 1.5, 0);
+    gb.visible = false;
+    this.goldBand = gb;
+    this.group.add(gb);
     this.deadT = 0;
     this.healT = 1.5;
   }
@@ -57,6 +65,8 @@ class BotMate extends Soldier {
     this.flinchT = 0.16;
     if (this.hp <= 0) {
       this.hp = 0; this.alive = false; this.state = 'dead'; this.deadT = 0;
+      this.hasGatling = false;                 // 黃金加特林死亡立即消失
+      if (this.goldBand) this.goldBand.visible = false;
       return true;   // 陣亡
     }
     return false;
@@ -127,15 +137,19 @@ class BotMate extends Soldier {
         this.moving = true;
       }
       // 開火（命中掃描，依職業點放數 / 間隔 / 傷害 / 命中率）
+      if (this.goldBand) this.goldBand.visible = this.hasGatling;   // 加特林持有者金臂章
       if (this.burstLeft > 0) {
         this.fireT -= dt;
         if (this.fireT <= 0) {
-          this.fireT = 0.14; this.burstLeft--;
+          this.fireT = this.hasGatling ? 0.07 : 0.14; this.burstLeft--;
           this._shootAt(tgt, ctx);
         }
       } else {
         this.pauseT -= dt;
-        if (this.pauseT <= 0) { this.burstLeft = R.burst; this.pauseT = R.pause[0] + Math.random() * (R.pause[1] - R.pause[0]); }
+        if (this.pauseT <= 0) {
+          this.burstLeft = this.hasGatling ? 14 : R.burst;   // 加特林：長點放
+          this.pauseT = this.hasGatling ? 0.5 + Math.random() * 0.5 : R.pause[0] + Math.random() * (R.pause[1] - R.pause[0]);
+        }
       }
     } else {
       // 無敵人：跟隨玩家（醫療兵貼更近）
@@ -188,12 +202,12 @@ class BotMate extends Soldier {
     const aim = tgt.pos.clone(); aim.y += 1.25;
     const dist = from.distanceTo(aim);
     const hit = Math.random() < Math.max(0.3, R.acc - dist * R.accDrop);
-    // 曳光：命中打到敵人胸口，未命中飛過頭
+    // 曳光：命中打到敵人胸口，未命中飛過頭（加特林持有者金色曳光）
     const to = aim.clone();
     if (!hit) { to.x += (Math.random() - .5) * 1.6; to.y += 0.3 + Math.random() * 0.7; to.z += (Math.random() - .5) * 1.6; }
-    ctx.tracer(from, to, hit, R.tracer);
+    ctx.tracer(from, to, hit, this.hasGatling ? 0xffd24a : R.tracer);
     if (hit && tgt.state !== 'dead') {
-      const dmg = R.dmg[0] + Math.random() * (R.dmg[1] - R.dmg[0]);
+      const dmg = (R.dmg[0] + Math.random() * (R.dmg[1] - R.dmg[0])) * (this.hasGatling ? 2.5 : 1);
       const killed = tgt.damage(dmg, 'body', ctx.now);
       if (killed) ctx.onKill(tgt, this);
     }

@@ -121,6 +121,9 @@ const G = {
   cannonSpawned: false,    // 本局 100 殺加農槍已生成過
   cannonBoosts: {},        // 加農槍改過的武器 boost（死亡時還原）
   cannonGoal: 100,         // 加農槍解鎖殺數（25 / 50 / 100）
+  gatling: false,          // 持有黃金加特林（50 殺獎勵 · 陣亡消失）
+  gatlingSpawned: false,   // 本局 50 殺加特林已生成過
+  gatlingPrev: null,       // 拾取加特林前的武器（陣亡時換回）
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
   boss: null,              // 当前 BOSS 士兵
@@ -307,8 +310,11 @@ function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
   }
   // 累計殺數達標：地圖隨機出現黃金加農槍（無限子彈）
   if (!G.cannonSpawned && G.kills >= G.cannonGoal) {
-    G.cannonSpawned = true;
-    spawnCannon();
+    G.cannonSpawned = true;    spawnCannon();
+  }
+  // 50 殺：地圖隨機出現黃金加特林機槍（玩家與 BOT 皆可拾取 · 陣亡消失）
+  if (!G.gatlingSpawned && G.kills >= 50) {
+    G.gatlingSpawned = true;   spawnGatling();
   }
   if (mine) {
     if (now - G.lastKillT < 4) G.streak++; else G.streak = 1;
@@ -485,6 +491,7 @@ function onPlayerDeath() {
   G.scoreR++;
   G.streak = 0;
   dropCannon();   // 黃金加農槍隨人物陣亡消失
+  dropGatling();  // 黃金加特林隨人物陣亡消失
   hud.setScore(G.scoreB, G.scoreR);
   hud.feed('ENEMY', 'AK-47', 'YOU', false);
   hud.sysmsg('你已陣亡 · 3 秒後重新部署', 3000);
@@ -554,6 +561,95 @@ function dropCannon() {
   for (const id in G.cannonBoosts) weapon.state[id].boost = G.cannonBoosts[id];
   G.cannonBoosts = {};
   G.cannon = false;
+}
+
+// ---------- 黃金加特林機槍（50 殺獎勵 · 玩家/BOT 皆可拾取 · 陣亡消失）----------
+let gatlingG = null;   // 地圖上的拾取物
+
+function spawnGatling(pos = null, remote = false) {
+  removeGatlingMesh();
+  let x, z;
+  if (pos) { x = pos[0]; z = pos[1]; }
+  else {
+    const b = mapInfo.bounds;
+    for (let i = 0; i < 40 && x === undefined; i++) {
+      const tx = b.minX + 2 + Math.random() * (b.maxX - b.minX - 4);
+      const tz = b.minZ + 2 + Math.random() * (b.maxZ - b.minZ - 4);
+      let blocked = false;
+      for (const c of colliders) {
+        if (c.max.y < 0.4 || c.min.y > 1.5) continue;
+        if (tx + 0.5 > c.min.x && tx - 0.5 < c.max.x && tz + 0.5 > c.min.z && tz - 0.5 < c.max.z) { blocked = true; break; }
+      }
+      if (!blocked) { x = tx; z = tz; }
+    }
+    if (x === undefined) { x = mapInfo.playerSpawn.x - 4; z = mapInfo.playerSpawn.z - 4; }
+  }
+  gatlingG = new THREE.Group();
+  const gold = new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0xaa7a10, emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.25 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.22, 0.7), gold);
+  gatlingG.add(body);
+  for (let i = 0; i < 6; i++) {   // 六根旋轉槍管
+    const a = (i / 6) * Math.PI * 2;
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.62, 8), gold);
+    br.rotation.x = Math.PI / 2;
+    br.position.set(Math.cos(a) * 0.07, 0.05 + Math.sin(a) * 0.07, -0.6);
+    gatlingG.add(br);
+  }
+  const ammoBox = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.28, 0.3), gold);
+  ammoBox.position.set(0, -0.22, 0.18);
+  gatlingG.add(ammoBox);
+  const gc = document.createElement('canvas'); gc.width = gc.height = 64;
+  const gx = gc.getContext('2d');
+  const gg2 = gx.createRadialGradient(32, 32, 4, 32, 32, 32);
+  gg2.addColorStop(0, 'rgba(255,220,120,.9)'); gg2.addColorStop(1, 'rgba(255,200,80,0)');
+  gx.fillStyle = gg2; gx.fillRect(0, 0, 64, 64);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.scale.set(2.0, 2.0, 1);
+  gatlingG.add(glow);
+  gatlingG.position.set(x, 1.0, z);
+  scene.add(gatlingG);
+  hud.sysmsg('🏆 50 殺獎勵 · 黃金加特林機槍出現在地圖某處！（BOT 也會去撿）', 4500);
+  if (!remote && G.coop && net.isHost) net._broadcast({ t: 'gatlingSpawn', p: [x, z] });
+}
+
+function removeGatlingMesh() { if (gatlingG) { scene.remove(gatlingG); gatlingG = null; } }
+
+function pickupGatling(byBot = null) {
+  removeGatlingMesh();
+  audio.kill();
+  if (byBot) {
+    byBot.hasGatling = true;
+    hud.sysmsg(`🏆 ${byBot.name} 撿到黃金加特林機槍 · 火力全開！`, 4000);
+  } else {
+    G.gatling = true;
+    G.gatlingPrev = weapon.activeId === 'gatling' ? 'ak' : weapon.activeId;
+    weapon.pickup('gatling');   // 補滿彈藥並切換
+    hud.sysmsg('🏆 撿到黃金加特林機槍 · 火力全開！（陣亡消失）', 4000);
+  }
+  if (G.coop) {
+    if (net.isHost) net._broadcast({ t: 'gatlingGone' });
+    else net.send({ t: 'gatlingTake' });
+  }
+}
+
+// 立即換槍（無動畫，處理換槍途中死亡的邊界情況）
+function forceSwitchWeapon(id) {
+  weapon.pendingId = null; weapon.switchT = 0; weapon.reloading = 0;
+  if (weapon.activeId === id) return;
+  weapon.gun.visible = false;
+  weapon.activeId = id;
+  weapon.gun = weapon.guns[id];
+  weapon.gun.visible = true;
+  weapon.gun.add(weapon.flash);
+  weapon.flash.position.set(0, 0.012, weapon.cfg.muzzleZ);
+}
+
+function dropGatling() {
+  if (!G.gatling) return;
+  G.gatling = false;
+  if (weapon.activeId === 'gatling' || weapon.pendingId === 'gatling')
+    forceSwitchWeapon(G.gatlingPrev || 'ak');
+  G.gatlingPrev = null;
 }
 
 // ---------- 传送门（奇遇入口 / 返程）----------
@@ -739,6 +835,8 @@ function resetWeapons() {
 function respawnPlayer() {
   player.spawn(mapInfo.playerSpawn);
   resetWeapons();
+  if (!G.gatling && (weapon.activeId === 'gatling' || weapon.pendingId === 'gatling'))
+    forceSwitchWeapon('ak');   // 保險：加特林已隨陣亡消失
   G.state = 'play';
   $('vignette').style.opacity = '0';   // 重生後關閉陣亡暗角
   hud.sysmsg('重新部署完成', 1200);
@@ -1030,6 +1128,17 @@ net.onEvent = (type, data) => {
       net._broadcast({ t: 'cannonGone' });
       break;
     }
+    case 'gatlingSpawn':   // 房主：50 殺加特林生成位置同步
+      spawnGatling(data.p, true);
+      break;
+    case 'gatlingGone':    // 有人（或 BOT）撿走了加特林
+      removeGatlingMesh();
+      break;
+    case 'gatlingTake': {  // 房主：加入者撿走加特林 → 移除並通知全員
+      removeGatlingMesh();
+      net._broadcast({ t: 'gatlingGone' });
+      break;
+    }
     case 'clientHit': {   // 房主：加入者回報命中
       if (G.state !== 'play') break;
       const s = enemies.soldiers[data.id];
@@ -1089,6 +1198,9 @@ function startGame() {
   G.shake = 0; G.missions = 0;
   G.inAdventure = false; G.boss = null;
   dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 加農槍重置
+  dropGatling(); removeGatlingMesh(); G.gatlingSpawned = false;   // 加特林重置
+  weapon.state.gatling.ammo = WEAPONS.gatling.mag;
+  weapon.state.gatling.reserve = WEAPONS.gatling.reserve;
   G.bomb.state = 'carry'; G.bomb.plantT = 0;
   deactivatePortal();
   hud.setScore(0, 0);
@@ -1337,6 +1449,22 @@ function loop() {
       if (!G.cannon && player.alive && Math.hypot(player.pos.x - cannonG.position.x, player.pos.z - cannonG.position.z) < 1.7)
         pickupCannon();
     }
+    // 黃金加特林：漂浮動畫 / 玩家或 BOT 拾取（BOT 僅房主端模擬）
+    if (gatlingG) {
+      gatlingG.rotation.y += dt * 1.5;
+      gatlingG.position.y = 1.0 + Math.sin(now * 2) * 0.12;
+      if (!G.gatling && player.alive && Math.hypot(player.pos.x - gatlingG.position.x, player.pos.z - gatlingG.position.z) < 1.7) {
+        pickupGatling();
+      } else if (!G.coop || net.isHost) {
+        for (const b of bots.bots) {
+          if (b.alive && !b.hasGatling &&
+              Math.hypot(b.pos.x - gatlingG.position.x, b.pos.z - gatlingG.position.z) < 1.7) {
+            pickupGatling(b);
+            break;
+          }
+        }
+      }
+    }
     if (G.cannon) {
       const cst = weapon.state[weapon.activeId];
       if (!(weapon.activeId in G.cannonBoosts)) G.cannonBoosts[weapon.activeId] = cst.boost || 1;
@@ -1367,4 +1495,4 @@ addEventListener('resize', () => {
 });
 
 // 调试句柄
-window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post };
+window.__game = { G, player, weapon, enemies, hud, nades, explode, loot, startGame, save, doInteract, enterAdventure, exitAdventure, activatePortal, portalG, quitToMenu, endRound, fx, updateBomb, applyLoot, audio, post, spawnGatling, pickupGatling, dropGatling, bots };

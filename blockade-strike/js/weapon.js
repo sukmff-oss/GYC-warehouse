@@ -15,7 +15,9 @@ export const WEAPONS = {
   m82:    { name: 'M82 巴雷特', auto: false, interval: 1.8, dmg: 150, mag: 5, reserve: 15,  spreadHip: 0.06,  spreadAds: 0.0006, heatSpread: 0,      zoomFov: 14, kick: 0.2,   recoil: 0.06,  reloadTime: 3.0, sight: 'scope',  sightH: 0.108, muzzleZ: -1.15, bolt: true, pierce: true, zooms: [30, 14, 7], zoomNames: ['3×', '6×', '12×'] },
   m249:   { name: 'M249',  auto: true,  interval: 0.075, dmg: 28,  mag: 100, reserve: 200, spreadHip: 0.022, spreadAds: 0.008,  heatSpread: 0.02,  zoomFov: 54, kick: 0.05,  recoil: 0.012, reloadTime: 3.5, sight: 'iron',   sightH: 0.08,  muzzleZ: -0.9 },
   deagle: { name: '沙漠之鷹', auto: false, interval: 0.35, dmg: 50,  mag: 7,   reserve: 49,  spreadHip: 0.02,  spreadAds: 0.006,  heatSpread: 0.01,  zoomFov: 58, kick: 0.09,  recoil: 0.025, reloadTime: 1.6, sight: 'iron',   sightH: 0.055, muzzleZ: -0.42, pistol: true },
-  rpg:    { name: 'RPG-7', auto: false, interval: 1.2,   dmg: 0,   mag: 1,   reserve: 4,   spreadHip: 0.01,  spreadAds: 0.002,  heatSpread: 0,      zoomFov: 50, kick: 0.15,  recoil: 0.04,  reloadTime: 3.0, sight: 'iron',   sightH: 0.07,  muzzleZ: -1.1,  rocket: true }
+  rpg:    { name: 'RPG-7', auto: false, interval: 1.2,   dmg: 0,   mag: 1,   reserve: 4,   spreadHip: 0.01,  spreadAds: 0.002,  heatSpread: 0,      zoomFov: 50, kick: 0.15,  recoil: 0.04,  reloadTime: 3.0, sight: 'iron',   sightH: 0.07,  muzzleZ: -1.1,  rocket: true },
+  // 50 殺獎勵：黃金加特林（不在 WEAPON_ORDER，數字鍵/換槍輪不到，只能拾取解鎖）
+  gatling: { name: '加特林機槍', auto: true, interval: 0.055, dmg: 30, mag: 200, reserve: 400, spreadHip: 0.02, spreadAds: 0.009, heatSpread: 0.012, zoomFov: 54, kick: 0.05, recoil: 0.010, reloadTime: 4.0, sight: 'iron', sightH: 0.085, muzzleZ: -1.02 }
 };
 
 // 射线 vs 场景 AABB
@@ -46,14 +48,15 @@ export function rayVsWorld(origin, dir, maxDist) {
 }
 
 // ---------- 枪械材质 ----------
-let GM, GW, GP;
+let GM, GW, GP, GG;
 function gunMats() {
   if (!GM) {
     GM = texMat(0x8a8d94, gunMetalTex(), { rough: 0.4, metal: 0.85 });
     GW = texMat(0x9a6a3c, gunWoodTex(), { rough: 0.75, metal: 0.05 });
     GP = texMat(0x50555e, gunMetalTex(), { rough: 0.6, metal: 0.5 }); // 聚合物
+    GG = new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0x7a5a08, emissiveIntensity: 0.55, metalness: 0.95, roughness: 0.28 }); // 黃金
   }
-  return { GM, GW, GP };
+  return { GM, GW, GP, GG };
 }
 
 export class Weapon {
@@ -80,6 +83,13 @@ export class Weapon {
       camera.add(g);
       this.guns[id] = g;
     }
+    // 50 殺獎勵：黃金加特林（不在 WEAPON_ORDER，只能靠拾取解鎖）
+    this.state.gatling = { ammo: WEAPONS.gatling.mag, reserve: WEAPONS.gatling.reserve, zoomIdx: 0, boost: 1.5 };
+    const gg = this._build('gatling');
+    gg.visible = false;
+    gg.scale.setScalar(0.8);
+    camera.add(gg);
+    this.guns.gatling = gg;
     this.gun = this.guns.ak;
     this.gun.visible = true;
     this.hipPos = new THREE.Vector3(0.25, -0.26, -0.5);
@@ -178,6 +188,21 @@ export class Weapon {
       this._mesh(g, new THREE.CylinderGeometry(r1, r2, l, 12), mt, x, y, z, rx);
 
     switch (id) {
+      case 'gatling': {
+        const { GG } = gunMats();
+        B(0.09, 0.11, 0.6, GG, 0, 0, -0.15);                     // 機身
+        for (let i = 0; i < 6; i++) {                            // 六根旋轉槍管
+          const a = (i / 6) * Math.PI * 2;
+          C(0.014, 0.014, 0.62, GG, Math.cos(a) * 0.035, 0.02 + Math.sin(a) * 0.035, -0.72);
+        }
+        C(0.052, 0.052, 0.1, GG, 0, 0.02, -0.45);                // 槍管束
+        C(0.03, 0.035, 0.06, GG, 0, 0.02, -1.04);                // 枪口
+        this.mags.gatling = B(0.16, 0.18, 0.24, GG, 0, -0.13, 0.08);  // 彈藥箱
+        B(0.05, 0.12, 0.06, GP, 0, -0.1, -0.04, 0.3);            // 握把
+        B(0.07, 0.03, 0.16, GG, 0, 0.085, -0.08);                // 提把
+        this._gloves(g, -0.32, 0.1);
+        break;
+      }
       case 'ak':
         B(0.075, 0.09, 0.46, GM, 0, 0, -0.1);
         C(0.018, 0.018, 0.42, GM, 0, 0.012, -0.52);
