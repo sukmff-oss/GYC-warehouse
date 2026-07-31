@@ -152,7 +152,7 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
     });
     return;
   }
-  // ===== 夕陽天空：大氣漸層 + 大夕陽光暈 + 晚霞雲 =====
+  // ===== 夕陽天空：大氣漸層 + 晚霞雲（夕陽光暈已移除，避免刺眼） =====
   if (SUNSET) {
     const simple = typeof perf !== 'undefined' && perf.settings.skyQuality === 'simple';
     if (simple) {
@@ -172,25 +172,6 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
         THREE.MathUtils.degToRad(90 - sunElevation), THREE.MathUtils.degToRad(135));
       u.sunPosition.value.copy(sunDir);
     }
-    // 大夕陽（光暈 + 日輪），掛在地平線附近
-    const sc = document.createElement('canvas'); sc.width = sc.height = 256;
-    const sx = sc.getContext('2d');
-    const sg = sx.createRadialGradient(128, 128, 10, 128, 128, 128);
-    sg.addColorStop(0, 'rgba(255,246,220,1)');
-    sg.addColorStop(0.12, 'rgba(255,214,140,.95)');
-    sg.addColorStop(0.3, 'rgba(255,150,70,.5)');
-    sg.addColorStop(0.6, 'rgba(230,90,60,.18)');
-    sg.addColorStop(1, 'rgba(200,70,60,0)');
-    sx.fillStyle = sg; sx.fillRect(0, 0, 256, 256);
-    const sunSp = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(sc), transparent: true, fog: false, depthWrite: false
-    }));
-    sunSp.scale.set(320, 320, 1);
-    const sd = new THREE.Vector3().setFromSphericalCoords(1,
-      THREE.MathUtils.degToRad(90 - sunElevation), THREE.MathUtils.degToRad(135));
-    sunSp.position.copy(sd).multiplyScalar(880);
-    sunSp.position.y = Math.max(sunSp.position.y, 40);
-    group.add(sunSp);
     // 晚霞雲（暖橙 + 暗紫兩層，緩慢飄動）
     const mkCloudTex = (r, g, b, a) => {
       const cc = document.createElement('canvas'); cc.width = cc.height = 128;
