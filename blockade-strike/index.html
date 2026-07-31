@@ -294,6 +294,24 @@
     background:rgba(10,14,20,.5); padding:7px 11px; border-radius:6px;
     border-left:3px solid #5db2ff; }
 
+  /* ===== 世界殺敵排行 ===== */
+  #lbBox { margin-top:18px; width:min(480px, 92vw); pointer-events:auto;
+    background:rgba(10,14,22,.55); border:1px solid rgba(255,210,122,.25); border-radius:10px; padding:12px 16px; }
+  #lbTitle { color:#ffd27a; font:14px sans-serif; letter-spacing:2px; margin-bottom:8px; }
+  #lbList { font:12.5px sans-serif; color:#cfd8e8; max-height:180px; overflow:auto; }
+  .lbrow { display:flex; gap:8px; padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.06); }
+  .lbrow .rk { width:26px; color:#8fa2bd; }
+  .lbrow .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lbrow .kl { color:#ffd27a; width:64px; text-align:right; }
+  .lbrow .mp { color:#8fa2bd; width:72px; text-align:right; font-size:11px; }
+  .lbrow.g1 .rk, .lbrow.g1 .nm { color:#ffd700; }
+  .lbrow.g2 .rk, .lbrow.g2 .nm { color:#c0c0c0; }
+  .lbrow.g3 .rk, .lbrow.g3 .nm { color:#cd7f32; }
+  .lbrow.me .nm { color:#7affa0; }
+  #lbNameRow { margin-top:8px; color:#8fa2bd; font:12px sans-serif; }
+  #lbName { background:#1a2230; border:1px solid rgba(255,255,255,.2); color:#e8ecf2; border-radius:5px; padding:3px 8px; font:12px sans-serif; width:110px; }
+  #lbNameSave { background:#2a3a52; color:#cfe0ff; border:1px solid rgba(255,255,255,.2); border-radius:5px; padding:3px 10px; font:12px sans-serif; cursor:pointer; }
+
   #startbar { display:flex; gap:12px; margin-top:14px; align-items:center; }
   .sbtn { padding:8px 18px; border-radius:8px; border:1px solid rgba(255,210,122,.4); cursor:pointer;
     color:#ffd27a; font:14px sans-serif; background:rgba(255,176,74,.08); }
@@ -392,6 +410,11 @@
     <span id="startgold">💰 0</span>
   </div>
   <div id="startstats"></div>
+  <div id="lbBox">
+    <div id="lbTitle">🌍 世界殺敵排行 TOP 15</div>
+    <div id="lbList">載入中…</div>
+    <div id="lbNameRow">我的名字：<input id="lbName" maxlength="12" /> <button id="lbNameSave">改名</button></div>
+  </div>
 </div>
 
 <!-- 结算界面 -->

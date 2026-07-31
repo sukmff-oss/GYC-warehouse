@@ -8,6 +8,7 @@ import { HUD } from './hud.js';
 import { audio } from './audio.js';
 import { LootManager, applyLoot } from './loot.js';
 import { save } from './save.js';
+import { fetchLeaderboard, submitKills, playerName, setPlayerName } from './leaderboard.js';
 import { PostFX } from './post.js';
 import { perf, createQualityUI } from './performance-config.js';
 import { ObjectPool } from './lod-mesh.js';
@@ -893,6 +894,7 @@ function quitToMenu() {
   G.state = 'menu';
   G.firing = false; G.adsHeld = false;
   G.inAdventure = false; G.boss = null;
+  submitRoundKills();   // 中途退出也上傳本局殺敵
   enemies.removeBosses();
   deactivatePortal();
   hud.plantBar(null); hud.prompt(null); hud.protect(0); hud.bossBar(null); hud.objective(null);
@@ -1046,9 +1048,41 @@ function refreshStartbar() {
   $('startgold').textContent = '💰 ' + save.gold;
   const st = save.stats;
   $('startstats').textContent = `生涯：擊殺 ${st.kills} · BOSS ${st.boss} · 爆破任務 ${st.missions} · 奇遇 ${st.adventures}`;
+  renderLeaderboard();
 }
 refreshStartbar();
 hud.gold(save.gold);
+
+// ---------- 世界殺敵排行 TOP 15 ----------
+const escHtml = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function renderLeaderboard() {
+  const list = $('lbList');
+  if (!list) return;
+  $('lbName').value = playerName();
+  fetchLeaderboard(rows => {
+    if (rows === null) { list.textContent = '排行榜載入失敗（離線仍可遊玩）'; return; }
+    if (!rows.length) { list.textContent = '暫無紀錄 · 成為第一位上榜的玩家！'; return; }
+    const me = playerName();
+    list.innerHTML = rows.map((r, i) =>
+      `<div class="lbrow g${i + 1}${r.name === me ? ' me' : ''}"><span class="rk">${i + 1}</span>` +
+      `<span class="nm">${escHtml(r.name)}</span><span class="kl">${r.kills} 殺</span>` +
+      `<span class="mp">${escHtml(r.map || '')}</span></div>`
+    ).join('');
+  });
+}
+$('lbNameSave').addEventListener('click', () => {
+  setPlayerName($('lbName').value);
+  renderLeaderboard();
+  hud.sysmsg('✅ 名字已更新', 1200);
+});
+// 結算本局殺敵並上傳排行榜（每局一次）
+function submitRoundKills() {
+  if (G.lbSubmitted || !G.kills) return;
+  G.lbSubmitted = true;
+  const rot = MAP_ROTATION.find(m => m[0] === G.mapId);
+  submitKills(G.kills, rot ? rot[1] : '');
+  setTimeout(renderLeaderboard, 2500);   // 上傳後刷新榜單
+}
 
 // ---------- 多人連線 UI ----------
 function updateRoster() {
@@ -1193,6 +1227,7 @@ function startGame() {
   if (bots.count) { bots.setBounds(mapInfo.bounds); bots.reset(mapInfo.playerSpawn); }   // BOT 隊友重新部署
   hud.setMap(mapInfo);
   G.state = 'play';
+  G.lbSubmitted = false;   // 本局排行榜尚未上傳
   G.scoreB = 0; G.scoreR = 0; G.kills = 0; G.deaths = 0; G.shots = 0; G.hits = 0;
   G.time = G.mode === 'timed' ? 180 : Infinity;   // 限时局 3 分钟
   G.shake = 0; G.missions = 0;
@@ -1266,6 +1301,7 @@ function endRound(fromAdventure = false) {
     if (G.scoreB > G.scoreR) audio.voice('victory');
   }
   $('endGold').textContent = `💰 當前金幣 ${save.gold}（已自動存檔）`;
+  submitRoundKills();   // 上傳本局殺敵到世界排行
   save.save();
   $('endScreen').classList.remove('hidden');
   refreshStartbar();
