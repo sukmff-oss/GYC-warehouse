@@ -110,15 +110,15 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
       transparent: true, opacity: 0.85, depthWrite: false
     }));
     group.add(stars);
-    // 月亮（帶光暈）
+    // 月亮（微亮柔光，不刺眼）
     const mc = document.createElement('canvas'); mc.width = mc.height = 128;
     const mx = mc.getContext('2d');
     const mg = mx.createRadialGradient(64, 64, 8, 64, 64, 64);
-    mg.addColorStop(0, 'rgba(235,242,255,1)'); mg.addColorStop(0.25, 'rgba(215,228,250,.9)');
-    mg.addColorStop(0.45, 'rgba(160,185,230,.28)'); mg.addColorStop(1, 'rgba(140,170,220,0)');
+    mg.addColorStop(0, 'rgba(214,226,244,.85)'); mg.addColorStop(0.25, 'rgba(190,206,234,.6)');
+    mg.addColorStop(0.45, 'rgba(140,165,210,.18)'); mg.addColorStop(1, 'rgba(120,150,200,0)');
     mx.fillStyle = mg; mx.fillRect(0, 0, 128, 128);
     const moon = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(mc), transparent: true, fog: false, depthWrite: false
+      map: new THREE.CanvasTexture(mc), transparent: true, opacity: 0.8, fog: false, depthWrite: false
     }));
     moon.scale.set(150, 150, 1);
     moon.position.set(-320, 380, -520);
@@ -129,12 +129,12 @@ function buildSky(horizon = '#e8e2d0', sunElevation = 38, haze = 1) {
     for (let i = 0; i < 10; i++) {
       const px = rand(20, 108), py = rand(45, 85), r = rand(14, 30);
       const rg = cx.createRadialGradient(px, py, 0, px, py, r);
-      rg.addColorStop(0, 'rgba(60,72,96,.5)'); rg.addColorStop(1, 'rgba(60,72,96,0)');
+      rg.addColorStop(0, 'rgba(110,128,162,.55)'); rg.addColorStop(1, 'rgba(110,128,162,0)');
       cx.fillStyle = rg; cx.beginPath(); cx.arc(px, py, r, 0, 7); cx.fill();
     }
     const ctex = new THREE.CanvasTexture(cc);
     const clouds = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ctex, transparent: true, opacity: rand(.3, .5), fog: false, depthWrite: false }));
       const s = rand(120, 240);
       sp.scale.set(s, s * 0.38, 1);

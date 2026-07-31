@@ -52,10 +52,10 @@ function applyMapEnv(info) {
   const env = info.env || (info.night ? 'night' : 'day');
   let envI;
   if (env === 'night') {
-    sun.intensity = 0.65;
+    sun.intensity = 0.85;
     sun.color.set(0x9ab8e8);                    // 冷色月光
     sun.position.set(-40, 70, -50);
-    hemi.intensity = 0.33;
+    hemi.intensity = 0.4;
     hemi.color.set(0x7a94c8);
     hemi.groundColor.set(0x1a2232);
     renderer.toneMappingExposure = 0.94;
@@ -111,7 +111,7 @@ const vehicles = new VehicleManager(scene);   // 載具系統（台北101地圖�
 const G = {
   state: 'menu',
   mapId: 'town',
-  env: 'sunset',          // 固定夕陽（地圖輪播由 rotationInfo 決定）
+  env: 'night',           // 固定夜晚（地圖輪播由 rotationInfo 決定）
   mode: 'free',            // free 自由局 | timed 限时局（3 分钟）
   scoreB: 0, scoreR: 0,
   kills: 0, deaths: 0, shots: 0, hits: 0,
@@ -1003,7 +1003,7 @@ if (IS_TOUCH) {
   document.addEventListener('dblclick', e => e.preventDefault());
 }
 
-// ---------- 地圖輪播（每 30 分鐘自動換圖 · 固定夕陽 · 免選地圖）----------
+// ---------- 地圖輪播（每 30 分鐘自動換圖 · 固定夜晚 · 免選地圖）----------
 const MAP_ROTATION = [
   ['taipei', '台北101'],   // 第一棒：整點/偶數時段起手就是新地圖
   ['town',  '小鎮街道'],
@@ -1014,13 +1014,13 @@ const ROT_MS = 30 * 60 * 1000;
 function rotationInfo() {
   const slot = Math.floor(Date.now() / ROT_MS);   // 以epoch對齊，所有玩家看到同一張圖
   const [mapId, name] = MAP_ROTATION[slot % MAP_ROTATION.length];
-  return { mapId, name, env: 'sunset', remainMs: (slot + 1) * ROT_MS - Date.now() };
+  return { mapId, name, env: 'night', remainMs: (slot + 1) * ROT_MS - Date.now() };
 }
 function applyRotation(broadcast = false) {
   const r = rotationInfo();
   G.mapId = r.mapId; G.env = r.env;
   net.mapId = r.mapId; net.env = r.env;
-  $('rotMap').textContent = `🌇 本輪地圖：${r.name}（夕陽）`;
+  $('rotMap').textContent = `🌙 本輪地圖：${r.name}（夜晚）`;
   if (broadcast && G.coop && net.isHost && net.connected)   // 房主同步給加入者
     net._broadcast({ t: 'map', mapId: r.mapId, env: r.env });
 }

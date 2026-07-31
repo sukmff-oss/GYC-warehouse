@@ -18,7 +18,7 @@ export class Net {
     this.connected = false;
     this.code = '';
     this.mapId = 'town';
-    this.env = 'sunset';
+    this.env = 'night';
     this.conns = new Map();     // id -> {conn, name, state, avatar, stub}（房主用）
     this.remote = new Map();    // id -> {state, avatar, stub}（加入者看其他玩家，含房主）
     this.myId = 0; this.myName = 'P1';
