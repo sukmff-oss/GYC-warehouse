@@ -9,14 +9,14 @@ const UNIFORMS = [0x8a7a52, 0x6b6a45, 0x4a5240, 0x7a6248];  // CS歹徒：沙漠
 const VESTS = [0x2e2a26, 0x3a332a, 0x46403a, 0x33302c];     // 深色戰術背心
 const MASKS = [0x1e1e22, 0x3a3d32, 0x565048];               // 蒙面頭套：黑 / 墨綠 / 灰
 
-function losClear(a, b) {
+export function losClear(a, b) {
   const dir = b.clone().sub(a);
   const dist = dir.length(); dir.normalize();
   const hit = rayVsWorld(a, dir, dist - 0.5);
   return !hit;
 }
 
-class Soldier {
+export class Soldier {
   constructor(scene, name) {
     this.scene = scene;
     this.name = name;
