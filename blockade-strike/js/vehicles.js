@@ -144,6 +144,18 @@ export class VehicleManager {
     this._spawn('jeep', jx, jz, jy);
   }
 
+  // 貨運碼頭配置：貨車/機車/腳踏車散佈各道路 + 一台金色車子停在主幹道
+  spawnDocks() {
+    this._spawn('car', -20, -20, 0);
+    this._spawn('car', 20, 10, Math.PI);
+    this._spawn('car', -20, 24, Math.PI);
+    this._spawn('scooter', 0, -26, 0.2);
+    this._spawn('scooter', -20, -2, -0.15);
+    this._spawn('bicycle', 20, -25, 0);
+    this._spawn('bicycle', 20, 24, 0.1);
+    this._spawn('gcar', 0, 14, 0, 0xffd24a);   // 金色車子：主幹道近玩家出生點
+  }
+
   nearest(pos, maxD = 2.6) {
     let best = null, bd = maxD;
     for (const v of this.list) {

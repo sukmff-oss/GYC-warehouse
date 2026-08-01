@@ -1271,6 +1271,7 @@ function switchMapLive(mapId, env) {
   mapInfo = buildMap(scene, mapId, env);
   vehicles.clear();
   if (mapId === 'taipei') vehicles.spawnTaipei();
+  if (mapId === 'docks') vehicles.spawnDocks();   // 貨運碼頭：道路載具 + 金色車子
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
   if (bots.count) { bots.setBounds(mapInfo.bounds); bots.reset(mapInfo.playerSpawn); }
@@ -1497,6 +1498,7 @@ function startGame() {
   mapInfo = buildMap(scene, G.mapId, G.env);
   vehicles.clear();
   if (G.mapId === 'taipei') vehicles.spawnTaipei();   // 台北101：街道載具 + 金色吉普
+  if (G.mapId === 'docks') vehicles.spawnDocks();   // 貨運碼頭：道路載具 + 金色車子
   player.driving = false;
   player.setBounds(mapInfo.bounds);
   enemies.setBounds(mapInfo.bounds, mapInfo.playerSpawn);
