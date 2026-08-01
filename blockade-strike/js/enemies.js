@@ -8,9 +8,10 @@ import { BulletPool } from './lod-mesh.js';
 
 // ===== 3D 人物模組（單一 Swat 角色，CS 染裝 + 頭巾做視覺變化；載入失敗靜默回退方塊模型）=====
 // 玩家 / BOT 隊友 / 敵人：共用 Quaternius Ultimate Modular Men — Swat (CC0，正常比例，非 Q 版)
-// CS 染裝從 _tTint (4 種) + _tBand (3 種頭巾) 隨機混出 12 種視覺差異
+// 動畫映射：待機 Idle_Gun (雙手舉起握槍姿態), 射擊 Gun_Shoot (射擊姿態), 移動 Run / Walk, 死亡 Death
+// 視覺差異靠 _tTint (4 色) + _tBand (3 色頭巾) 隨機混出 12 種
 const MODEL_DEFS = [
-  { url: './assets/models/swat.glb', scale: 1, rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
+  { url: './assets/models/swat.glb', scale: 1, rotY: 0, names: { idle: 'CharacterArmature|Idle_Gun', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', shoot: 'CharacterArmature|Gun_Shoot', death: 'CharacterArmature|Death' } },
 ];
 const _gl = new GLTFLoader();
 const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
@@ -152,7 +153,8 @@ export class Soldier {
     }
 
     // ===== AK 步槍（木槍托/木護木/彈匣/瞄具）=====
-    const gun = new THREE.Group(); gun.position.set(0.16, 1.34, 0.28); bg.add(gun);
+    // 槍物件獨立放在 this.group（不被 boxGroup.visible=false 影響），GLB 載入後仍可見
+    const gun = new THREE.Group(); gun.position.set(0.18, 1.32, 0.18); g.add(gun);
     M(new THREE.BoxGeometry(0.06, 0.1, 0.42), dark, 0, 0, 0.1, gun);             // 机匣
     const barrel = M(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6), dark, 0, 0.01, 0.48, gun);
     barrel.rotation.x = Math.PI / 2;
@@ -160,7 +162,8 @@ export class Soldier {
     M(new THREE.BoxGeometry(0.05, 0.16, 0.08), dark, 0, -0.11, 0.06, gun);       // 弹匣
     M(new THREE.BoxGeometry(0.05, 0.09, 0.18), wood, 0, -0.01, -0.2, gun);       // 木槍托
     M(new THREE.BoxGeometry(0.03, 0.05, 0.06), dark, 0, 0.09, 0.12, gun);        // 瞄具
-    this.muzzleLocal = new THREE.Vector3(0.16, 1.35, 0.78);
+    this.gun = gun;
+    this.muzzleLocal = new THREE.Vector3(0.18, 1.32, 0.6);   // 槍管前端（跟 gun 位置一致）
 
     // 体型微差
     g.scale.setScalar(0.94 + Math.random() * 0.14);
@@ -399,6 +402,9 @@ export class Soldier {
   }
 
   muzzleWorld() {
+    // 槍口世界座標：gun 物件掛在 this.group，跟 GLB 模型同步顯示
+    // 更新 this.group.matrixWorld 確保 transform 正確（用 gun.position + group.matrixWorld）
+    this.group.updateMatrixWorld(true);
     return this.muzzleLocal.clone().applyMatrix4(this.group.matrixWorld);
   }
 
@@ -496,9 +502,13 @@ export class Soldier {
     } else this._stuckT = 0;
     this._lastX = this.pos.x; this._lastZ = this.pos.z;
 
-    // ===== 動畫：GLB 模組用 idle/walk/run 邏輯名；方塊模型走程序化擺動 =====
+    // ===== 動畫：GLB 模組用 idle/walk/run/shoot 邏輯名；方塊模型走程序化擺動 =====
     if (this._glb) {
-      const want = !this.moving ? 'idle' : (this.state === 'engage' ? 'run' : 'walk');
+      // 射擊中：用 Gun_Shoot（射擊姿態），否則待機用 Idle_Gun，移動用 Run/Walk
+      let want;
+      if (this.burstLeft > 0) want = 'shoot';
+      else if (!this.moving) want = 'idle';
+      else want = (this.state === 'engage') ? 'run' : 'walk';
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
     } else {
@@ -513,9 +523,13 @@ export class Soldier {
       this.armL.rotation.x += (armTarget - this.armL.rotation.x) * lerp;
       this.armR.rotation.x = this.armL.rotation.x;
     }
-    // 受击后仰
+    // 受击后仰：GLB 模型用 group.rotation 會跟骨架動畫衝突 → 身體斜斜。方塊模型仍可用
     if (this.flinchT > 0) this.flinchT -= dt;
-    this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
+    if (!this._glb) {
+      this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
+    } else {
+      this.group.rotation.x = 0;
+    }
 
     this._sync();
 

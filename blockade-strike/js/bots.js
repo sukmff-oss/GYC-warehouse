@@ -203,7 +203,11 @@ class BotMate extends Soldier {
 
     // 動畫：GLB 模組用邏輯動畫；方塊模型走程序化擺動
     if (this._glb) {
-      const want = !this.moving ? 'idle' : (tgt ? 'run' : 'walk');
+      // 射擊中：用 Gun_Shoot（射擊姿態），否則待機用 Idle_Gun（雙手舉起握槍），移動用 Run/Walk
+      let want;
+      if (this.burstLeft > 0) want = 'shoot';
+      else if (!this.moving) want = 'idle';
+      else want = tgt ? 'run' : 'walk';
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
     } else {
@@ -217,7 +221,12 @@ class BotMate extends Soldier {
       this.armR.rotation.x = this.armL.rotation.x;
     }
     if (this.flinchT > 0) this.flinchT -= dt;
-    this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
+    // flinch 動畫：GLB 模型用 group.rotation 會跟骨架動畫衝突 → 身體斜斜。方塊模型仍可用
+    if (!this._glb) {
+      this.group.rotation.x = -Math.max(0, this.flinchT) * 1.5;
+    } else {
+      this.group.rotation.x = 0;
+    }
     this._sync();
   }
 
