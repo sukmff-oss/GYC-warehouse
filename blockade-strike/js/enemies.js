@@ -7,10 +7,10 @@ import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
 
 // ===== 3D 人物模組（兩款隨機混用；載入失敗靜默回退方塊模型）=====
-// ① three.js 官方 Soldier.glb（戰術士兵）② KayKit Rogue_Hooded.glb（連帽歹徒，CC0）
+// ① three.js 官方 Soldier.glb（戰術士兵）② Quaternius SWAT.glb（特警，CC0，正常比例）
 const MODEL_DEFS = [
-  { url: './assets/models/soldier.glb',      scale: 1,    names: { idle: 'Idle', walk: 'Walk',      run: 'Run' } },
-  { url: './assets/models/rogue_hooded.glb', scale: 0.95, names: { idle: 'Idle', walk: 'Walking_A', run: 'Running_A', death: 'Death_A' } },
+  { url: './assets/models/soldier.glb', scale: 1,    names: { idle: 'Idle', walk: 'Walk', run: 'Run' } },
+  { url: './assets/models/swat.glb',    scale: 1,    rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
 ];
 const _gl = new GLTFLoader();
 const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
@@ -222,7 +222,7 @@ export class Soldier {
     // 蒙皮模型不能用幾何包盒推算尺寸，用各模組的手動比例
     model.scale.setScalar(def.scale);
     model.position.y = 0;
-    model.rotation.y = Math.PI;   // GLB 面朝 -Z，轉向與 group 的 +Z 前向一致
+    model.rotation.y = def.rotY !== undefined ? def.rotY : Math.PI;   // GLB 面朝 -Z 的模組轉向與 group 的 +Z 前向一致；SWAT 原生朝 +Z 不轉
     this.group.add(model);
     this.boxGroup.visible = false;   // 方塊身體隱藏（raycast 不受 visible 影響，命中體照舊）
     // 動畫（各模組的邏輯名 → 實際 clip 名）
