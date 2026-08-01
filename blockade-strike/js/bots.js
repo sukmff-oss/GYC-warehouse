@@ -11,17 +11,13 @@ import { Soldier, losClear } from './enemies.js';
 
 const ROLES = [
   { key: 'sniper', name: 'BOT-阿凱', weapon: '狙擊槍', band: 0x8a4ad8, bandEm: 0x4a1a88, tracer: 0xc09aff,
-    minD: 20, maxD: 50, sight: 65, burst: 1, pause: [1.9, 2.6], dmg: [42, 58], acc: 0.92, accDrop: 0.004, speed: 2.7,
-    hair: 0x7a6aff, style: 'ponytail' },   // 二次元：藍紫長單馬尾
+    minD: 20, maxD: 50, sight: 65, burst: 1, pause: [1.9, 2.6], dmg: [42, 58], acc: 0.92, accDrop: 0.004, speed: 2.7 },
   { key: 'medic', name: 'BOT-小琳', weapon: '衝鋒槍', band: 0x2ad86a, bandEm: 0x1a7a3a, tracer: 0x8affb0,
-    minD: 6, maxD: 18, sight: 35, burst: 2, pause: [1.2, 1.8], dmg: [6, 10], acc: 0.62, accDrop: 0.010, speed: 3.3, medic: true,
-    hair: 0xff9ac8, style: 'twintails' },   // 二次元：粉紅雙馬尾
+    minD: 6, maxD: 18, sight: 35, burst: 2, pause: [1.2, 1.8], dmg: [6, 10], acc: 0.62, accDrop: 0.010, speed: 3.3, medic: true },
   { key: 'rusher', name: 'BOT-阿志', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
-    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9,
-    hair: 0xff8a3a, style: 'spiky' },   // 二次元：橙色刺蝟頭
+    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
   { key: 'rusher', name: 'BOT-阿豪', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
-    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9,
-    hair: 0xffd24a, style: 'spiky' },   // 二次元：金色刺蝟頭
+    minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
 ];
 
 class BotMate extends Soldier {
@@ -50,86 +46,6 @@ class BotMate extends Soldier {
     this.group.add(gb);
     this.deadT = 0;
     this.healT = 1.5;
-    // 二次元專屬造型：動漫髮型 + 遠距 LOD 職業色
-    this._addAnimeHair(role);
-    if (this._lodMesh) {
-      this._lodMesh.material = this._lodMesh.material.clone();
-      this._lodMesh.material.color.set(role.band);
-    }
-  }
-
-  // ===== GLB 換裝後：複製材質染上職業色（只染 GLB 身體，不動臂章與頭髮）=====
-  _attachGlb(gltf, def) {
-    const before = new Set(this.group.children);
-    super._attachGlb(gltf, def);
-    const model = this.group.children.find(c => !before.has(c));
-    if (!model) return;
-    const tint = new THREE.Color(this.role.band);
-    const em = new THREE.Color(this.role.bandEm);
-    model.traverse(o => {
-      if (!o.isMesh) return;
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      const out = mats.map(m => {
-        if (!m) return m;
-        const c = m.clone();
-        if (c.color) c.color.lerp(tint, 0.45);
-        if (c.emissive) { c.emissive.copy(em); c.emissiveIntensity = 0.22; }
-        return c;
-      });
-      o.material = Array.isArray(o.material) ? out : out[0];
-    });
-  }
-
-  // ===== 動漫髮型（頭頂呆毛標配；依職業分單馬尾 / 雙馬尾 / 刺蝟頭）=====
-  _addAnimeHair(role) {
-    const g = new THREE.Group();
-    const hc = new THREE.Color(role.hair);
-    const mat = new THREE.MeshStandardMaterial({ color: hc, roughness: 0.55, metalness: 0.05,
-      emissive: hc.clone().multiplyScalar(0.3), emissiveIntensity: 0.4 });
-    // 髮蓋（只罩頭頂與後腦，不遮臉）
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.168, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), mat);
-    cap.position.set(0, 1.80, -0.015);
-    cap.scale.set(1, 0.9, 1.05);
-    g.add(cap);
-    if (role.style === 'ponytail') {
-      // 長單馬尾：後腦垂下
-      const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.46, 4, 8), mat);
-      tail.position.set(0, 1.52, -0.20);
-      tail.rotation.x = 0.35;
-      g.add(tail);
-      const tie = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.018, 6, 12), mat);
-      tie.position.set(0, 1.78, -0.15);
-      g.add(tie);
-    } else if (role.style === 'twintails') {
-      // 雙馬尾：左右兩束 + 白色十字髮飾
-      for (const s of [-1, 1]) {
-        const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.048, 0.38, 4, 8), mat);
-        tail.position.set(s * 0.20, 1.58, -0.05);
-        tail.rotation.z = s * -0.28;
-        g.add(tail);
-      }
-      const crossM = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, emissive: 0xffffff, emissiveIntensity: 0.25 });
-      const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.02), crossM);
-      const c2 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.09, 0.02), crossM);
-      c1.position.set(-0.10, 1.90, 0.10); c2.position.set(-0.10, 1.90, 0.10);
-      g.add(c1, c2);
-    } else if (role.style === 'spiky') {
-      // 刺蝟頭：頂部 5 根尖刺
-      for (let i = 0; i < 5; i++) {
-        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 6), mat);
-        const a = (i / 5) * Math.PI * 2;
-        spike.position.set(Math.cos(a) * 0.07, 1.95, Math.sin(a) * 0.07 - 0.02);
-        spike.rotation.set(Math.sin(a) * 0.55, 0, -Math.cos(a) * 0.55);
-        g.add(spike);
-      }
-    }
-    // 呆毛（アホ毛）：頭頂小弧線
-    const ahoge = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.011, 6, 10, Math.PI * 0.9), mat);
-    ahoge.position.set(0.02, 1.985, 0);
-    ahoge.rotation.z = -0.4;
-    g.add(ahoge);
-    this.group.add(g);
-    this._animeHair = g;
   }
 
   placeNear(p) {
