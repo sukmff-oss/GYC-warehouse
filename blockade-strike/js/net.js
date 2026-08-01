@@ -201,6 +201,8 @@ export class Net {
       this.onEvent('cannonTake');
     } else if (d.t === 'gatlingTake') {
       this.onEvent('gatlingTake');
+    } else if (d.t === 'carTake') {
+      this.onEvent('carTake');
     } else if (d.t === 'boomfx') {   // 加入者的加農槍爆炸 → 本地播放 + 轉播其他人
       this.onEvent('boom', d);
       this._broadcast({ t: 'boom', p: d.p }, this._idOf(rec));
@@ -230,6 +232,8 @@ export class Net {
       case 'cannonGone': this.onEvent('cannonGone'); break;
       case 'gatlingSpawn': this.onEvent('gatlingSpawn', d); break;
       case 'gatlingGone': this.onEvent('gatlingGone'); break;
+      case 'carSpawn': this.onEvent('carSpawn', d); break;
+      case 'carGone': this.onEvent('carGone'); break;
     }
   }
 

@@ -127,6 +127,7 @@ const G = {
   gatling: false,          // 持有黃金加特林（50 殺獎勵 · 陣亡消失）
   gatlingSpawned: false,   // 本局 50 殺加特林已生成過
   gatlingPrev: null,       // 拾取加特林前的武器（陣亡時換回）
+  carSpawned: false,       // 本局 101 殺金色車子已生成過
   rotationHold: -1,        // 101 倒塌提前換圖後，暫停本輪 slot 的輪播干預
   missions: 0,             // 爆破完成次数
   bomb: { state: 'carry', plantT: 0, boomT: 0, beepT: 0, mesh: null }, // carry|planting|planted
@@ -319,6 +320,10 @@ function onKill(soldier, weaponName, isHeadshot = false, killerName = 'YOU') {
   // 50 殺：地圖隨機出現黃金加特林機槍（玩家與 BOT 皆可拾取 · 陣亡消失）
   if (!G.gatlingSpawned && G.kills >= 50) {
     G.gatlingSpawned = true;   spawnGatling();
+  }
+  // 101 殺：地圖隨機出現金色車子（碰到獲得金幣大獎）
+  if (!G.carSpawned && G.kills >= 101) {
+    G.carSpawned = true;   spawnCar();
   }
   if (mine) {
     if (now - G.lastKillT < 4) G.streak++; else G.streak = 1;
@@ -634,6 +639,64 @@ function pickupGatling(byBot = null) {
   if (G.coop) {
     if (net.isHost) net._broadcast({ t: 'gatlingGone' });
     else net.send({ t: 'gatlingTake' });
+  }
+}
+
+// ---------- 金色車子（101 殺獎勵 · 地圖隨機出現 · 碰到獲得金幣 +500 · 無光暈）----------
+let carG = null;   // 地圖上的金色車子
+
+function spawnCar(pos = null, remote = false) {
+  removeCarMesh();
+  let x, z;
+  if (pos) { x = pos[0]; z = pos[1]; }
+  else {
+    const b = mapInfo.bounds;
+    for (let i = 0; i < 40 && x === undefined; i++) {
+      const tx = b.minX + 3 + Math.random() * (b.maxX - b.minX - 6);
+      const tz = b.minZ + 3 + Math.random() * (b.maxZ - b.minZ - 6);
+      let blocked = false;
+      for (const c of colliders) {
+        if (c.max.y < 0.4 || c.min.y > 1.5) continue;
+        if (tx + 1.4 > c.min.x && tx - 1.4 < c.max.x && tz + 1.4 > c.min.z && tz - 1.4 < c.max.z) { blocked = true; break; }
+      }
+      if (!blocked) { x = tx; z = tz; }
+    }
+    if (x === undefined) { x = mapInfo.playerSpawn.x + 6; z = mapInfo.playerSpawn.z - 6; }
+  }
+  carG = new THREE.Group();
+  const gold = new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0x8a6808, emissiveIntensity: 0.45, metalness: 0.9, roughness: 0.25 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.3, roughness: 0.8 });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x9fd8ff, metalness: 0.6, roughness: 0.15 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.55, 1.05), gold);
+  body.position.y = 0.55;
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.45, 0.95), gold);
+  cabin.position.set(-0.15, 1.02, 0);
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.38, 0.97), glass);
+  windshield.position.set(0.42, 1.0, 0);
+  carG.add(body, cabin, windshield);
+  for (const [wx, wz] of [[0.75, 0.55], [0.75, -0.55], [-0.75, 0.55], [-0.75, -0.55]]) {
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.18, 14), dark);
+    wheel.rotation.x = Math.PI / 2;
+    wheel.position.set(wx, 0.28, wz);
+    carG.add(wheel);
+  }
+  carG.position.set(x, 0, z);
+  carG.rotation.y = Math.random() * Math.PI * 2;
+  scene.add(carG);
+  hud.sysmsg('🏆 101 殺獎勵 · 金色車子出現在地圖某處 · 碰到獲得大獎！', 4500);
+  if (!remote && G.coop && net.isHost) net._broadcast({ t: 'carSpawn', p: [x, z] });
+}
+
+function removeCarMesh() { if (carG) { scene.remove(carG); carG = null; } }
+
+function pickupCar() {
+  removeCarMesh();
+  addGold(500);
+  hud.celebrate('GOLDEN CAR', '金色車子 · 金幣 +500', 2);
+  audio.kill();
+  if (G.coop) {
+    if (net.isHost) net._broadcast({ t: 'carGone' });
+    else net.send({ t: 'carTake' });
   }
 }
 
@@ -1210,6 +1273,7 @@ function switchMapLive(mapId, env) {
   hud.setMap(mapInfo);
   dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 新圖可再次出現加農槍
   dropGatling(); removeGatlingMesh(); G.gatlingSpawned = false;
+  removeCarMesh(); G.carSpawned = false;   // 新圖可再次出現金色車子
   player.spawn(mapInfo.playerSpawn);
   for (const n of nades) scene.remove(n.mesh);
   nades.length = 0;
@@ -1367,6 +1431,17 @@ net.onEvent = (type, data) => {
       net._broadcast({ t: 'gatlingGone' });
       break;
     }
+    case 'carSpawn':   // 房主：101 殺金色車子生成位置同步
+      spawnCar(data.p, true);
+      break;
+    case 'carGone':    // 有人碰到了金色車子
+      removeCarMesh();
+      break;
+    case 'carTake': {  // 房主：加入者碰到金色車子 → 移除並通知全員
+      removeCarMesh();
+      net._broadcast({ t: 'carGone' });
+      break;
+    }
     case 'clientHit': {   // 房主：加入者回報命中
       if (G.state !== 'play') break;
       const s = enemies.soldiers[data.id];
@@ -1431,6 +1506,7 @@ function startGame() {
   G.inAdventure = false; G.boss = null;
   dropCannon(); removeCannonMesh(); G.cannonSpawned = false;   // 加農槍重置
   dropGatling(); removeGatlingMesh(); G.gatlingSpawned = false;   // 加特林重置
+  removeCarMesh(); G.carSpawned = false;   // 金色車子重置
   weapon.state.gatling.ammo = WEAPONS.gatling.mag;
   weapon.state.gatling.reserve = WEAPONS.gatling.reserve;
   G.bomb.state = 'carry'; G.bomb.plantT = 0;
@@ -1722,6 +1798,12 @@ function loop() {
           }
         }
       }
+    }
+    // 金色車子：緩慢旋轉展示 / 玩家碰到拾取
+    if (carG) {
+      carG.rotation.y += dt * 0.8;
+      if (player.alive && Math.hypot(player.pos.x - carG.position.x, player.pos.z - carG.position.z) < 2)
+        pickupCar();
     }
     if (G.cannon) {
       const cst = weapon.state[weapon.activeId];
