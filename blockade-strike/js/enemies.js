@@ -6,11 +6,17 @@ import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
 
-// ===== 3D 人物模組（兩款隨機混用；載入失敗靜默回退方塊模型）=====
-// ① three.js 官方 Soldier.glb（戰術士兵）② Quaternius SWAT.glb（特警，CC0，正常比例）
+// ===== 3D 人物模組（CC0 Quaternius Toon Shooter Kit + Swat pack；載入失敗靜默回退方塊模型）=====
+// ① 玩家 / BOT 隊友：Swat 特警 (Quaternius Ultimate Modular Men — CC0)
+// ② 敵人 A：character_soldier 標準兵 (CS 1.6 風格，Quaternius CC0)
+// ③ 敵人 B：character_enemy 匪徒 (Quaternius CC0) — 另款造型
+// ④ BOSS / 重裝：character_hazmat 化學兵 (Quaternius CC0) — 配合 BOSS 暗黑染裝
+// 三款敵人共用動畫命名 Idle/Walk/Run/Death，直接對接 def.names
 const MODEL_DEFS = [
-  { url: './assets/models/soldier.glb', scale: 1,    names: { idle: 'Idle', walk: 'Walk', run: 'Run' } },
-  { url: './assets/models/swat.glb',    scale: 1,    rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
+  { url: './assets/models/swat.glb',               scale: 1,    rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
+  { url: './assets/models/character_soldier.glb',  scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
+  { url: './assets/models/character_enemy.glb',    scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
+  { url: './assets/models/character_hazmat.glb',   scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
 ];
 const _gl = new GLTFLoader();
 const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
@@ -30,7 +36,7 @@ export function losClear(a, b) {
 }
 
 export class Soldier {
-  constructor(scene, name) {
+  constructor(scene, name, modelIdx) {
     this.scene = scene;
     this.name = name;
     this.pos = new THREE.Vector3();
@@ -187,8 +193,11 @@ export class Soldier {
     this.legsM.userData = { soldier: this, part: 'body' };
     this.group = g;
     this.scene.add(g);
-    // GLB 人物模組載入完成後換裝（方塊身體保留為隱形命中體）；兩款造型隨機混用
-    this._modelIdx = (Math.random() * MODEL_DEFS.length) | 0;
+    // GLB 人物模組載入完成後換裝（方塊身體保留為隱形命中體）；多款造型隨機混用
+    // modelIdx 傳入則鎖定造型（用於 BOT 隊友綁定職業、敵人按章節分群）
+    this._modelIdx = (typeof modelIdx === 'number' && modelIdx >= 0 && modelIdx < MODEL_DEFS.length)
+      ? modelIdx
+      : ((Math.random() * MODEL_DEFS.length) | 0);
     modelListP.then(list => {
       const m = list[this._modelIdx] || list.find(x => x);
       if (m) this._attachGlb(m.gltf, m.def);

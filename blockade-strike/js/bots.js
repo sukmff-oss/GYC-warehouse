@@ -10,19 +10,19 @@ import * as THREE from 'three';
 import { Soldier, losClear } from './enemies.js';
 
 const ROLES = [
-  { key: 'sniper', name: 'BOT-阿凱', weapon: '狙擊槍', band: 0x8a4ad8, bandEm: 0x4a1a88, tracer: 0xc09aff,
+  { key: 'sniper', name: 'BOT-阿凱', weapon: '狙擊槍', band: 0x8a4ad8, bandEm: 0x4a1a88, tracer: 0xc09aff, modelIdx: 3,
     minD: 20, maxD: 50, sight: 65, burst: 1, pause: [1.9, 2.6], dmg: [42, 58], acc: 0.92, accDrop: 0.004, speed: 2.7 },
-  { key: 'medic', name: 'BOT-小琳', weapon: '衝鋒槍', band: 0x2ad86a, bandEm: 0x1a7a3a, tracer: 0x8affb0,
+  { key: 'medic', name: 'BOT-小琳', weapon: '衝鋒槍', band: 0x2ad86a, bandEm: 0x1a7a3a, tracer: 0x8affb0, modelIdx: 3,
     minD: 6, maxD: 18, sight: 35, burst: 2, pause: [1.2, 1.8], dmg: [6, 10], acc: 0.62, accDrop: 0.010, speed: 3.3, medic: true },
-  { key: 'rusher', name: 'BOT-阿志', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
+  { key: 'rusher', name: 'BOT-阿志', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060, modelIdx: 2,
     minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
-  { key: 'rusher', name: 'BOT-阿豪', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060,
+  { key: 'rusher', name: 'BOT-阿豪', weapon: '霰彈槍', band: 0xd85a2a, bandEm: 0x7a2a10, tracer: 0xffb060, modelIdx: 2,
     minD: 3, maxD: 9, sight: 45, burst: 5, pause: [0.8, 1.3], dmg: [6, 9], acc: 0.72, accDrop: 0.012, speed: 3.9 },
 ];
 
 class BotMate extends Soldier {
   constructor(scene, role, id) {
-    super(scene, role.name);
+    super(scene, role.name, role.modelIdx);   // 綁定職業外觀：sniper/medic 用 hazmat 重裝,rusher 用 enemy 匪徒
     this.role = role;
     this.id = id;              // 快照玩家 id（90+）
     this.alive = true;
