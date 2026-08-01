@@ -65,6 +65,8 @@ export class Soldier {
     const nb = isNight() ? 1.55 : 1;
     const uniCol = UNIFORMS[(Math.random() * UNIFORMS.length) | 0];
     const vestCol = VESTS[(Math.random() * VESTS.length) | 0];
+    this._tTint = uniCol;   // 匪徒染裝色（GLB 換裝後沿用方塊身配色，風格一致）
+    this._tBand = [0x8a2a22, 0xcfc4a4, 0x2e2e33][(Math.random() * 3) | 0];   // 紅頭巾 / 沙漠巾 / 黑頭套
     const uni = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(nb), roughness: 0.92 });
     const uniD = new THREE.MeshStandardMaterial({ color: new THREE.Color(uniCol).multiplyScalar(0.75 * nb), roughness: 0.95 });
     const skin = new THREE.MeshStandardMaterial({ color: [0xc9a184, 0xa87f62, 0x8a6a50][(Math.random() * 3) | 0], roughness: 0.85 });
@@ -232,6 +234,42 @@ export class Soldier {
     this._animNames = def.names;
     this._curAnim = null;
     this._glb = true;
+    if (!this.isBot) this._applyOutfit(model);   // 敵人：CS 經典染裝（BOT 隊友有自己的職業染裝）
+  }
+
+  // ===== CS 經典風：普通敵人沙漠匪徒染裝 + 頭巾；BOSS 暗黑重裝染裝 =====
+  _applyOutfit(model) {
+    const boss = this.isBoss;
+    const tint = new THREE.Color(boss ? 0x3a3d46 : this._tTint);
+    model.traverse(o => {
+      if (!o.isMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const out = mats.map(m => {
+        if (!m) return m;
+        const c = m.clone();
+        if (c.color) c.color.lerp(tint, boss ? 0.6 : 0.5);
+        if (boss && c.emissive) { c.emissive.setRGB(0.10, 0.02, 0.02); c.emissiveIntensity = 0.5; }
+        return c;
+      });
+      o.material = Array.isArray(o.material) ? out : out[0];
+    });
+    if (!boss) this._addBandana();
+  }
+
+  // ===== 匪徒頭巾（紅頭巾 / 沙漠巾 / 黑頭套隨機）=====
+  _addBandana() {
+    const bc = this._tBand;
+    const bm = new THREE.MeshStandardMaterial({ color: bc, roughness: 0.95,
+      emissive: new THREE.Color(bc).multiplyScalar(0.25), emissiveIntensity: 0.4 });
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.07, 0.3), bm);
+    ring.position.set(0, 1.82, 0);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.09, 0.24), bm);
+    top.position.set(0, 1.88, -0.02);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.04), bm);
+    tail.position.set(0.06, 1.72, -0.16);
+    g.add(ring, top, tail);
+    this.group.add(g);
   }
 
   _setAnim(logical) {
@@ -631,6 +669,18 @@ export class EnemyManager {
       spike.position.set(Math.cos(a) * 0.2, 2.05, Math.sin(a) * 0.2);
       s.group.add(spike);
     }
+    // 重裝甲風：雙肩甲 / 胸甲 / 背甲 / 頭盔 + 紅色目鏡（CS 重裝兵感）
+    const armorM = new THREE.MeshStandardMaterial({ color: 0x2a2d33, metalness: 0.85, roughness: 0.35 });
+    const mk = (geo, x, y, z) => { const m = new THREE.Mesh(geo, armorM); m.position.set(x, y, z); s.group.add(m); return m; };
+    mk(new THREE.BoxGeometry(0.26, 0.16, 0.3), -0.36, 1.68, 0);    // 左肩甲
+    mk(new THREE.BoxGeometry(0.26, 0.16, 0.3), 0.36, 1.68, 0);     // 右肩甲
+    mk(new THREE.BoxGeometry(0.56, 0.42, 0.1), 0, 1.38, 0.19);     // 胸甲
+    mk(new THREE.BoxGeometry(0.5, 0.3, 0.08), 0, 1.35, -0.2);      // 背甲
+    const helm = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), armorM);
+    helm.position.set(0, 1.76, 0); s.group.add(helm);
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.035, 0.02),
+      new THREE.MeshStandardMaterial({ color: 0xff2a2a, emissive: 0xff2a2a, emissiveIntensity: 0.9 }));
+    visor.position.set(0, 1.76, 0.15); s.group.add(visor);
     s.pos.copy(pos); s.state = 'patrol'; s.group.visible = true; s._sync();
     s.bounds = this.soldiers[0] ? this.soldiers[0].bounds : s.bounds;
     s.playerSpawn = this.playerSpawn || null;
