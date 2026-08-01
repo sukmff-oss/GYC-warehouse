@@ -203,14 +203,14 @@ class BotMate extends Soldier {
 
     // 動畫：GLB 模組用邏輯動畫；方塊模型走程序化擺動
     if (this._glb) {
-      // 射擊中：用 Gun_Shoot（射擊姿態），否則待機用 Idle_Gun（雙手舉起握槍），移動用 Run/Walk
+      // 射擊中不切換動畫 — 沿用當前姿態 (Idle_Gun / Walk / Run) + 程式觸發 muzzle flash
+      // swat.glb 全部 *Shoot* 動畫都前傾 15-27° (瞄準姿態)，保持原姿態視覺更自然
       let want;
-      if (this.burstLeft > 0) want = 'shoot';
-      else if (!this.moving) want = 'idle';
+      if (!this.moving) want = 'idle';
       else want = tgt ? 'run' : 'walk';
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
-      this._uprightTorso();   // 導正 Body/Torso/Chest 累積 pitch/roll
+      if (this.state !== 'dead') this._uprightTorso();   // 導正 Body/Torso/Chest 累積 pitch/roll
     } else {
       const lerp = Math.min(1, dt * 10);
       if (this.moving) this.walkPh += dt * spd * 3.4;
