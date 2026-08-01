@@ -69,6 +69,29 @@ function gunMats() {
   return { GM, GW, GP, GG };
 }
 
+// ---------- 動漫風武器塗裝（二次元配色：主色漸染 + 螢光點綴）----------
+const ANIME_SKINS = {
+  ak:     { tint: 0xff6a5a, em: 0x4a1208 },   // 火紅×金（火花騎士風）
+  m4:     { tint: 0x6ac8ff, em: 0x0a2a4a },   // 冰藍×白（白鷺公主風）
+  mp5:    { tint: 0xa06aff, em: 0x2a0a4a },   // 紫電×黑（雷光風）
+  p90:    { tint: 0xff8ac8, em: 0x4a0a2a },   // 櫻粉×白（櫻花風）
+  m870:   { tint: 0x6affa0, em: 0x0a4a2a },   // 草綠×白（森林風）
+  awp:    { tint: 0x4a6aff, em: 0x0a1a4a },   // 深藍×銀（夜嵐風）
+  m82:    { tint: 0xd83a4a, em: 0x3a0a0a },   // 黑紅×蝶（彼岸花風）
+  m249:   { tint: 0xd8a04a, em: 0x3a2408 },   // 金棕×岩（岩王風）
+  deagle: { tint: 0x5ae0d8, em: 0x083a38 },   // 青玉×白（麒麟風）
+  rpg:    { tint: 0xff9a3a, em: 0x4a2408 },   // 橙焰×黑（煙花風）
+  // gatling 保留黃金原色，不染色
+};
+
+// 複製材質並染上動漫配色（保留原貼圖細節，只疊色調與螢光）
+function animeTintMat(m, skin) {
+  const c = m.clone();
+  if (c.color) c.color.lerp(new THREE.Color(skin.tint), 0.5);
+  if (c.emissive) { c.emissive.set(skin.em); c.emissiveIntensity = 0.5; }
+  return c;
+}
+
 export class Weapon {
   constructor(camera, scene) {
     this.camera = camera;
@@ -88,6 +111,7 @@ export class Weapon {
     this.guns = {};
     for (const id of WEAPON_ORDER) {
       const g = this._build(id);
+      this._animeTintGun(g, id);   // 動漫風塗裝（方塊槍備案也上色）
       g.visible = false;
       g.scale.setScalar(0.8);
       camera.add(g);
@@ -112,18 +136,37 @@ export class Weapon {
     });
   }
 
+  // ===== 動漫風塗裝：把槍組內所有網格材質換成二次元配色複本 =====
+  _animeTintGun(g, id) {
+    const skin = ANIME_SKINS[id];
+    if (!skin) return;   // gatling 等獎勵槍保留原色
+    g.traverse(o => {
+      if (!o.isMesh || !o.material) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const out = mats.map(m => animeTintMat(m, skin));
+      o.material = Array.isArray(o.material) ? out : out[0];
+    });
+  }
+
   // ===== 換裝 GLB 槍模：正規化尺寸/朝向後掛進槍組，藏掉方塊零件 =====
   _attachGunGlb(id, gltf) {
     const g = this.guns[id];
     if (!g || g.userData.glb) return;
     const cfg = WEAPONS[id];
     const model = gltf.scene.clone(true);
+    const skin = ANIME_SKINS[id];
     model.traverse(o => {
       o.frustumCulled = false; o.castShadow = false;
-      // 視模離場景光遠，加一點自發光免得黑成剪影
       if (o.isMesh) {
         const mats = Array.isArray(o.material) ? o.material : [o.material];
-        for (const m of mats) if (m && m.emissive) m.emissive.setRGB(0.035, 0.035, 0.04);
+        if (skin) {
+          // 動漫風塗裝：複製材質染色（自帶螢光點綴，不會黑成剪影）
+          const out = mats.map(m => (m ? animeTintMat(m, skin) : m));
+          o.material = Array.isArray(o.material) ? out : out[0];
+        } else {
+          // 視模離場景光遠，加一點自發光免得黑成剪影
+          for (const m of mats) if (m && m.emissive) m.emissive.setRGB(0.035, 0.035, 0.04);
+        }
       }
     });
     // Quaternius 槍口原生朝 +X（四角度截圖實測確認），轉 +90° 對齊視模前向 -Z
