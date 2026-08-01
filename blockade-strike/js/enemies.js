@@ -8,10 +8,11 @@ import { BulletPool } from './lod-mesh.js';
 
 // ===== 3D 人物模組（單一 Swat 角色，CS 染裝 + 頭巾做視覺變化；載入失敗靜默回退方塊模型）=====
 // 玩家 / BOT 隊友 / 敵人：共用 Quaternius Ultimate Modular Men — Swat (CC0，正常比例，非 Q 版)
-// 動畫映射：待機 Idle_Gun (雙手舉起握槍姿態), 射擊 Gun_Shoot (射擊姿態), 移動 Run / Walk, 死亡 Death
+// 動畫映射：待機 Idle_Gun, 射擊 Idle_Gun_Shoot (身體前傾 27° 是該動畫設計), 移動 Run / Walk
+// 注意：Gun_Shoot 動畫是瞄準姿態 (Body pitch 27°), 跑動時用 Run_Shoot
 // 視覺差異靠 _tTint (4 色) + _tBand (3 色頭巾) 隨機混出 12 種
 const MODEL_DEFS = [
-  { url: './assets/models/swat.glb', scale: 1, rotY: 0, names: { idle: 'CharacterArmature|Idle_Gun', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', shoot: 'CharacterArmature|Gun_Shoot', death: 'CharacterArmature|Death' } },
+  { url: './assets/models/swat.glb', scale: 1, rotY: 0, names: { idle: 'CharacterArmature|Idle_Gun', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', shoot: 'CharacterArmature|Idle_Gun_Shoot', death: 'CharacterArmature|Death' } },
 ];
 const _gl = new GLTFLoader();
 const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
@@ -286,10 +287,32 @@ export class Soldier {
     if (!next) return;
     const prev = this._curAnim ? this._actions[this._curAnim] : null;
     next.reset();
-    next.time = Math.random() * next.getClip().duration;   // 錯開相位，避免整隊齊步走
+    // 接續上一動畫時間（避免從隨機傾斜姿態開始 → 身體歪斜）
+    if (prev) next.time = prev.time % prev.getClip().duration;
     if (prev) { next.crossFadeFrom(prev, 0.18, false); }
     next.play();
+    // mixer.timeScale 微調：每個 BOT 速度略不同（避免整隊齊步走）
+    if (!this._timeScaleSet) {
+      this._timeScaleSet = true;
+      if (this.mixer) this.mixer.timeScale = 0.95 + Math.random() * 0.1;
+    }
     this._curAnim = name;
+  }
+
+  // 動畫套用後的「導正」：鎖住 Body/Torso/Chest 的 pitch/roll 累積（swat 動畫設計上身體會前傾 + 側傾）
+  // 保留 yaw (頭部/軀幹擺動) 讓走路自然，但消除「一直斜斜」的視覺 bug
+  _uprightTorso() {
+    if (!this._glb) return;
+    const m = this.group;
+    // 找 Root / Body / Torso / Chest bone
+    const bones = ['Root', 'Body', 'Torso', 'Chest'];
+    m.traverse(o => {
+      if (o.isBone && bones.includes(o.name)) {
+        // 只消除 pitch/roll，保留 yaw
+        o.rotation.x = 0;   // pitch
+        o.rotation.z = 0;   // roll
+      }
+    });
   }
 
   spawn(playerPos) {
@@ -504,13 +527,14 @@ export class Soldier {
 
     // ===== 動畫：GLB 模組用 idle/walk/run/shoot 邏輯名；方塊模型走程序化擺動 =====
     if (this._glb) {
-      // 射擊中：用 Gun_Shoot（射擊姿態），否則待機用 Idle_Gun，移動用 Run/Walk
+      // 射擊中：用 Idle_Gun_Shoot（射擊姿態），否則待機用 Idle_Gun，移動用 Run/Walk
       let want;
       if (this.burstLeft > 0) want = 'shoot';
       else if (!this.moving) want = 'idle';
       else want = (this.state === 'engage') ? 'run' : 'walk';
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
+      this._uprightTorso();   // 導正 Body/Torso/Chest 的 pitch/roll，保留走路 yaw 擺動
     } else {
       const lerp = Math.min(1, dt * 10);
       if (this.moving) this.walkPh += dt * spd * 3.4;

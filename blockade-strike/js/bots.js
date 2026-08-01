@@ -210,6 +210,7 @@ class BotMate extends Soldier {
       else want = tgt ? 'run' : 'walk';
       this._setAnim(want);
       if (this.mixer) this.mixer.update(dt);
+      this._uprightTorso();   // 導正 Body/Torso/Chest 累積 pitch/roll
     } else {
       const lerp = Math.min(1, dt * 10);
       if (this.moving) this.walkPh += dt * spd * 3.4;
