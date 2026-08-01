@@ -683,16 +683,20 @@ function spawnCar(pos = null, remote = false) {
   carG.position.set(x, 0, z);
   carG.rotation.y = Math.random() * Math.PI * 2;
   scene.add(carG);
-  hud.sysmsg('🏆 101 殺獎勵 · 金色車子出現在地圖某處 · 碰到獲得大獎！', 4500);
+  hud.sysmsg('🏆 101 殺獎勵 · 金色車子出現在地圖某處 · 碰到即可駕駛！', 4500);
   if (!remote && G.coop && net.isHost) net._broadcast({ t: 'carSpawn', p: [x, z] });
 }
 
 function removeCarMesh() { if (carG) { scene.remove(carG); carG = null; } }
 
 function pickupCar() {
+  if (!carG) return;
+  const x = carG.position.x, z = carG.position.z, yaw = carG.rotation.y;
   removeCarMesh();
   addGold(500);
-  hud.celebrate('GOLDEN CAR', '金色車子 · 金幣 +500', 2);
+  const v = vehicles._spawn('gcar', x, z, yaw, 0xffd24a);   // 原地變成可駕駛載具
+  vehicles.mount(v, player, bots.bots, hud);               // 自動上車
+  hud.celebrate('GOLDEN CAR', '金色車子 · 金幣 +500 · 輾過敵人吧！', 2);
   audio.kill();
   if (G.coop) {
     if (net.isHost) net._broadcast({ t: 'carGone' });
@@ -1799,10 +1803,10 @@ function loop() {
         }
       }
     }
-    // 金色車子：緩慢旋轉展示 / 玩家碰到拾取
+    // 金色車子：緩慢旋轉展示 / 玩家碰到自動上車
     if (carG) {
       carG.rotation.y += dt * 0.8;
-      if (player.alive && Math.hypot(player.pos.x - carG.position.x, player.pos.z - carG.position.z) < 2)
+      if (player.alive && !player.driving && Math.hypot(player.pos.x - carG.position.x, player.pos.z - carG.position.z) < 2)
         pickupCar();
     }
     if (G.cannon) {

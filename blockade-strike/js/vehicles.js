@@ -12,6 +12,7 @@ const TYPES = {
   scooter: { name: '機車',         maxF: 11, maxR: 4, accel: 9,  turn: 2.4, r: 1.0, seatY: 0.75, seatZ: 0 },
   bicycle: { name: '腳踏車',       maxF: 6,  maxR: 2, accel: 6,  turn: 3.0, r: 0.8, seatY: 0.8,  seatZ: 0 },
   jeep:    { name: '50機槍吉普車', maxF: 16, maxR: 5, accel: 11, turn: 1.9, r: 2.1, seatY: 0.75, seatZ: 0.6, gun: true },
+  gcar:    { name: '金色車子',     maxF: 24, maxR: 6, accel: 14, turn: 1.9, r: 2.0, seatY: 0.55, seatZ: 0.2 },
 };
 
 function boxM(g, w, h, d, mat, x, y, z, rx = 0, rz = 0) {
@@ -22,10 +23,12 @@ function boxM(g, w, h, d, mat, x, y, z, rx = 0, rz = 0) {
 
 function buildMesh(type, color) {
   const g = new THREE.Group();
-  const body = new THREE.MeshStandardMaterial({ color, metalness: 0.6, roughness: 0.4 });
+  const body = type === 'gcar'
+    ? new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0x8a6808, emissiveIntensity: 0.45, metalness: 0.95, roughness: 0.28 })   // 純金屬光澤，不加光暈
+    : new THREE.MeshStandardMaterial({ color, metalness: 0.6, roughness: 0.4 });
   const dark = new THREE.MeshStandardMaterial({ color: 0x22262c, metalness: 0.3, roughness: 0.8 });
   const glass = new THREE.MeshStandardMaterial({ color: 0x8fb8d8, metalness: 0.9, roughness: 0.15 });
-  if (type === 'car') {
+  if (type === 'car' || type === 'gcar') {
     boxM(g, 1.85, 0.55, 4.3, body, 0, 0.62, 0);
     boxM(g, 1.6, 0.5, 2.1, glass, 0, 1.12, 0.25);
     for (const [x, z] of [[-0.85, 1.4], [0.85, 1.4], [-0.85, -1.4], [0.85, -1.4]]) {
@@ -156,6 +159,12 @@ export class VehicleManager {
     if (this.playerV) { this.exit(player, bots, hud); return true; }
     const v = this.nearest(player.pos);
     if (!v) return false;
+    this.mount(v, player, bots, hud);
+    return true;
+  }
+
+  // 直接登上指定載具（E 互動或金色車子碰到自動上車）
+  mount(v, player, bots, hud) {
     v.driver = 'player';
     v.speed = 0;
     this.playerV = v;
@@ -174,9 +183,8 @@ export class VehicleManager {
       hud?.sysmsg(gb ? `🏆 登上金色吉普車 · ${gb.name} 操作 50 機槍！W/S 油門 A/D 轉向 E 下車`
                      : '🏆 登上金色吉普車（無槍手）W/S 油門 A/D 轉向 E 下車', 3500);
     } else {
-      hud?.sysmsg(`${{ car: '🚗', scooter: '🛵', bicycle: '🚲' }[v.type]} 登上${v.cfg.name} · W/S 油門 A/D 轉向 E 下車`, 2600);
+      hud?.sysmsg(`${{ car: '🚗', scooter: '🛵', bicycle: '🚲', gcar: '🏆' }[v.type]} 登上${v.cfg.name} · W/S 油門 A/D 轉向 E 下車`, 2600);
     }
-    return true;
   }
 
   exit(player, bots, hud) {
