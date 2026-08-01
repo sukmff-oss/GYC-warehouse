@@ -256,7 +256,8 @@ export class Soldier {
       const out = mats.map(m => {
         if (!m) return m;
         const c = m.clone();
-        if (c.color) c.color.lerp(tint, boss ? 0.6 : 0.5);
+        // 染裝強度：CS 染裝保留 Quaternius 原色 70%（避免人物變得白灰）
+        if (c.color) c.color.lerp(tint, boss ? 0.5 : 0.3);
         if (boss && c.emissive) { c.emissive.setRGB(0.10, 0.02, 0.02); c.emissiveIntensity = 0.5; }
         return c;
       });
