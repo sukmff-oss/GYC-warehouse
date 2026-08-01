@@ -6,17 +6,11 @@ import { rayVsWorld } from './weapon.js';
 import { audio } from './audio.js';
 import { BulletPool } from './lod-mesh.js';
 
-// ===== 3D 人物模組（CC0 Quaternius Toon Shooter Kit + Swat pack；載入失敗靜默回退方塊模型）=====
-// ① 玩家 / BOT 隊友：Swat 特警 (Quaternius Ultimate Modular Men — CC0)
-// ② 敵人 A：character_soldier 標準兵 (CS 1.6 風格，Quaternius CC0)
-// ③ 敵人 B：character_enemy 匪徒 (Quaternius CC0) — 另款造型
-// ④ BOSS / 重裝：character_hazmat 化學兵 (Quaternius CC0) — 配合 BOSS 暗黑染裝
-// 三款敵人共用動畫命名 Idle/Walk/Run/Death，直接對接 def.names
+// ===== 3D 人物模組（單一 Swat 角色，CS 染裝 + 頭巾做視覺變化；載入失敗靜默回退方塊模型）=====
+// 玩家 / BOT 隊友 / 敵人：共用 Quaternius Ultimate Modular Men — Swat (CC0，正常比例，非 Q 版)
+// CS 染裝從 _tTint (4 種) + _tBand (3 種頭巾) 隨機混出 12 種視覺差異
 const MODEL_DEFS = [
-  { url: './assets/models/swat.glb',               scale: 1,    rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
-  { url: './assets/models/character_soldier.glb',  scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
-  { url: './assets/models/character_enemy.glb',    scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
-  { url: './assets/models/character_hazmat.glb',   scale: 0.95, rotY: 0, names: { idle: 'Idle',                 walk: 'Walk',                  run: 'Run',                  death: 'Death' } },
+  { url: './assets/models/swat.glb', scale: 1, rotY: 0, names: { idle: 'CharacterArmature|Idle', walk: 'CharacterArmature|Walk', run: 'CharacterArmature|Run', death: 'CharacterArmature|Death' } },
 ];
 const _gl = new GLTFLoader();
 const modelListP = Promise.all(MODEL_DEFS.map(d => new Promise(res => {
