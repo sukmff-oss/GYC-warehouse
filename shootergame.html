@@ -101,6 +101,24 @@
     0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.3); }
     50% { box-shadow: 0 0 16px rgba(255, 170, 60, 0.7); }
   }
+  /* 音訊開關按鈕 */
+  #audioBtn {
+    position: fixed; top: 14px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 44px; height: 44px;
+    font-size: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: transform 0.15s ease, background 0.15s ease;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #audioBtn:hover { background: rgba(255, 255, 255, 0.15); transform: translateX(-50%) scale(1.08); }
+  #audioBtn:active { transform: translateX(-50%) scale(0.95); }
   #dualTag { top: 50px; right: 18px; }
   #shieldTag { top: 80px; right: 18px; color: #6bd4ff; border-color: rgba(107, 212, 255, 0.5); background: rgba(107, 212, 255, 0.12); }
   #droneTag { top: 110px; right: 18px; color: #a4ff6b; border-color: rgba(164, 255, 107, 0.5); background: rgba(164, 255, 107, 0.12); }
@@ -129,6 +147,8 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+
+<button id="audioBtn" title="音效開/關">🔊</button>
 
 <div id="hud" class="hidden">
   <div>
@@ -217,6 +237,191 @@
 
   // ===== 升級里程碑 =====
   var UNLOCK = { DUAL_WAVE: 3, SHIELD_WAVE: 5, DRONE1_WAVE: 7, DRONE2_WAVE: 9, TEAMMATE_WAVE: 11, BOSS_WAVE: 13 };
+
+  // ===== 音訊系統 (Web Audio API, 純程式生成) =====
+  var audioCtx = null;
+  var audioEnabled = true;
+  var bgmGain = null;
+  var bgmInterval = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      bgmGain = audioCtx.createGain();
+      bgmGain.gain.value = 0.08;  // BGM 音量較低
+      bgmGain.connect(audioCtx.destination);
+    } catch (e) {
+      audioEnabled = false;
+      console.warn("Audio not supported:", e);
+    }
+  }
+
+  function playShoot() {
+    if (!audioEnabled || !audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    var t = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.08);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  }
+
+  function playExplosion() {
+    if (!audioEnabled || !audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    var t = audioCtx.currentTime;
+    // 噪音緩衝 (白噪音)
+    var bufferSize = audioCtx.sampleRate * 0.3;
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    var noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    var filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 800;
+    var gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start(t);
+    noise.stop(t + 0.3);
+    // 低頻轟鳴
+    var osc = audioCtx.createOscillator();
+    var og = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.2);
+    og.gain.setValueAtTime(0.2, t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(og);
+    og.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.25);
+  }
+
+  function playPickup() {
+    if (!audioEnabled || !audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    var t = audioCtx.currentTime;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.1);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  }
+
+  function playGold() {
+    if (!audioEnabled || !audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    var t = audioCtx.currentTime;
+    // 三音和弦 (C-E-G 上行)
+    var notes = [523, 659, 784];
+    for (var i = 0; i < notes.length; i++) {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = notes[i];
+      var startT = t + i * 0.08;
+      gain.gain.setValueAtTime(0.18, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.4);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(startT);
+      osc.stop(startT + 0.4);
+    }
+  }
+
+  function startBGM() {
+    if (!audioEnabled || !audioCtx || bgmInterval) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    var bpm = 90;
+    var beatTime = 60 / bpm;
+    var noteIdx = 0;
+    // 簡單低音旋律 (C minor)
+    var pattern = [130, 130, 196, 130, 146, 130, 174, 130];
+    function tickNote() {
+      if (!audioEnabled || !audioCtx || !bgmGain) return;
+      var freq = pattern[noteIdx % pattern.length];
+      var t = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.06, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + beatTime * 0.8);
+      osc.connect(gain);
+      gain.connect(bgmGain);
+      osc.start(t);
+      osc.stop(t + beatTime * 0.9);
+      // 第二拍加踢鼓 (低頻噪音)
+      if (noteIdx % 2 === 0) {
+        var kickBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+        var kd = kickBuf.getChannelData(0);
+        for (var i = 0; i < kd.length; i++) kd[i] = (Math.random() * 2 - 1) * (1 - i / kd.length);
+        var ks = audioCtx.createBufferSource();
+        ks.buffer = kickBuf;
+        var kf = audioCtx.createBiquadFilter();
+        kf.type = "lowpass";
+        kf.frequency.value = 150;
+        var kg = audioCtx.createGain();
+        kg.gain.setValueAtTime(0.08, t);
+        kg.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        ks.connect(kf); kf.connect(kg); kg.connect(bgmGain);
+        ks.start(t); ks.stop(t + 0.1);
+      }
+      noteIdx++;
+    }
+    bgmInterval = setInterval(tickNote, beatTime * 1000);
+  }
+
+  function stopBGM() {
+    if (bgmInterval) {
+      clearInterval(bgmInterval);
+      bgmInterval = null;
+    }
+  }
+
+  function toggleAudio() {
+    if (!audioCtx) {
+      initAudio();
+      startBGM();
+      audioEnabled = true;
+    } else {
+      audioEnabled = !audioEnabled;
+      if (audioEnabled) {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        startBGM();
+      } else {
+        stopBGM();
+      }
+    }
+    updateAudioBtn();
+  }
+
+  function updateAudioBtn() {
+    var btn = document.getElementById("audioBtn");
+    if (btn) btn.textContent = audioEnabled ? "🔊" : "🔇";
+  }
 
   function resetGame() {
     player = {
@@ -569,6 +774,7 @@
         r: 2 + Math.random() * 2, life: 0.12, maxLife: 0.12, color: "#ffd34d"
       });
     }
+    playShoot();
   }
   function shootSecondary() {
     var a = player.angle;
@@ -591,6 +797,7 @@
         r: 2 + Math.random() * 2, life: 0.12, maxLife: 0.12, color: "#ffd34d"
       });
     }
+    playShoot();
   }
 
   function burst(x, y, color, n) {
@@ -1122,11 +1329,13 @@
         if (pk.type === "hp") {
           player.hp = Math.min(player.maxHp, player.hp + 20);
           burst(pk.x, pk.y, "#6bff8f", 8);
+          playPickup();
         } else if (pk.type === "shield") {
           player.shield.active = true;
           player.shield.time = player.shield.max;
           burst(pk.x, pk.y, "#6bd4ff", 16);
           flash = 0.15;
+          playPickup();
         } else if (pk.type === "gold_weapon") {
           // 立即裝備金色武器
           goldWeapons = pk.weapon;
@@ -1134,6 +1343,7 @@
           burst(pk.x, pk.y, "#ffffff", 12);
           flash = 0.4;
           shake = 8;
+          playGold();
           // 更新 HUD
           if (goldWeaponTagEl && goldWeaponNameEl) {
             var n = pk.weapon === "crimson_rifle" ? "CRIMSON"
@@ -1409,6 +1619,7 @@
   }
 
   function triggerExplosion(x, y, radius, damage) {
+    playExplosion();
     // 火花粒子
     for (var i = 0; i < 20; i++) {
       var a = Math.random() * Math.PI * 2, s = 100 + Math.random() * 250;
@@ -2489,6 +2700,21 @@
 
   document.getElementById("startBtn").addEventListener("click", startGame);
   document.getElementById("retryBtn").addEventListener("click", startGame);
+  document.getElementById("audioBtn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleAudio();
+  });
+
+  // 首次互動時初始化 audio (瀏覽器 autoplay policy 要求)
+  var _audioInitialized = false;
+  function initAudioOnce() {
+    if (_audioInitialized) return;
+    _audioInitialized = true;
+    initAudio();
+    if (audioEnabled) startBGM();
+  }
+  document.addEventListener("click", initAudioOnce, { once: false });
+  document.addEventListener("keydown", initAudioOnce, { once: false });
 
   resetGame();
   generateScenery();
