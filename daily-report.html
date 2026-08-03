@@ -608,10 +608,38 @@ table.compare tr:last-child td{border-bottom:none;}
     document.getElementById('fs0').textContent=s[0];document.getElementById('fb4').textContent=s[0];
     document.getElementById('fs1').textContent=s[1];document.getElementById('fb5').textContent=s[1];
     setInterval(tick,1000);
-    </script>
-  </div>
+        </script>
+      </div>
 
-  <!-- 1. 金融行情 -->
+      <!-- 🎮 研發中心 - 叢林槍戰突圍 -->
+      <div class="card game-launcher" id="game-launcher" style="background:linear-gradient(135deg,rgba(34,80,40,.92),rgba(20,40,28,.95));border:1px solid rgba(120,255,140,.4);box-shadow:0 0 30px rgba(120,255,140,.15);">
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div style="flex:0 0 auto;font-size:64px;line-height:1;">🎮</div>
+          <div style="flex:1;min-width:240px;">
+            <div style="font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:6px;font-weight:700;">🟢 國研AI研發中心 · R&amp;D CENTER</div>
+            <h2 style="font-size:28px;font-weight:900;margin:0 0 10px 0;background:linear-gradient(90deg,#a4ff6b,#6bd4ff,#ffd34d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">叢林槍戰突圍</h2>
+            <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+              2.5D Isometric 動作射擊 ・ Canvas 多部件 3D 模型 ・ 雙槍/防護罩/無人機/機槍班波次解鎖<br>
+              <span style="color:#a4ff6b;font-weight:700;">🎯 滑鼠瞄準射擊</span> ・
+              <span style="color:#6bd4ff;font-weight:700;">🛡 第 5 波解鎖防護罩</span> ・
+              <span style="color:#ffd34d;font-weight:700;">🪖 第 11 波召喚機槍班</span>
+            </div>
+            <a href="./shootergame.html" class="game-launch-btn" style="display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#a4ff6b,#6bd4ff);color:#0b0e14;text-decoration:none;border-radius:8px;font-weight:900;font-size:16px;letter-spacing:2px;box-shadow:0 0 20px rgba(120,255,140,.4);transition:transform .15s,box-shadow .15s;">▶ 立即開始突圍</a>
+            <a href="./shootergame.html" target="_blank" style="margin-left:10px;color:var(--muted);font-size:12px;text-decoration:none;padding:8px 14px;border:1px solid var(--border);border-radius:6px;">在新分頁開啟 ↗</a>
+          </div>
+          <div style="flex:0 0 auto;font-family:'Courier New',monospace;font-size:11px;color:rgba(164,255,107,.6);text-align:right;line-height:1.4;">
+            <div>v2.5D-OPT</div>
+            <div>Canvas</div>
+            <div>2026-08</div>
+          </div>
+        </div>
+        <style>
+          .game-launch-btn:hover { transform: translateY(-2px); box-shadow: 0 0 32px rgba(120,255,140,.7); }
+          .game-launch-btn:active { transform: translateY(1px); }
+        </style>
+      </div>
+
+      <!-- 1. 金融行情 -->
   <div class="card" id="finance">
     <div class="metrics-grid">
       <div class="metric-card">

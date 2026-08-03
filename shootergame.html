@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>叢林槍戰突圍 · 2.5D Isometric</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0b0e14;
+    overflow: hidden;
+    font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #game { display: block; width: 100%; height: 100%; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(8, 10, 16, 0.82);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+    color: #e8ecf4;
+    text-align: center;
+    padding: 24px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay h1 {
+    font-size: clamp(36px, 8vw, 64px);
+    letter-spacing: 0.15em;
+    color: #ffd34d;
+    text-shadow: 0 0 24px rgba(255, 211, 77, 0.45);
+    margin-bottom: 12px;
+  }
+  .overlay p { color: #9aa4b8; line-height: 1.9; font-size: 15px; margin-bottom: 28px; }
+  .overlay p b { color: #e8ecf4; }
+  .btn {
+    display: inline-block;
+    padding: 14px 52px;
+    font-size: 20px;
+    letter-spacing: 0.3em;
+    text-indent: 0.3em;
+    color: #0b0e14;
+    background: linear-gradient(135deg, #ffd34d, #ff9d3c);
+    border: none; border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 0 24px rgba(255, 170, 60, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 0 36px rgba(255, 170, 60, 0.55); }
+  .btn:active { transform: translateY(1px); }
+  #finalScore { font-size: 42px; color: #ffd34d; margin: 6px 0 22px; font-weight: 800; }
+
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 14px 18px;
+    z-index: 5; pointer-events: none;
+    color: #e8ecf4;
+  }
+  #hud.hidden { display: none; }
+  #hpWrap {
+    width: min(240px, 38vw); height: 14px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 7px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  #hpBar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #ff5a5a, #ffb84d);
+    transition: width 0.15s ease;
+  }
+  #scoreBox { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-align: right; }
+  #scoreBox span { color: #ffd34d; font-size: 24px; }
+  #waveBox { font-size: 13px; color: #9aa4b8; margin-top: 2px; }
+
+  /* 升級標籤 (右上角堆疊) */
+  .upgrade-tag {
+    position: fixed;
+    font-size: 12px; font-weight: 700;
+    color: #ffd34d;
+    background: rgba(255, 170, 60, 0.18);
+    border: 1px solid rgba(255, 211, 77, 0.5);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.1em;
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+  }
+  .upgrade-tag.show {
+    display: block;
+    animation: tagPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes tagPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.3); }
+    50% { box-shadow: 0 0 16px rgba(255, 170, 60, 0.7); }
+  }
+  #dualTag { top: 50px; right: 18px; }
+  #shieldTag { top: 80px; right: 18px; color: #6bd4ff; border-color: rgba(107, 212, 255, 0.5); background: rgba(107, 212, 255, 0.12); }
+  #droneTag { top: 110px; right: 18px; color: #a4ff6b; border-color: rgba(164, 255, 107, 0.5); background: rgba(164, 255, 107, 0.12); }
+  #teammateTag { top: 140px; right: 18px; color: #a4ff6b; border-color: rgba(255, 200, 60, 0.5); background: rgba(255, 200, 60, 0.12); }
+  /* 機槍班裝備員 黃色 */
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div>
+    <div id="hpWrap"><div id="hpBar"></div></div>
+  </div>
+  <div id="scoreBox">得分 <span id="score">0</span><div id="waveBox">第 1 波</div></div>
+</div>
+
+<div id="dualTag" class="upgrade-tag">⚡ 雙槍模式</div>
+<div id="shieldTag" class="upgrade-tag">🛡 防護罩掉落</div>
+<div id="droneTag" class="upgrade-tag">🛸 無人機×<span id="droneCount">0</span></div>
+<div id="teammateTag" class="upgrade-tag">🪖 機槍班 (<span id="teammateCount">60</span>s)</div>
+
+<div id="menu" class="overlay">
+  <h1>叢林槍戰突圍</h1>
+  <p>
+    <b>WASD / 方向鍵</b> 移動 ・ <b>滑鼠</b> 瞄準 ・ <b>左鍵 / 空白鍵</b> 射擊<br>
+    手機：<b>左半邊拖曳</b> 移動，<b>點右半邊</b> 朝該方向射擊<br>
+    <span style="color:#6bd4ff">第 5 波</span> 防護罩掉落 ・ <span style="color:#a4ff6b">第 7 波</span> 無人機 ・ <span style="color:#ffd34d">第 9 波</span> 雙無人機<br>
+    <span style="color:#c8ff60">第 11 波</span> 召喚機槍班 (60s) 支援<br>
+    撐越久越強！
+  </p>
+  <button class="btn" id="startBtn">開始遊戲</button>
+</div>
+
+<div id="gameover" class="overlay hidden">
+  <h1 style="color:#ff6b6b;text-shadow:0 0 24px rgba(255,107,107,.45)">任務失敗</h1>
+  <div id="finalScore">0</div>
+  <button class="btn" id="retryBtn">再來一次</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ===== Canvas 設定 =====
+  var canvas = document.getElementById("game");
+  var ctx = canvas.getContext("2d");
+
+  var menuEl = document.getElementById("menu");
+  var overEl = document.getElementById("gameover");
+  var hudEl = document.getElementById("hud");
+  var scoreEl = document.getElementById("score");
+  var hpBarEl = document.getElementById("hpBar");
+  var waveEl = document.getElementById("waveBox");
+  var finalScoreEl = document.getElementById("finalScore");
+  var dualTagEl = document.getElementById("dualTag");
+  var shieldTagEl = document.getElementById("shieldTag");
+  var droneTagEl = document.getElementById("droneTag");
+  var droneCountEl = document.getElementById("droneCount");
+  var teammateTagEl = document.getElementById("teammateTag");
+  var teammateCountEl = document.getElementById("teammateCount");
+
+  var W = 0, H = 0, DPR = 1;
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  var ISO_Y_SCALE = 0.55;
+
+  var STATE = { MENU: 0, PLAY: 1, OVER: 2 };
+  var state = STATE.MENU;
+
+  var player, bullets, enemies, particles, pickups, drones, missiles, explosions, aiTeammates;
+  var score, wave, spawnTimer, waveTimer, shake, flash, aiSupportTimer;
+  var lastTime = 0, gameTime = 0;
+
+  var keys = {};
+  var mouse = { x: W / 2, y: H / 2, down: false };
+  var touchMove = null;
+  var touchFire = null;
+
+  var _prevPx = 0, _prevPy = 0;
+
+  // ===== 升級里程碑 =====
+  var UNLOCK = { DUAL_WAVE: 3, SHIELD_WAVE: 5, DRONE1_WAVE: 7, DRONE2_WAVE: 9, TEAMMATE_WAVE: 11 };
+
+  function resetGame() {
+    player = {
+      x: W / 2, y: H / 2,
+      r: 14,
+      speed: 260,
+      hp: 100, maxHp: 100,
+      angle: 0,
+      facing: 0,
+      fireCd: 0, fireRate: 0.16,
+      fireCd2: 0, fireRate2: 0.14,
+      inv: 0,
+      dual: false, dualUnlocked: false,
+      shield: { active: false, time: 0, max: 10 },  // 防護罩
+      bodyH: 38, bodyW: 22, headR: 9, legLen: 14, armLen: 13,
+      gunLen: 26, gunThick: 4, shadowR: 18
+    };
+    bullets = [];
+    enemies = [];
+    particles = [];
+    pickups = [];
+    drones = [];
+    missiles = [];
+    explosions = [];
+    aiTeammates = [];
+    aiSupportTimer = 0;
+    score = 0;
+    wave = 1;
+    spawnTimer = 0;
+    waveTimer = 0;
+    shake = 0;
+    flash = 0;
+    gameTime = 0;
+    _prevPx = player.x;
+    _prevPy = player.y;
+    // 重置升級標籤
+    if (dualTagEl) dualTagEl.classList.remove("show");
+    if (shieldTagEl) shieldTagEl.classList.remove("show");
+    if (droneTagEl) droneTagEl.classList.remove("show");
+    if (teammateTagEl) teammateTagEl.classList.remove("show");
+    updateHud();
+  }
+
+  // ===== 輸入 =====
+  window.addEventListener("keydown", function (e) {
+    keys[e.code] = true;
+    if (e.code === "Space") e.preventDefault();
+  });
+  window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+
+  canvas.addEventListener("mousemove", function (e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+  canvas.addEventListener("mousedown", function (e) { if (e.button === 0) mouse.down = true; });
+  window.addEventListener("mouseup", function () { mouse.down = false; });
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  canvas.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (t.clientX < W / 2 && !touchMove) {
+        touchMove = { id: t.identifier, sx: t.clientX, sy: t.clientY, dx: 0, dy: 0 };
+      } else if (!touchFire) {
+        touchFire = { id: t.identifier, x: t.clientX, y: t.clientY };
+        mouse.x = t.clientX; mouse.y = t.clientY; mouse.down = true;
+      }
+    }
+  }, { passive: false });
+
+  canvas.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (touchMove && t.identifier === touchMove.id) {
+        var dx = t.clientX - touchMove.sx, dy = t.clientY - touchMove.sy;
+        var len = Math.hypot(dx, dy), max = 60;
+        if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+        touchMove.dx = dx / max; touchMove.dy = dy / max;
+      }
+      if (touchFire && t.identifier === touchFire.id) {
+        touchFire.x = t.clientX; touchFire.y = t.clientY;
+        mouse.x = t.clientX; mouse.y = t.clientY;
+      }
+    }
+  }, { passive: false });
+
+  function endTouch(e) {
+    e.preventDefault();
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (touchMove && t.identifier === touchMove.id) touchMove = null;
+      if (touchFire && t.identifier === touchFire.id) { touchFire = null; mouse.down = false; }
+    }
+  }
+  canvas.addEventListener("touchend", endTouch, { passive: false });
+  canvas.addEventListener("touchcancel", endTouch, { passive: false });
+
+  // ===== 顏色組 =====
+  var COLOR = {
+    player: {
+      helmet: "#2a3a1a", helmetRim: "#1a2810", helmetHL: "#4a5a2a",
+      skin: "#c89878", skinShadow: "#a87858", skinHL: "#e0b890",
+      vest: "#3d4f2a", vestShadow: "#1a2810", vestHighlight: "#5a6f3a", vestZip: "#9aa888",
+      pants: "#1f261a", pantsShadow: "#0f140a", pantsHL: "#3a4530",
+      boots: "#0a0a08", bootsHL: "#2a2a28",
+      gun: "#2a2a2a", gunHighlight: "#6a6a6a", gunShadow: "#0a0a0a", gunStock: "#3a3a3a", gunWood: "#5a3818",
+      pack: "#2a3818", packShadow: "#1a2810",
+      arm: "#3d4f2a", armShadow: "#1a2810", armHL: "#5a6f3a",
+      glove: "#0a0a08", gloveHL: "#2a2a28"
+    },
+    normal: {
+      helmet: "#5a1a1a", helmetHL: "#8a3030",
+      skin: "#c89878", skinShadow: "#a87858",
+      vest: "#8a2828", vestShadow: "#4a1010", vestHighlight: "#b04040",
+      pants: "#3a1010", pantsShadow: "#1a0808",
+      boots: "#0a0a08",
+      gun: "#1a1a1a", gunHighlight: "#4a4a4a",
+      arm: "#8a2828", armShadow: "#4a1010"
+    },
+    fast: {
+      helmet: "#a05820", helmetHL: "#d07a30",
+      skin: "#b88860", skinShadow: "#905e3a",
+      vest: "#c8742a", vestShadow: "#7a3a10", vestHighlight: "#e89040",
+      pants: "#5a2a10", pantsShadow: "#2a1008",
+      boots: "#0a0a08",
+      gun: "#1a1a1a", gunHighlight: "#4a4a4a",
+      arm: "#c8742a", armShadow: "#7a3a10"
+    },
+    heavy: {
+      helmet: "#3a1a4a", helmetHL: "#5a2a6a",
+      skin: "#a87858", skinShadow: "#7a5038",
+      vest: "#5a1a6a", vestShadow: "#2a0a3a", vestHighlight: "#7a2a8a", vestHL: "#9a4aaa",
+      pants: "#2a0a3a", pantsShadow: "#1a0520",
+      boots: "#0a0a08",
+      gun: "#1a1a1a", gunHighlight: "#5a5a5a",
+      arm: "#5a1a6a", armShadow: "#2a0a3a", armHL: "#9a4aaa",
+      pack: "#2a0a3a"
+    }
+  };
+
+  // ===== 工具函式 =====
+  function fillCylinder(cx, cy, w, h, lightColor, midColor, shadowColor) {
+    ctx.fillStyle = midColor;
+    ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+    ctx.fillStyle = lightColor;
+    ctx.fillRect(cx - w / 2, cy - h / 2, w, h * 0.25);
+    ctx.fillStyle = shadowColor;
+    ctx.fillRect(cx - w / 2, cy + h / 2 - h * 0.25, w, h * 0.25);
+  }
+  function fillSphere(cx, cy, r, lightColor, midColor, shadowColor, hlOffsetX, hlOffsetY, hlR) {
+    ctx.fillStyle = shadowColor;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = midColor;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.85, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = lightColor;
+    ctx.beginPath();
+    ctx.arc(cx + (hlOffsetX || 0), cy + (hlOffsetY || 0), hlR || r * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ===== 武器繪製 (共用) =====
+  function drawWeapon(type, gunBaseX, gunBaseY, gunLen, gunThick, palette) {
+    var c = palette.gun;
+    var hl = palette.gunHighlight;
+    var sh = palette.gunShadow || "#0a0a0a";
+    var wood = palette.gunWood;
+
+    ctx.save();
+    ctx.translate(gunBaseX, gunBaseY);
+
+    if (type === "rifle" || type === "ak") {
+      ctx.fillStyle = wood || "#5a3818";
+      ctx.fillRect(-gunLen * 0.25, -gunThick * 0.8, gunLen * 0.22, gunThick * 1.6);
+      ctx.fillStyle = "#7a5028";
+      ctx.fillRect(-gunLen * 0.25, -gunThick * 0.8, gunLen * 0.22, gunThick * 0.3);
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.05, -gunThick * 0.95, gunLen * 0.30, gunThick * 1.9);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.05, -gunThick * 0.85, gunLen * 0.30, gunThick * 1.7);
+      ctx.fillStyle = hl;
+      ctx.fillRect(-gunLen * 0.05, -gunThick * 0.85, gunLen * 0.30, gunThick * 0.25);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.02, -gunThick * 1.1, gunLen * 0.10, gunThick * 0.3);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.22, -gunThick * 1.15, gunThick * 0.6, gunThick * 0.5);
+      ctx.fillStyle = hl;
+      ctx.fillRect(gunLen * 0.22, -gunThick * 1.15, gunThick * 0.4, 1);
+      fillCylinder(gunLen * 0.4, 0, gunLen * 0.35, gunThick * 0.9, hl, c, sh);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.75, -gunThick * 0.6, gunLen * 0.06, gunThick * 1.2);
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.05, gunThick * 0.95, gunThick * 1.4, gunLen * 0.18);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.05, gunThick * 0.95, gunThick * 1.4, gunLen * 0.15);
+      ctx.fillStyle = sh;
+      for (var i = 0; i < 3; i++) {
+        ctx.fillRect(-gunLen * 0.05, gunThick * 1.05 + i * 2, gunThick * 1.4, 0.5);
+      }
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.05, gunThick * 1.1 + gunLen * 0.15, gunThick * 1.3, gunThick * 0.3);
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.18, gunThick * 0.9, gunThick * 1.0, gunLen * 0.10);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.18, gunThick * 0.9, gunThick * 1.0, gunLen * 0.08);
+      ctx.fillStyle = sh;
+      for (var j = 0; j < 3; j++) {
+        ctx.fillRect(-gunLen * 0.18 + j * 1.5, gunThick * 0.95, 0.5, gunLen * 0.07);
+      }
+    } else if (type === "smg") {
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.18, -gunThick * 0.4, gunLen * 0.16, gunThick * 0.8);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.04, -gunThick * 0.85, gunLen * 0.32, gunThick * 1.7);
+      ctx.fillStyle = hl;
+      ctx.fillRect(-gunLen * 0.04, -gunThick * 0.85, gunLen * 0.32, gunThick * 0.25);
+      fillCylinder(gunLen * 0.36, 0, gunLen * 0.36, gunThick * 0.7, hl, c, sh);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.72, -gunThick * 0.5, gunLen * 0.05, gunThick);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.05, gunThick * 0.95, gunThick * 0.9, gunLen * 0.13);
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.05, gunThick * 0.95, gunThick * 0.9, 0.8);
+      ctx.fillStyle = c;
+      ctx.fillRect(gunLen * 0.18, gunThick * 0.95, gunThick * 0.7, gunLen * 0.08);
+    } else if (type === "pistol") {
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.08, -gunThick * 0.4, gunLen * 0.14, gunThick * 1.8);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.08, -gunThick * 0.4, gunLen * 0.14, gunThick * 1.6);
+      ctx.fillStyle = hl;
+      ctx.fillRect(-gunLen * 0.08, -gunThick * 0.4, gunLen * 0.14, 0.6);
+      fillCylinder(gunLen * 0.25, -gunThick * 0.25, gunLen * 0.5, gunThick * 0.6, hl, c, sh);
+      ctx.fillStyle = hl;
+      ctx.fillRect(gunLen * 0.45, -gunThick * 0.55, 0.6, 1);
+    } else if (type === "shotgun") {
+      ctx.fillStyle = wood || "#5a3818";
+      ctx.fillRect(-gunLen * 0.30, -gunThick * 0.9, gunLen * 0.22, gunThick * 1.8);
+      ctx.fillStyle = "#7a5028";
+      ctx.fillRect(-gunLen * 0.30, -gunThick * 0.9, gunLen * 0.22, gunThick * 0.3);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.10, -gunThick * 1.0, gunLen * 0.22, gunThick * 2.0);
+      ctx.fillStyle = hl;
+      ctx.fillRect(-gunLen * 0.10, -gunThick * 1.0, gunLen * 0.22, 0.4);
+      fillCylinder(gunLen * 0.35, 0, gunLen * 0.45, gunThick * 1.1, hl, c, sh);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.20, -gunThick * 0.7, 1.5, gunThick * 1.4);
+      ctx.fillRect(gunLen * 0.55, -gunThick * 0.7, 1.5, gunThick * 1.4);
+    } else if (type === "mg") {
+      ctx.fillStyle = sh;
+      ctx.fillRect(-gunLen * 0.30, -gunThick * 0.7, gunLen * 0.20, gunThick * 1.4);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.30, -gunThick * 0.7, gunLen * 0.20, gunThick * 1.2);
+      ctx.fillStyle = c;
+      ctx.fillRect(-gunLen * 0.12, -gunThick * 0.85, gunLen * 0.24, gunThick * 1.7);
+      ctx.fillStyle = hl;
+      ctx.fillRect(-gunLen * 0.12, -gunThick * 0.85, gunLen * 0.24, 0.5);
+      fillCylinder(gunLen * 0.32, 0, gunLen * 0.30, gunThick * 1.0, hl, c, sh);
+      ctx.fillStyle = sh;
+      ctx.fillRect(gunLen * 0.62, -gunThick * 0.7, gunLen * 0.06, gunThick * 1.4);
+      fillSphere(0, gunThick * 1.4, gunThick * 1.5, "#3a3a3a", "#1a1a1a", "#0a0a0a", -1, -1, 1.5);
+      ctx.fillStyle = "#2a2a2a";
+      for (var k = 0; k < 4; k++) {
+        ctx.fillRect(-gunLen * 0.05 + k * 1.2, gunThick * 1.5, 1, 1.5);
+      }
+    } else {
+      ctx.fillStyle = palette.gunStock || "#3a3a3a";
+      ctx.fillRect(-2, -gunThick * 0.7, 4, gunThick * 1.4);
+      ctx.fillStyle = palette.gun;
+      ctx.fillRect(2, -gunThick * 0.5, gunLen, gunThick);
+      ctx.fillRect(gunLen, -gunThick * 0.7, 2, gunThick * 1.4);
+      ctx.fillRect(gunLen * 0.6, -gunThick * 0.5 - 2, 1.5, 2);
+      ctx.fillStyle = palette.gunHighlight;
+      ctx.fillRect(2, -gunThick * 0.5 + 0.5, gunLen, 0.8);
+    }
+    ctx.restore();
+  }
+
+  // ===== 動畫關節點 =====
+  function calcJointSwing(phase, isMoving) {
+    if (!isMoving) return { shoulder: 0, elbow: 0, hip: 0, knee: 0 };
+    var s = Math.sin(phase * 1.4);
+    var c = Math.cos(phase * 1.4);
+    return {
+      shoulder: s * 0.3,
+      elbow: 0.15 + Math.max(0, c) * 0.1,
+      hip: s * 0.25,
+      knee: 0.2 + Math.max(0, -c) * 0.3
+    };
+  }
+
+  // ===== 遊戲邏輯 =====
+  function spawnEnemy() {
+    var side = Math.floor(Math.random() * 4);
+    var x, y;
+    if (side === 0) { x = -30; y = Math.random() * H; }
+    else if (side === 1) { x = W + 30; y = Math.random() * H; }
+    else if (side === 2) { x = Math.random() * W; y = -30; }
+    else { x = Math.random() * W; y = H + 30; }
+
+    var typeRoll = Math.random();
+    var e;
+    if (wave >= 3 && typeRoll < 0.15) {
+      e = { type: "heavy", r: 22, hp: 60 + wave * 8, speed: 55 + wave * 2, color: "#c14bff",
+            dmg: 25, score: 30, scale: 1.35, weapon: "mg" };
+    } else if (wave >= 2 && typeRoll < 0.4) {
+      e = { type: "fast", r: 11, hp: 12 + wave * 2, speed: 170 + wave * 6, color: "#ffb84d",
+            dmg: 8, score: 15, scale: 0.85, weapon: "pistol" };
+    } else {
+      e = { type: "normal", r: 14, hp: 24 + wave * 4, speed: 95 + wave * 4, color: "#ff5a5a",
+            dmg: 15, score: 10, scale: 1.0, weapon: "smg" };
+    }
+    e.x = x; e.y = y; e.maxHp = e.hp; e.hitFlash = 0;
+    e._lastX = x; e._lastY = y;
+    e._animPhase = Math.random() * Math.PI * 2;
+    e.facing = Math.floor(Math.random() * 4);
+    enemies.push(e);
+  }
+
+  function shoot() {
+    var a = player.angle;
+    var spread = (Math.random() - 0.5) * 0.06;
+    var gunTipDist = player.bodyW * 0.3 + player.gunLen;
+    var gunTipX = player.x + Math.cos(a) * gunTipDist;
+    var gunTipY = player.y + Math.sin(a) * gunTipDist;
+    bullets.push({
+      x: gunTipX, y: gunTipY, z: 14,
+      vx: Math.cos(a + spread) * 640, vy: Math.sin(a + spread) * 640, vz: 0,
+      r: 4, life: 1.2, rot: 0
+    });
+    for (var i = 0; i < 3; i++) {
+      particles.push({
+        x: gunTipX + Math.cos(a) * 4, y: gunTipY + Math.sin(a) * 4,
+        vx: Math.cos(a + (Math.random() - 0.5)) * 120,
+        vy: Math.sin(a + (Math.random() - 0.5)) * 120,
+        r: 2 + Math.random() * 2, life: 0.12, maxLife: 0.12, color: "#ffd34d"
+      });
+    }
+  }
+  function shootSecondary() {
+    var a = player.angle;
+    var spread = (Math.random() - 0.5) * 0.08;
+    var gunTipDist = player.bodyW * 0.3 + player.gunLen;
+    var perpX = -Math.sin(a) * 6;
+    var perpY = Math.cos(a) * 6;
+    var gunTipX = player.x + Math.cos(a) * gunTipDist + perpX;
+    var gunTipY = player.y + Math.sin(a) * gunTipDist + perpY;
+    bullets.push({
+      x: gunTipX, y: gunTipY, z: 14,
+      vx: Math.cos(a + spread) * 640, vy: Math.sin(a + spread) * 640, vz: 0,
+      r: 4, life: 1.2, rot: 0
+    });
+    for (var i = 0; i < 3; i++) {
+      particles.push({
+        x: gunTipX + Math.cos(a) * 4, y: gunTipY + Math.sin(a) * 4,
+        vx: Math.cos(a + (Math.random() - 0.5)) * 120,
+        vy: Math.sin(a + (Math.random() - 0.5)) * 120,
+        r: 2 + Math.random() * 2, life: 0.12, maxLife: 0.12, color: "#ffd34d"
+      });
+    }
+  }
+
+  function burst(x, y, color, n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 220;
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        r: 2 + Math.random() * 3.5, life: 0.35 + Math.random() * 0.3,
+        maxLife: 0.6, color: color
+      });
+    }
+  }
+
+  function updateHud() {
+    scoreEl.textContent = score;
+    hpBarEl.style.width = Math.max(0, player.hp / player.maxHp * 100) + "%";
+    waveEl.textContent = "第 " + wave + " 波";
+    if (droneCountEl) droneCountEl.textContent = drones.length;
+  }
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  function angleToFacing(angle) {
+    var a = angle;
+    while (a < 0) a += Math.PI * 2;
+    while (a >= Math.PI * 2) a -= Math.PI * 2;
+    var step = Math.PI / 2;
+    return Math.floor((a + step / 2) / step) % 4;
+  }
+
+  // ===== 升級解鎖 =====
+  function unlockWave(w) {
+    if (w >= UNLOCK.DUAL_WAVE && !player.dualUnlocked) {
+      player.dual = true; player.dualUnlocked = true;
+      if (dualTagEl) dualTagEl.classList.add("show");
+      burst(player.x, player.y, "#ffd34d", 24);
+      flash = 0.3;
+    }
+    if (w >= UNLOCK.SHIELD_WAVE) {
+      if (shieldTagEl) shieldTagEl.classList.add("show");
+    }
+    if (w >= UNLOCK.DRONE1_WAVE) {
+      if (drones.length === 0) spawnDrone(0);
+      if (droneTagEl) droneTagEl.classList.add("show");
+    }
+    if (w >= UNLOCK.DRONE2_WAVE) {
+      if (drones.length === 1) spawnDrone(1);
+      if (droneCountEl) droneCountEl.textContent = drones.length;
+    }
+    if (w >= UNLOCK.TEAMMATE_WAVE) {
+      spawnTeammates();
+    }
+  }
+
+  function spawnDruneDroneId(idx) {
+    // 環形編隊: 多機均分 360°
+    var phaseOffset = idx * (Math.PI * 2 / Math.max(drones.length + 1, 2));
+    drones.push({
+      angle: phaseOffset,                  // 環形位置 (相對玩家)
+      orbitRadius: 100 + (idx * 4),        // 不同無人機半徑略不同
+      bobAmp: 6 + idx * 2,                 // 飄動幅度
+      bobFreq: 1.5 + idx * 0.3,            // 飄動頻率
+      x: player.x, y: player.y,
+      targetEnemy: null,
+      fireCd: 0, fireRate: 1.4,            // 每 1.4 秒發射一次
+      spin: 0                              // 旋翼動畫
+    });
+  }
+  // alias
+  function spawnDrone(idx) { spawnDruneDroneId(idx); }
+
+  // 召喚機槍班: 2 位 AI 在出生區,固定不動
+  function spawnTeammates() {
+    aiTeammates = [];
+    // 出生位置: 玩家初始位置 ± 60 px (中 + 左、右)
+    // 但玩家已動了, 所以用「現在位置」為中心
+    var cx = player.x, cy = player.y;
+    var offsets = [[-60, 0], [60, 0]];
+    for (var i = 0; i < 2; i++) {
+      aiTeammates.push({
+        x: cx + offsets[i][0],
+        y: cy + offsets[i][1],
+        fireCd: i * 0.3,  // 錯開首次開火
+        fireRate: 0.12,
+        viewRange: 400,
+        target: null,
+        bobPhase: Math.random() * Math.PI * 2
+      });
+    }
+    aiSupportTimer = 60; // 60 秒支援
+    if (teammateTagEl) teammateTagEl.classList.add("show");
+    // 召喚特效
+    for (var k = 0; k < aiTeammates.length; k++) {
+      burst(aiTeammates[k].x, aiTeammates[k].y, "#a4ff6b", 20);
+    }
+    flash = 0.3;
+  }
+
+  // ===== Update =====
+  function update(dt) {
+    gameTime += dt;
+
+    // --- 玩家移動 ---
+    var mx = 0, my = 0;
+    if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
+    if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
+    if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
+    if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
+    if (touchMove) { mx += touchMove.dx; my += touchMove.dy; }
+    var ml = Math.hypot(mx, my);
+    if (ml > 1) { mx /= ml; my /= ml; }
+
+    _prevPx = player.x; _prevPy = player.y;
+    player.x = clamp(player.x + mx * player.speed * dt, player.r, W - player.r);
+    player.y = clamp(player.y + my * player.speed * dt, player.r, H - player.r);
+
+    player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    player.facing = angleToFacing(player.angle);
+
+    player.fireCd -= dt;
+    if ((mouse.down || keys["Space"]) && player.fireCd <= 0) {
+      shoot(); player.fireCd = player.fireRate;
+    }
+    if (player.dual) {
+      if (player.fireCd2 < 0) player.fireCd2 = 0;
+      player.fireCd2 -= dt;
+      if ((mouse.down || keys["Space"]) && player.fireCd2 <= 0) {
+        shootSecondary(); player.fireCd2 = player.fireRate2;
+      }
+    }
+    if (player.inv > 0) player.inv -= dt;
+
+    // --- 防護罩計時 ---
+    if (player.shield.active) {
+      player.shield.time -= dt;
+      if (player.shield.time <= 0) {
+        player.shield.active = false;
+        player.shield.time = 0;
+        burst(player.x, player.y, "#6bd4ff", 16);
+      }
+    }
+
+    // --- 波次 ---
+    spawnTimer -= dt;
+    var spawnInterval = Math.max(0.35, 1.4 - wave * 0.12);
+    if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnInterval; }
+    waveTimer += dt;
+    if (waveTimer > 22) {
+      waveTimer = 0;
+      wave++;
+      unlockWave(wave);
+      updateHud();
+    }
+
+    // --- 子彈 (玩家) ---
+    for (var i = bullets.length - 1; i >= 0; i--) {
+      var b = bullets[i];
+      b.x += b.vx * dt; b.y += b.vy * dt;
+      b.z = (b.z || 0) + (b.vz || 0) * dt;
+      b.vz = (b.vz || 0) + 380 * dt;
+      b.life -= dt;
+      b.rot = (b.rot || 0) + 12 * dt;
+      if (b.life <= 0 || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40 || b.z < -2) {
+        bullets.splice(i, 1);
+      }
+    }
+
+    // --- 飛彈 (無人機) ---
+    for (var mi = missiles.length - 1; mi >= 0; mi--) {
+      var m = missiles[mi];
+      m.life -= dt;
+      // 追蹤邏輯: 若目標還活著,每幀微調速度向量往目標
+      if (m.target) {
+        var tgtStillAlive = false;
+        for (var ee = 0; ee < enemies.length; ee++) {
+          if (enemies[ee] === m.target && enemies[ee].hp > 0) { tgtStillAlive = true; break; }
+        }
+        if (tgtStillAlive) {
+          var da = Math.atan2(m.target.y - m.y, m.target.x - m.x);
+          var curA = Math.atan2(m.vy, m.vx);
+          // 角度差,平滑轉向
+          var diff = da - curA;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          var turnRate = 6; // rad/s
+          if (diff > turnRate * dt) diff = turnRate * dt;
+          if (diff < -turnRate * dt) diff = -turnRate * dt;
+          var newA = curA + diff;
+          var sp = Math.hypot(m.vx, m.vy);
+          m.vx = Math.cos(newA) * sp;
+          m.vy = Math.sin(newA) * sp;
+        }
+      }
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      m.rot = Math.atan2(m.vy, m.vx);
+
+      // 煙尾粒子
+      if (Math.random() < 0.6) {
+        particles.push({
+          x: m.x - Math.cos(m.rot) * 4,
+          y: m.y - Math.sin(m.rot) * 4,
+          vx: (Math.random() - 0.5) * 30,
+          vy: (Math.random() - 0.5) * 30,
+          r: 2 + Math.random() * 2,
+          life: 0.35, maxLife: 0.35,
+          color: Math.random() < 0.5 ? "#888" : "#aaa"
+        });
+      }
+
+      // 命中偵測
+      var hit = false;
+      for (var ej = enemies.length - 1; ej >= 0; ej--) {
+        var en = enemies[ej];
+        if (en.hp <= 0) continue;
+        if (Math.hypot(m.x - en.x, m.y - en.y) < m.r + en.r + 4) {
+          hit = true;
+          break;
+        }
+      }
+      // 距離過遠自爆
+      var distToPlayer = Math.hypot(m.x - player.x, m.y - player.y);
+      if (hit || m.life <= 0 || distToPlayer > 800) {
+        // 爆炸 (AoE)
+        triggerExplosion(m.x, m.y, 40, 30);
+        missiles.splice(mi, 1);
+        continue;
+      }
+    }
+
+    // --- 爆炸擴散 ---
+    for (var ex = explosions.length - 1; ex >= 0; ex--) {
+      var e = explosions[ex];
+      e.time -= dt;
+      if (e.time <= 0) explosions.splice(ex, 1);
+    }
+
+    // --- 敵人 ---
+    for (var j = enemies.length - 1; j >= 0; j--) {
+      var e = enemies[j];
+      var ea = Math.atan2(player.y - e.y, player.x - e.x);
+      e._lastX = e.x; e._lastY = e.y;
+      e.x += Math.cos(ea) * e.speed * dt;
+      e.y += Math.sin(ea) * e.speed * dt;
+      e.facing = angleToFacing(ea);
+      e._animPhase += 0.18;
+      if (e.hitFlash > 0) e.hitFlash -= dt;
+
+      // 撞玩家 (防護罩狀態下免疫)
+      var dp = Math.hypot(player.x - e.x, player.y - e.y);
+      if (dp < player.r + e.r && player.inv <= 0) {
+        if (!player.shield.active) {
+          player.hp -= e.dmg;
+          player.inv = 0.6;
+          shake = 8;
+          flash = 0.25;
+          burst(player.x, player.y, "#ff5a5a", 10);
+          updateHud();
+          if (player.hp <= 0) { gameOver(); return; }
+        } else {
+          // 防護罩把敵人彈開
+          var push = (dp - (player.r + e.r)) * -2;
+          e.x += push; e.y += push;
+        }
+      }
+      // 撞機槍班 AI (無敵,只把敵人彈開)
+      for (var aiK = 0; aiK < aiTeammates.length; aiK++) {
+        var aiC = aiTeammates[aiK];
+        var adp = Math.hypot(aiC.x - e.x, aiC.y - e.y);
+        if (adp < 18 + e.r) {
+          var apush = (adp - (18 + e.r)) * -2;
+          e.x += apush; e.y += apush;
+        }
+      }
+
+      // 被子彈打中
+      for (var k = bullets.length - 1; k >= 0; k--) {
+        var bb = bullets[k];
+        if (Math.hypot(bb.x - e.x, bb.y - e.y) < bb.r + e.r) {
+          e.hp -= 14;
+          e.hitFlash = 0.08;
+          burst(bb.x, bb.y, "#ffd34d", 3);
+          bullets.splice(k, 1);
+          if (e.hp <= 0) {
+            score += e.score;
+            burst(e.x, e.y, e.color, 14);
+            // 第 5 波起,8% 機率掉防護罩,其餘掉補血包
+            if (Math.random() < 0.08) {
+              if (wave >= UNLOCK.SHIELD_WAVE) {
+                pickups.push({ x: e.x, y: e.y, r: 11, life: 12, pulse: 0, type: "shield" });
+              } else {
+                pickups.push({ x: e.x, y: e.y, r: 9, life: 8, pulse: 0, type: "hp" });
+              }
+            } else if (Math.random() < 0.5) {
+              pickups.push({ x: e.x, y: e.y, r: 9, life: 8, pulse: 0, type: "hp" });
+            }
+            enemies.splice(j, 1);
+            updateHud();
+          }
+          break;
+        }
+      }
+
+      // 被飛彈爆炸 AoE 波及
+      for (var ex2 = 0; ex2 < explosions.length; ex2++) {
+        var exp = explosions[ex2];
+        if (exp.hitIds && exp.hitIds.indexOf(e._id) >= 0) continue;
+        if (!exp.hitIds) exp.hitIds = [];
+        if (Math.hypot(e.x - exp.x, e.y - exp.y) < exp.radius) {
+          e.hp -= 40;  // AoE 傷害
+          e.hitFlash = 0.1;
+          exp.hitIds.push(e._id || (e._id = Math.random()));
+          if (e.hp <= 0) {
+            score += e.score;
+            burst(e.x, e.y, e.color, 14);
+            enemies.splice(j, 1);
+            updateHud();
+          }
+        }
+      }
+    }
+
+    // --- 拾取物 (補血 + 防護罩) ---
+    for (var p = pickups.length - 1; p >= 0; p--) {
+      var pk = pickups[p];
+      pk.life -= dt; pk.pulse += dt;
+      if (pk.life <= 0) { pickups.splice(p, 1); continue; }
+
+      // 自動吸入範圍 (50 px)
+      var suctionDist = 50;
+      var dp2 = Math.hypot(player.x - pk.x, player.y - pk.y);
+      if (dp2 < suctionDist) {
+        // 拉向玩家
+        var dx = player.x - pk.x, dy = player.y - pk.y;
+        var dlen = Math.hypot(dx, dy);
+        if (dlen > 0) {
+          var pullSp = 800;
+          pk.x += (dx / dlen) * pullSp * dt;
+          pk.y += (dy / dlen) * pullSp * dt;
+        }
+      }
+      // 接觸即觸發
+      if (Math.hypot(player.x - pk.x, player.y - pk.y) < player.r + pk.r + 4) {
+        if (pk.type === "hp") {
+          player.hp = Math.min(player.maxHp, player.hp + 20);
+          burst(pk.x, pk.y, "#6bff8f", 8);
+        } else if (pk.type === "shield") {
+          player.shield.active = true;
+          player.shield.time = player.shield.max;
+          burst(pk.x, pk.y, "#6bd4ff", 16);
+          flash = 0.15;
+        }
+        pickups.splice(p, 1);
+        updateHud();
+      }
+    }
+
+    // --- 無人機 ---
+    for (var di = 0; di < drones.length; di++) {
+      var d = drones[di];
+      d.spin += dt * 30;  // 旋翼動畫
+      d.fireCd -= dt;
+
+      // 環形跟隨 (基於 d.angle)
+      d.angle += dt * 0.6;  // 環形轉速
+      var bob = Math.sin(gameTime * d.bobFreq + di) * d.bobAmp;
+      var tx = player.x + Math.cos(d.angle) * d.orbitRadius;
+      var ty = player.y + Math.sin(d.angle) * d.orbitRadius * 0.6 + bob;
+      // 平滑跟隨
+      d.x += (tx - d.x) * Math.min(1, dt * 8);
+      d.y += (ty - d.y) * Math.min(1, dt * 8);
+
+      // 偵測最近敵人 (250 px 內)
+      var nearest = null, nearestD = 250;
+      for (var dn = 0; dn < enemies.length; dn++) {
+        if (enemies[dn].hp <= 0) continue;
+        var dd = Math.hypot(enemies[dn].x - d.x, enemies[dn].y - d.y);
+        if (dd < nearestD) { nearest = enemies[dn]; nearestD = dd; }
+      }
+      d.targetEnemy = nearest;
+      // 鎖定時顯示瞄準線
+      if (nearest && d.fireCd <= 0) {
+        // 發射飛彈
+        var ang = Math.atan2(nearest.y - d.y, nearest.x - d.x);
+        missiles.push({
+          x: d.x, y: d.y,
+          vx: Math.cos(ang) * 380,
+          vy: Math.sin(ang) * 380,
+          r: 4, life: 4, rot: ang,
+          target: nearest
+        });
+        // 發射火焰
+        for (var pf = 0; pf < 4; pf++) {
+          particles.push({
+            x: d.x - Math.cos(ang) * 4,
+            y: d.y - Math.sin(ang) * 4,
+            vx: Math.cos(ang + (Math.random() - 0.5)) * 90,
+            vy: Math.sin(ang + (Math.random() - 0.5)) * 90,
+            r: 1.5 + Math.random() * 2, life: 0.18, maxLife: 0.18, color: "#a4ff6b"
+          });
+        }
+        d.fireCd = d.fireRate;
+      }
+    }
+
+    // --- 機槍班 AI ---
+    if (aiTeammates.length > 0) {
+      aiSupportTimer -= dt;
+      if (aiSupportTimer <= 0) {
+        // 支援結束: 爆掉 + 移除
+        for (var ai2 = 0; ai2 < aiTeammates.length; ai2++) {
+          burst(aiTeammates[ai2].x, aiTeammates[ai2].y, "#a4ff6b", 14);
+        }
+        aiTeammates = [];
+        if (teammateTagEl) teammateTagEl.classList.remove("show");
+      } else {
+        // 更新計時文字
+        if (teammateCountEl) teammateCountEl.textContent = Math.ceil(aiSupportTimer);
+        for (var ai = 0; ai < aiTeammates.length; ai++) {
+          var aiT = aiTeammates[ai];
+          aiT.fireCd -= dt;
+          // 偵測最近敵人 (400 px 內)
+          var nearest = null, nearestD = aiT.viewRange;
+          for (var an = 0; an < enemies.length; an++) {
+            if (enemies[an].hp <= 0) continue;
+            var dd = Math.hypot(enemies[an].x - aiT.x, enemies[an].y - aiT.y);
+            if (dd < nearestD) { nearest = enemies[an]; nearestD = dd; }
+          }
+          aiT.target = nearest;
+          // 開火
+          if (nearest && aiT.fireCd <= 0) {
+            var ang = Math.atan2(nearest.y - aiT.y, nearest.x - aiT.x);
+            // 子彈起點: 槍口位置 (AI 角色前方 + 槍長)
+            var muzzleDist = 18;
+            var bx = aiT.x + Math.cos(ang) * muzzleDist;
+            var by = aiT.y + Math.sin(ang) * muzzleDist - 14; // 抬高 (子彈從肩高)
+            bullets.push({
+              x: bx, y: by, z: 14,
+              vx: Math.cos(ang) * 640, vy: Math.sin(ang) * 640, vz: 0,
+              r: 4, life: 1.2, rot: 0, fromAI: true
+            });
+            // 槍口火焰 (綠色)
+            for (var pf = 0; pf < 3; pf++) {
+              particles.push({
+                x: bx + Math.cos(ang) * 4,
+                y: by + Math.sin(ang) * 4,
+                vx: Math.cos(ang + (Math.random() - 0.5)) * 120,
+                vy: Math.sin(ang + (Math.random() - 0.5)) * 120,
+                r: 2 + Math.random() * 2, life: 0.12, maxLife: 0.12, color: "#a4ff6b"
+              });
+            }
+            aiT.fireCd = aiT.fireRate;
+          }
+        }
+      }
+    }
+
+    // --- 粒子 ---
+    for (var q = particles.length - 1; q >= 0; q--) {
+      var pt = particles[q];
+      pt.x += pt.vx * dt; pt.y += pt.vy * dt;
+      pt.vx *= 0.92; pt.vy *= 0.92;
+      pt.life -= dt;
+      if (pt.life <= 0) particles.splice(q, 1);
+    }
+
+    if (shake > 0) shake = Math.max(0, shake - 30 * dt);
+    if (flash > 0) flash = Math.max(0, flash - dt);
+  }
+
+  function triggerExplosion(x, y, radius, damage) {
+    // 火花粒子
+    for (var i = 0; i < 20; i++) {
+      var a = Math.random() * Math.PI * 2, s = 100 + Math.random() * 250;
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        r: 2 + Math.random() * 3, life: 0.4 + Math.random() * 0.3,
+        maxLife: 0.7,
+        color: ["#ffd34d", "#ff8030", "#ff3030"][Math.floor(Math.random() * 3)]
+      });
+    }
+    // 衝擊波 (expansion)
+    explosions.push({
+      x: x, y: y, radius: 0, maxRadius: radius,
+      time: 0.35, maxTime: 0.35,
+      damage: damage, hitIds: null
+    });
+    shake = Math.max(shake, 10);
+    flash = Math.max(flash, 0.2);
+  }
+
+  // ======================================================
+  // 2.5D 角色繪製 (含 dual 旗標)
+  // ======================================================
+  function drawCharacter2_5D(x, y, palette, opts) {
+    var facing = opts.facing;
+    var scale = opts.scale || 1.0;
+    var isMoving = opts.isMoving;
+    var phase = opts.phase || 0;
+    var isPlayer = !!opts.isPlayer;
+    var weapon = opts.weapon || (isPlayer ? "rifle" : "smg");
+    var gunLen = isPlayer ? player.gunLen : (opts.gunLen || 22);
+    var gunThick = isPlayer ? player.gunThick : 3.2;
+    var bodyH = (isPlayer ? 38 : 32) * scale;
+    var bodyW = (isPlayer ? 22 : 18) * scale;
+    var headR = (isPlayer ? 9 : 8) * scale;
+    var legLen = (isPlayer ? 14 : 12) * scale;
+    var armLen = (isPlayer ? 13 : 11) * scale;
+
+    var J = calcJointSwing(phase, isMoving);
+    var bodyBob = isMoving ? Math.abs(Math.cos(phase * 1.4)) * 2 : 0;
+
+    // 1) 地面陰影
+    ctx.save();
+    ctx.translate(x, y - 2);
+    ctx.scale(1, ISO_Y_SCALE);
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, bodyW * 0.95, bodyW * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y - bodyBob - bodyH / 2 + 2);
+
+    function drawLeg(hipX, isBackLeg) {
+      var sign = isBackLeg ? -1 : 1;
+      var swing = J.hip * sign;
+      ctx.save();
+      ctx.translate(hipX, bodyH * 0.05);
+      ctx.rotate(swing);
+      ctx.fillStyle = palette.pantsShadow || palette.pants;
+      ctx.fillRect(-legW * 0.5, 0, legW, legLen * 0.55);
+      ctx.fillStyle = palette.pants;
+      ctx.fillRect(-legW * 0.5, 0, legW, legLen * 0.55);
+      ctx.fillStyle = palette.pantsHL || palette.pants;
+      ctx.fillRect(-legW * 0.5, 0, legW * 0.3, legLen * 0.55);
+      fillSphere(0, legLen * 0.55, legW * 0.6, palette.pantsHL || palette.pants, palette.pants, palette.pantsShadow || palette.pants, -1, -1, 1);
+      ctx.save();
+      ctx.translate(0, legLen * 0.55);
+      ctx.rotate(J.knee * sign * 0.4);
+      ctx.fillStyle = palette.pantsShadow || palette.pants;
+      ctx.fillRect(-legW * 0.45, 0, legW * 0.9, legLen * 0.45);
+      ctx.fillStyle = palette.pants;
+      ctx.fillRect(-legW * 0.45, 0, legW * 0.9, legLen * 0.45);
+      ctx.fillStyle = palette.pantsHL || palette.pants;
+      ctx.fillRect(-legW * 0.45, 0, legW * 0.27, legLen * 0.45);
+      fillSphere(0, legLen * 0.45 + legW * 0.4, legW * 0.55, palette.bootsHL || palette.boots, palette.boots, sh, 0, 0, 1);
+      ctx.restore();
+      ctx.restore();
+    }
+    var legW = 4.5 * scale;
+    var sh = palette.pantsShadow || "#000";
+
+    function drawArm(shoulderX, isBackArm, gunType) {
+      var sign = isBackArm ? -1 : 1;
+      var swingSign = (isPlayer && opts.dual) ? 1 : sign;
+      var swing = J.shoulder * swingSign;
+      var hasGun = !isBackArm;
+      if (isPlayer && opts.dual && isBackArm) {
+        hasGun = true;
+        gunType = opts.dualWeapon || "smg";
+      }
+      ctx.save();
+      ctx.translate(shoulderX, -bodyH * 0.18);
+      ctx.rotate(swing);
+      ctx.fillStyle = palette.armShadow || palette.arm;
+      ctx.fillRect(-armW * 0.5, 0, armW, armLen * 0.5);
+      ctx.fillStyle = palette.arm;
+      ctx.fillRect(-armW * 0.5, 0, armW, armLen * 0.5);
+      ctx.fillStyle = palette.armHL || palette.arm;
+      ctx.fillRect(-armW * 0.5, 0, armW * 0.3, armLen * 0.5);
+      fillSphere(0, 0, armW * 0.55, palette.armHL || palette.arm, palette.arm, palette.armShadow || palette.arm, -0.5, -0.5, 1);
+      fillSphere(0, armLen * 0.5, armW * 0.55, palette.armHL || palette.arm, palette.arm, palette.armShadow || palette.arm, -0.5, -0.5, 1);
+      ctx.save();
+      ctx.translate(0, armLen * 0.5);
+      ctx.rotate(J.elbow * (hasGun ? 0.4 : 0.6));
+      ctx.fillStyle = palette.armShadow || palette.arm;
+      ctx.fillRect(-armW * 0.45, 0, armW * 0.9, armLen * 0.5);
+      ctx.fillStyle = palette.arm;
+      ctx.fillRect(-armW * 0.45, 0, armW * 0.9, armLen * 0.5);
+      ctx.fillStyle = palette.armHL || palette.arm;
+      ctx.fillRect(-armW * 0.45, 0, armW * 0.27, armLen * 0.5);
+      fillSphere(0, armLen * 0.5, armW * 0.6,
+        palette.gloveHL || palette.glove || "#0a0a08",
+        palette.glove || "#0a0a08", "#000", -0.5, -0.5, 1.2);
+      if (hasGun && gunType) {
+        drawWeapon(gunType, armW * 0.4, armLen * 0.5, gunLen, gunThick, palette);
+      }
+      ctx.restore();
+      ctx.restore();
+    }
+    var armW = 4 * scale;
+
+    if (facing === 1) {
+      drawLeg(-bodyW * 0.22 + J.hip * 1.5, true);
+      drawLeg(bodyW * 0.22 - J.hip * 1.5, false);
+      ctx.fillStyle = palette.vestShadow || palette.vest;
+      ctx.fillRect(-bodyW / 2, -bodyH / 2 + 2, bodyW, bodyH - legLen - 2);
+      ctx.fillStyle = palette.vest;
+      ctx.fillRect(-bodyW / 2 + 1, -bodyH / 2 + 3, bodyW - 2, bodyH - legLen - 4);
+      if (palette.vestHighlight) {
+        ctx.fillStyle = palette.vestHighlight;
+        ctx.fillRect(-bodyW / 2 + 1, -bodyH / 2 + 3, 3, bodyH - legLen - 4);
+      }
+      ctx.fillStyle = palette.pack || palette.vestShadow;
+      ctx.fillRect(-bodyW * 0.35, -bodyH / 2 + 6, bodyW * 0.7, bodyH * 0.45);
+      ctx.fillStyle = palette.packShadow || "#000";
+      ctx.fillRect(-bodyW * 0.35, -bodyH / 2 + 6, bodyW * 0.7, 2);
+      ctx.fillRect(-bodyW * 0.35, -bodyH / 2 + bodyH * 0.45 + 4, bodyW * 0.7, 2);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-0.5, -bodyH / 2 + 8, 1, bodyH * 0.4);
+      ctx.fillStyle = "#5a5a5a";
+      ctx.fillRect(bodyW * 0.35 - 2, -bodyH / 2 + bodyH * 0.2, 3, 3);
+      drawArm(-bodyW * 0.55, true, null);
+      fillSphere(0, -bodyH / 2 - headR * 0.4, headR + 0.5,
+        palette.skinHL || palette.skin, palette.skin, palette.skinShadow || palette.skin,
+        -headR * 0.3, -headR * 0.3, headR * 0.35);
+      fillSphere(0, -bodyH / 2 - headR * 0.4, headR + 1,
+        palette.helmetHL || palette.helmet, palette.helmet, palette.helmetRim || palette.helmet,
+        -headR * 0.3, -headR * 0.3, headR * 0.4);
+      ctx.fillStyle = palette.helmetRim || palette.helmet;
+      ctx.fillRect(-headR, -bodyH / 2 - headR * 1.1, headR * 2, 3);
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(-headR, -bodyH / 2 - headR * 0.05, headR * 2, 2);
+      drawArm(bodyW * 0.55, false, weapon);
+    } else if (facing === 3) {
+      drawLeg(-bodyW * 0.22 + J.hip * 1.5, true);
+      drawLeg(bodyW * 0.22 - J.hip * 1.5, false);
+      ctx.fillStyle = palette.vestShadow || palette.vest;
+      ctx.fillRect(-bodyW / 2, -bodyH / 2 + 2, bodyW, bodyH - legLen - 2);
+      ctx.fillStyle = palette.vest;
+      ctx.fillRect(-bodyW / 2 + 1, -bodyH / 2 + 3, bodyW - 2, bodyH - legLen - 4);
+      if (palette.vestHighlight) {
+        ctx.fillStyle = palette.vestHighlight;
+        ctx.fillRect(-bodyW / 2 + 2, -bodyH / 2 + 4, bodyW * 0.35, bodyH - legLen - 6);
+      }
+      ctx.fillStyle = palette.vestZip || "rgba(0,0,0,0.5)";
+      ctx.fillRect(-0.8, -bodyH / 2 + 4, 1.6, bodyH - legLen - 6);
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillRect(-bodyW * 0.35, bodyH * 0.05, bodyW * 0.25, bodyH * 0.18);
+      ctx.fillRect(bodyW * 0.10, bodyH * 0.05, bodyW * 0.25, bodyH * 0.18);
+      ctx.fillStyle = "#9aa888";
+      ctx.fillRect(-bodyW * 0.35 + bodyW * 0.1, bodyH * 0.05 + bodyH * 0.18 - 1, 2, 1);
+      ctx.fillRect(bodyW * 0.10 + bodyW * 0.1, bodyH * 0.05 + bodyH * 0.18 - 1, 2, 1);
+      for (var bI = 0; bI < 4; bI++) {
+        ctx.fillStyle = "#3a2818";
+        ctx.fillRect(-bodyW * 0.3 + bI * 2.5, bodyH * 0.28, 1.8, 1.5);
+        ctx.fillStyle = "#9a7048";
+        ctx.fillRect(-bodyW * 0.3 + bI * 2.5, bodyH * 0.28, 1.8, 0.4);
+      }
+      ctx.fillStyle = "#888";
+      ctx.fillRect(bodyW * 0.05, -bodyH / 2 + 6, 3, 4);
+      ctx.fillStyle = "#5a5a5a";
+      ctx.fillRect(bodyW * 0.05, -bodyH / 2 + 9, 3, 0.5);
+      drawArm(-bodyW * 0.55, true, null);
+      fillSphere(0, -bodyH / 2 - headR * 0.5, headR,
+        palette.skinHL || palette.skin, palette.skin, palette.skinShadow || palette.skin,
+        -headR * 0.3, -headR * 0.3, headR * 0.35);
+      fillSphere(0, -bodyH / 2 - headR * 0.5, headR + 1,
+        palette.helmetHL || palette.helmet, palette.helmet, palette.helmetRim || palette.helmet,
+        -headR * 0.3, -headR * 0.3, headR * 0.4);
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillRect(-headR * 0.85, -bodyH / 2 - headR * 0.5 - 1, headR * 1.7, headR * 0.4);
+      ctx.fillStyle = palette.helmetRim || "#000";
+      ctx.fillRect(-headR * 0.9, -bodyH / 2 - headR * 0.5 - 1.5, headR * 1.8, 0.8);
+      ctx.fillRect(-headR * 0.9, -bodyH / 2 - headR * 0.5 + headR * 0.4 - 0.5, headR * 1.8, 0.8);
+      ctx.fillStyle = "rgba(180,220,255,0.7)";
+      ctx.fillRect(-headR * 0.7, -bodyH / 2 - headR * 0.5 - 0.5, headR * 0.4, 1);
+      ctx.fillStyle = "rgba(180,220,255,0.4)";
+      ctx.fillRect(headR * 0.3, -bodyH / 2 - headR * 0.5 - 0.5, headR * 0.2, 0.8);
+      ctx.fillStyle = palette.skinShadow || palette.skin;
+      ctx.fillRect(-headR * 0.5, -bodyH / 2 - headR * 0.05, headR, headR * 0.5);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-headR * 0.4, -bodyH / 2 - headR * 0.05 + headR * 0.15, headR * 0.8, 0.5);
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-headR, -bodyH / 2 - headR * 0.05, headR * 2, 1.5);
+      if (isPlayer) {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(headR * 0.4, -bodyH / 2 - headR * 1.6, 1, headR * 0.6);
+        ctx.fillStyle = "#ff3333";
+        ctx.fillRect(headR * 0.3, -bodyH / 2 - headR * 1.65, 2, 1.5);
+      }
+      drawArm(bodyW * 0.55, false, weapon);
+    } else if (facing === 0) {
+      drawLeg(-bodyW * 0.10 + J.hip * 1.2, true);
+      drawLeg(bodyW * 0.10 - J.hip * 1.2, false);
+      ctx.fillStyle = palette.vestShadow || palette.vest;
+      ctx.beginPath();
+      ctx.moveTo(-bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(bodyW * 0.30, bodyH * 0.15);
+      ctx.lineTo(-bodyW * 0.30, bodyH * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = palette.vest;
+      ctx.beginPath();
+      ctx.moveTo(-bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(-bodyW * 0.10, -bodyH / 2 + 2);
+      ctx.lineTo(-bodyW * 0.10, bodyH * 0.15);
+      ctx.lineTo(-bodyW * 0.30, bodyH * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#5a5a5a";
+      ctx.beginPath();
+      ctx.arc(0, -bodyH * 0.15, 1, 0, Math.PI * 2);
+      ctx.fill();
+      drawArm(-bodyW * 0.40, true, null);
+      ctx.fillStyle = palette.skinShadow || palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.3, headR * 0.95, headR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.3, headR * 0.85, headR * 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skinShadow || palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15 + headR * 0.7, -bodyH / 2 - headR * 0.25, headR * 0.25, headR * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15 + headR * 0.7, -bodyH / 2 - headR * 0.35, headR * 0.2, headR * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmetRim || palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.4, headR + 0.5, headR * 1.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.4, headR + 0.3, headR * 1.0, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmetHL || palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.05, -bodyH / 2 - headR * 0.6, headR * 0.6, headR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillRect(bodyW * 0.15 - headR * 0.4, -bodyH / 2 - headR * 0.4, headR * 1.2, headR * 0.35);
+      ctx.fillStyle = "rgba(180,220,255,0.7)";
+      ctx.fillRect(bodyW * 0.15 - headR * 0.3, -bodyH / 2 - headR * 0.4, headR * 0.4, 1);
+      drawArm(bodyW * 0.20, false, weapon);
+    } else if (facing === 2) {
+      ctx.scale(-1, 1);
+      drawLeg(-bodyW * 0.10 + J.hip * 1.2, true);
+      drawLeg(bodyW * 0.10 - J.hip * 1.2, false);
+      ctx.fillStyle = palette.vestShadow || palette.vest;
+      ctx.beginPath();
+      ctx.moveTo(-bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(bodyW * 0.30, bodyH * 0.15);
+      ctx.lineTo(-bodyW * 0.30, bodyH * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = palette.vest;
+      ctx.beginPath();
+      ctx.moveTo(-bodyW * 0.35, -bodyH / 2 + 2);
+      ctx.lineTo(-bodyW * 0.10, -bodyH / 2 + 2);
+      ctx.lineTo(-bodyW * 0.10, bodyH * 0.15);
+      ctx.lineTo(-bodyW * 0.30, bodyH * 0.15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#5a5a5a";
+      ctx.beginPath();
+      ctx.arc(0, -bodyH * 0.15, 1, 0, Math.PI * 2);
+      ctx.fill();
+      drawArm(-bodyW * 0.40, true, null);
+      ctx.fillStyle = palette.skinShadow || palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.3, headR * 0.95, headR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.3, headR * 0.85, headR * 0.9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skinShadow || palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15 + headR * 0.7, -bodyH / 2 - headR * 0.25, headR * 0.25, headR * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.skin;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15 + headR * 0.7, -bodyH / 2 - headR * 0.35, headR * 0.2, headR * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmetRim || palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.4, headR + 0.5, headR * 1.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.15, -bodyH / 2 - headR * 0.4, headR + 0.3, headR * 1.0, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = palette.helmetHL || palette.helmet;
+      ctx.beginPath();
+      ctx.ellipse(bodyW * 0.05, -bodyH / 2 - headR * 0.6, headR * 0.6, headR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillRect(bodyW * 0.15 - headR * 0.4, -bodyH / 2 - headR * 0.4, headR * 1.2, headR * 0.35);
+      ctx.fillStyle = "rgba(180,220,255,0.7)";
+      ctx.fillRect(bodyW * 0.15 - headR * 0.3, -bodyH / 2 - headR * 0.4, headR * 0.4, 1);
+      drawArm(bodyW * 0.20, false, weapon);
+    }
+    ctx.restore();
+  }
+
+  // ===== 3D 立體子彈 =====
+  function drawBullet(b) {
+    var by2 = b.y - (b.z || 0);
+    ctx.save();
+    ctx.translate(b.x, by2);
+    ctx.rotate(b.rot || 0);
+    var tailLen = 12;
+    var tailGrad = ctx.createLinearGradient(-tailLen, 0, 0, 0);
+    tailGrad.addColorStop(0, "rgba(255, 211, 77, 0)");
+    tailGrad.addColorStop(1, "rgba(255, 211, 77, 0.7)");
+    ctx.fillStyle = tailGrad;
+    ctx.beginPath();
+    ctx.moveTo(-tailLen, -b.r * 0.6);
+    ctx.lineTo(0, -b.r);
+    ctx.lineTo(0, b.r);
+    ctx.lineTo(-tailLen, b.r * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    fillSphere(0, 0, b.r, "#ffffff", "#ffe98a", "#aa8030", -b.r * 0.3, -b.r * 0.3, b.r * 0.35);
+    ctx.restore();
+  }
+
+  // ===== 飛彈 (追蹤彈) =====
+  function drawMissile(m) {
+    ctx.save();
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.rot);
+    // 煙尾 (長)
+    var tailLen = 22;
+    var tailGrad = ctx.createLinearGradient(-tailLen, 0, 0, 0);
+    tailGrad.addColorStop(0, "rgba(164, 255, 107, 0)");
+    tailGrad.addColorStop(0.7, "rgba(164, 255, 107, 0.6)");
+    tailGrad.addColorStop(1, "rgba(255, 255, 255, 0.95)");
+    ctx.fillStyle = tailGrad;
+    ctx.beginPath();
+    ctx.moveTo(-tailLen, -3);
+    ctx.lineTo(-2, -3);
+    ctx.lineTo(-2, 3);
+    ctx.lineTo(-tailLen, 3);
+    ctx.closePath();
+    ctx.fill();
+    // 飛彈主體 (圓柱 + 錐頭)
+    ctx.fillStyle = "#a4ff6b";
+    ctx.fillRect(-4, -2.5, 10, 5);
+    ctx.fillStyle = "#6bd455";
+    ctx.fillRect(-4, 1.5, 10, 1);
+    // 錐頭
+    ctx.fillStyle = "#dfffb0";
+    ctx.beginPath();
+    ctx.moveTo(6, -2.5);
+    ctx.lineTo(10, 0);
+    ctx.lineTo(6, 2.5);
+    ctx.closePath();
+    ctx.fill();
+    // 翼 (後)
+    ctx.fillStyle = "#3a8a20";
+    ctx.fillRect(-6, -2.5, 2, 1.5);
+    ctx.fillRect(-6, 1, 2, 1.5);
+    ctx.restore();
+  }
+
+  // ===== 無人機 (主題型, 4 旋翼 + LED) =====
+  function drawDrone(d) {
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    // 陰影 (地面投影)
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(0, 14, 14, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // 主體 (中央金屬盒)
+    fillSphere(0, 0, 7, "#888", "#444", "#222", -1.5, -1.5, 2);
+    // LED 燈 (脈動)
+    var ledPulse = 0.7 + Math.sin(gameTime * 6) * 0.3;
+    ctx.fillStyle = "rgba(255, 80, 80, " + ledPulse + ")";
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 200, 200, 0.6)";
+    ctx.beginPath();
+    ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // 4 個旋翼支架 + 旋翼 (旋轉動畫)
+    var armOffsets = [
+      [-9, -6], [9, -6], [-9, 6], [9, 6]
+    ];
+    for (var i = 0; i < 4; i++) {
+      var ox = armOffsets[i][0], oy = armOffsets[i][1];
+      // 支架
+      ctx.fillStyle = "#555";
+      ctx.fillRect(ox - 1, oy - 1, 2, 2);
+      // 馬達座
+      ctx.fillStyle = "#222";
+      ctx.beginPath();
+      ctx.arc(ox, oy, 2, 0, Math.PI * 2);
+      ctx.fill();
+      // 旋翼 (透明高速旋轉效果)
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.rotate(d.spin * (i % 2 === 0 ? 1 : -1));
+      // 旋翼輪廓 (模糊效果: 兩條交叉淡線 + 弧)
+      ctx.strokeStyle = "rgba(180,180,180,0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 7, 1.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 1.5, 7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // 旋翼中心
+      ctx.fillStyle = "#aaa";
+      ctx.beginPath();
+      ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // 鎖定線 (瞄準最近的敵人)
+    if (d.targetEnemy) {
+      ctx.strokeStyle = "rgba(255, 80, 80, 0.6)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(d.targetEnemy.x - d.x, d.targetEnemy.y - d.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // 敵人身上的紅圈
+      ctx.fillStyle = "rgba(255, 60, 60, 0.4)";
+      ctx.beginPath();
+      ctx.arc(d.targetEnemy.x - d.x, d.targetEnemy.y - d.y, 14, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ===== 爆炸擴散 (衝擊波) =====
+  function drawExplosion(e) {
+    var t = 1 - e.time / e.maxTime;
+    var r = e.maxRadius * t;
+    ctx.save();
+    // 外圈 (亮橙)
+    ctx.strokeStyle = "rgba(255, 200, 80, " + (1 - t) + ")";
+    ctx.lineWidth = 4 * (1 - t) + 1;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    // 內圈 (深紅)
+    ctx.strokeStyle = "rgba(255, 80, 30, " + (1 - t) * 0.7 + ")";
+    ctx.lineWidth = 2 * (1 - t);
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, r * 0.6, 0, Math.PI * 2);
+    ctx.stroke();
+    // 中心火球
+    var fireR = 12 * (1 - t * 0.5);
+    fillSphere(e.x, e.y, fireR, "#ffeb70", "#ff8030", "#ff2010", -fireR * 0.3, -fireR * 0.3, fireR * 0.3);
+    ctx.restore();
+  }
+
+  // ===== 防護罩 (能量場) =====
+  function drawShield() {
+    if (!player.shield.active) return;
+    var t = player.shield.time / player.shield.max;  // 剩餘比例 (1 → 0)
+    var fade = t < 0.3 ? t / 0.3 : 1;  // 最後 3 秒淡出
+    ctx.save();
+    var x = player.x, y = player.y;
+    // 外環 (青色)
+    ctx.strokeStyle = "rgba(107, 212, 255, " + (0.4 * fade) + ")";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, 30, 0, Math.PI * 2);
+    ctx.stroke();
+    // 內環 (亮白)
+    ctx.strokeStyle = "rgba(180, 240, 255, " + (0.6 * fade) + ")";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, 27, 0, Math.PI * 2);
+    ctx.stroke();
+    // 6 邊形繞圈粒子 (旋轉)
+    for (var i = 0; i < 6; i++) {
+      var a = gameTime * 1.5 + i * (Math.PI * 2 / 6);
+      var px = x + Math.cos(a) * 30;
+      var py = y + Math.sin(a) * 30 * 0.55;  // 橢圓 (2.5D)
+      var particleR = 2 + Math.sin(gameTime * 4 + i) * 0.5;
+      fillSphere(px, py, particleR,
+        "rgba(220, 245, 255, " + (0.9 * fade) + ")",
+        "rgba(107, 212, 255, " + (0.7 * fade) + ")",
+        "rgba(40, 100, 180, " + (0.5 * fade) + ")",
+        -1, -1, 0.8);
+    }
+    // 反向旋轉的內圈粒子
+    for (var j = 0; j < 4; j++) {
+      var a2 = -gameTime * 2 + j * (Math.PI * 2 / 4);
+      var px2 = x + Math.cos(a2) * 22;
+      var py2 = y + Math.sin(a2) * 22 * 0.55;
+      fillSphere(px2, py2, 1.5,
+        "rgba(255, 255, 255, " + (0.8 * fade) + ")",
+        "rgba(180, 230, 255, " + (0.6 * fade) + ")",
+        "rgba(60, 140, 200, " + (0.4 * fade) + ")",
+        -0.5, -0.5, 0.5);
+    }
+    // 中心脈動
+    var pulse = 0.3 + Math.sin(gameTime * 3) * 0.15;
+    ctx.fillStyle = "rgba(107, 212, 255, " + (pulse * fade * 0.3) + ")";
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ===== 繪製 =====
+  function drawGrid() {
+    ctx.strokeStyle = "rgba(255,255,255,0.045)";
+    ctx.lineWidth = 1;
+    var gw = 64, gh = gw * ISO_Y_SCALE;
+    ctx.beginPath();
+    for (var x = 0; x <= W; x += gw) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+    for (var y = 0; y <= H; y += gh) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    ctx.stroke();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#0b0e14";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    if (shake > 0) {
+      ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    }
+
+    drawGrid();
+
+    // 拾取物
+    for (var p = 0; p < pickups.length; p++) {
+      var pk = pickups[p];
+      var pulse = 1 + Math.sin(pk.pulse * 6) * 0.15;
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath(); ctx.ellipse(pk.x, pk.y + 1, pk.r * 1.1 * pulse, pk.r * 0.5 * pulse, 0, 0, Math.PI * 2); ctx.fill();
+      if (pk.type === "shield") {
+        // 防護罩道具 (藍色+閃光)
+        fillSphere(pk.x, pk.y, pk.r * pulse,
+          "#aae8ff", "#6bd4ff", "#1a4866",
+          -pk.r * 0.3, -pk.r * 0.3, pk.r * 0.35);
+        // 護盾十字
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(pk.x, pk.y, pk.r * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pk.x - pk.r * 0.5, pk.y);
+        ctx.lineTo(pk.x + pk.r * 0.5, pk.y);
+        ctx.moveTo(pk.x, pk.y - pk.r * 0.5);
+        ctx.lineTo(pk.x, pk.y + pk.r * 0.5);
+        ctx.stroke();
+      } else {
+        // 補血包
+        fillSphere(pk.x, pk.y, pk.r * pulse,
+          "#aaffbf", "#6bff8f", "#1a3a26",
+          -pk.r * 0.3, -pk.r * 0.3, pk.r * 0.35);
+        ctx.fillStyle = "#1d3a26";
+        ctx.fillRect(pk.x - 2, pk.y - 5, 4, 10);
+        ctx.fillRect(pk.x - 5, pk.y - 2, 10, 4);
+      }
+    }
+
+    // 敵人 (y 排序)
+    enemies.sort(function (a, b) {
+      return ((a.y - (a.z || 0)) || a.y) - ((b.y - (b.z || 0)) || b.y);
+    });
+
+    for (var j = 0; j < enemies.length; j++) {
+      var e = enemies[j];
+      var moved = Math.hypot(e.x - e._lastX, e.y - e._lastY);
+      var isMoving = moved > 0.5;
+      var palette = e.type === "heavy" ? COLOR.heavy
+                  : e.type === "fast"  ? COLOR.fast
+                  : COLOR.normal;
+      if (e.hitFlash > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+      }
+      drawCharacter2_5D(e.x, e.y, palette, {
+        facing: e.facing, scale: e.scale,
+        isMoving: isMoving, phase: e._animPhase,
+        weapon: e.weapon
+      });
+      if (e.hitFlash > 0) ctx.restore();
+      if (e.hp < e.maxHp) {
+        var bw2 = (e.scale || 1) * 38;
+        var by = e.y - (e.scale || 1) * 38 - 8;
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(e.x - bw2 / 2, by, bw2, 4);
+        var hpGrad = ctx.createLinearGradient(e.x - bw2 / 2, 0, e.x + bw2 / 2, 0);
+        hpGrad.addColorStop(0, "#4a9a5a");
+        hpGrad.addColorStop(1, "#aaffbf");
+        ctx.fillStyle = hpGrad;
+        ctx.fillRect(e.x - bw2 / 2, by, bw2 * (e.hp / e.maxHp), 4);
+      }
+    }
+
+    // 子彈 (玩家)
+    for (var i = 0; i < bullets.length; i++) drawBullet(bullets[i]);
+
+    // 飛彈 (無人機)
+    for (var mi = 0; mi < missiles.length; mi++) drawMissile(missiles[mi]);
+
+    // 爆炸擴散
+    for (var ex = 0; ex < explosions.length; ex++) drawExplosion(explosions[ex]);
+
+    // 玩家
+    if (state === STATE.PLAY) {
+      var blink = player.inv > 0 && Math.floor(player.inv * 12) % 2 === 0;
+      if (!blink) {
+        var pmoved = Math.hypot(player.x - _prevPx, player.y - _prevPy);
+        var pMoving = pmoved > 0.5;
+        var pPhase = gameTime * 8;
+        drawCharacter2_5D(player.x, player.y, COLOR.player, {
+          facing: player.facing, scale: 1.0,
+          isMoving: pMoving, phase: pPhase,
+          isPlayer: true,
+          weapon: player.dual ? "smg" : "rifle",
+          dual: player.dual
+        });
+      }
+    }
+
+    // 無人機 (在玩家上方層)
+    for (var di = 0; di < drones.length; di++) drawDrone(drones[di]);
+
+    // 防護罩 (最上層,環繞玩家)
+    drawShield();
+
+    // 粒子
+    for (var q = 0; q < particles.length; q++) {
+      var pt = particles[q];
+      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
+      ctx.fillStyle = pt.color;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if (touchMove) {
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(touchMove.sx, touchMove.sy, 48, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.beginPath();
+      ctx.arc(touchMove.sx + touchMove.dx * 40, touchMove.sy + touchMove.dy * 40, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    if (flash > 0) {
+      ctx.fillStyle = "rgba(255, 40, 40, " + (flash * 0.6) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+
+  function loop(t) {
+    var dt = Math.min((t - lastTime) / 1000, 0.05);
+    lastTime = t;
+    if (state === STATE.PLAY) update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    resetGame();
+    state = STATE.PLAY;
+    menuEl.classList.add("hidden");
+    overEl.classList.add("hidden");
+    hudEl.classList.remove("hidden");
+  }
+
+  function gameOver() {
+    state = STATE.OVER;
+    finalScoreEl.textContent = "得分 " + score;
+    hudEl.classList.add("hidden");
+    overEl.classList.remove("hidden");
+    mouse.down = false;
+  }
+
+  document.getElementById("startBtn").addEventListener("click", startGame);
+  document.getElementById("retryBtn").addEventListener("click", startGame);
+
+  resetGame();
+  requestAnimationFrame(function (t) { lastTime = t; loop(t); });
+})();
+</script>
+</body>
+</html>
