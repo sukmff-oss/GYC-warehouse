@@ -224,7 +224,7 @@
   var STATE = { MENU: 0, PLAY: 1, OVER: 2 };
   var state = STATE.MENU;
 
-  var player, bullets, enemies, particles, pickups, drones, missiles, explosions, aiTeammates, scenery, bosses, goldWeapons;
+  var player, bullets, enemies, particles, pickups, drones, missiles, explosions, aiTeammates, scenery, bosses, goldWeapons, teammates;
   var score, wave, spawnTimer, waveTimer, shake, flash, aiSupportTimer;
   var lastTime = 0, gameTime = 0;
 
@@ -450,7 +450,8 @@
     aiSupportTimer = 0;
     scenery = [];
     bosses = [];
-    goldWeapons = null;  // 玩家當前裝備的金色武器
+    goldWeapons = null;
+    teammates = [];
     score = 0;
     wave = 1;
     spawnTimer = 0;
@@ -851,6 +852,10 @@
     if (w >= UNLOCK.TEAMMATE_WAVE) {
       spawnTeammates();
     }
+    // 每 5 波召喚隨機隊友 (5/10/15/20/...)
+    if (w >= 5 && w % 5 === 0) {
+      spawnTeammateRandom();
+    }
   }
 
   function spawnDruneDroneId(idx) {
@@ -922,6 +927,73 @@
     boss._animPhase = Math.random() * Math.PI * 2;
     boss.facing = Math.floor(Math.random() * 4);
     bosses.push(boss);
+  }
+
+  // ===== 隊友系統 (每 5 波召喚) =====
+  // 5 種類型: 機槍兵/火箭兵/武士/手槍兵/雷射兵
+  var TEAMMATE_TYPES = {
+    machinegun: { name: "MG 兵", hp: 300, weapon: "mg", fireRate: 0.125, dmg: 3,
+                  palette: { vest: "#3a4030", helmet: "#3a4030", skin: "#c89878",
+                             pants: "#1a2010", boots: "#0a0a08", gun: "#2a2a2a",
+                             arm: "#3a4030", pack: "#2a3020" },
+                  label: "🔫 MG", labelColor: "#a4ff6b" },
+    rocket: { name: "火箭兵", hp: 200, weapon: "rocket", fireRate: 1.5, dmg: 1000,
+              aoeRadius: 100, range: 280,
+              palette: { vest: "#5a4a3a", helmet: "#5a4a3a", skin: "#c89878",
+                         pants: "#3a2a1a", boots: "#0a0a08", gun: "#3a3a3a",
+                         arm: "#5a4a3a", pack: "#3a2a1a" },
+              label: "🚀 RKT", labelColor: "#ff8c5a" },
+    samurai: { name: "武士", hp: 250, weapon: "katana", fireRate: 0.33, dmg: 40,
+               melee: true, range: 50, burst: 3,
+               palette: { vest: "#8a1a1a", helmet: "#8a1a1a", skin: "#e8c098",
+                          pants: "#3a1a1a", boots: "#0a0a08", gun: "#e8e8e8",
+                          arm: "#8a1a1a", pack: "#5a1a1a" },
+               label: "⚔️ SAMURAI", labelColor: "#ffaaaa" },
+    pistol: { name: "手槍兵", hp: 180, weapon: "pistol", fireRate: 0.2, dmg: 8,
+              palette: { vest: "#2a4a5a", helmet: "#2a4a5a", skin: "#c89878",
+                         pants: "#1a2a3a", boots: "#0a0a08", gun: "#2a2a2a",
+                         arm: "#2a4a5a", pack: "#1a3040" },
+              label: "🔫 PISTOL", labelColor: "#5ad4ff" },
+    laser: { name: "雷射兵", hp: 350, weapon: "laser", fireRate: 0.5, dmg: 20,
+             piercing: true,
+             palette: { vest: "#3a2a5a", helmet: "#3a2a5a", skin: "#b898d8",
+                       pants: "#1a0a3a", boots: "#0a0a08", gun: "#6a8aff",
+                       arm: "#3a2a5a", pack: "#2a1a4a" },
+             label: "⚡ LASER", labelColor: "#8aafff" }
+  };
+
+  function spawnTeammateRandom() {
+    // 上限 4 位隊友
+    if (teammates.length >= 4) return;
+    // 隨機選一種
+    var typeKeys = Object.keys(TEAMMATE_TYPES);
+    var typeName = typeKeys[Math.floor(Math.random() * typeKeys.length)];
+    var def = TEAMMATE_TYPES[typeName];
+    // 生成位置: 前 2 位在玩家身邊 150-250 px,超過 2 位隨機散布
+    var cx, cy;
+    if (teammates.length < 2) {
+      var ang = Math.random() * Math.PI * 2;
+      var dist = 150 + Math.random() * 100;
+      cx = clamp(player.x + Math.cos(ang) * dist, 30, W - 30);
+      cy = clamp(player.y + Math.sin(ang) * dist, 30, H - 30);
+    } else {
+      cx = 60 + Math.random() * (W - 120);
+      cy = 60 + Math.random() * (H - 120);
+    }
+    teammates.push({
+      type: typeName,
+      x: cx, y: cy,
+      hp: def.hp, maxHp: def.hp,
+      fireCd: Math.random() * 0.5,
+      fireRate: def.fireRate,
+      viewRange: def.range || 350,
+      target: null,
+      def: def,
+      bobPhase: Math.random() * Math.PI * 2,
+      facing: 0
+    });
+    burst(cx, cy, def.labelColor, 18);
+    flash = 0.2;
   }
 
   // ===== 場景生成 (種子隨機, 確保重生一致) =====
@@ -1117,6 +1189,12 @@
         bullets.splice(i, 1);
         continue;
       }
+      // 隊友火箭: 落地爆炸
+      if (b.rocket && (b.life <= 0 || b.z < 0)) {
+        triggerExplosion(b.x, b.y, b.aoeRadius || 80, b.dmg || 50);
+        bullets.splice(i, 1);
+        continue;
+      }
       // BOSS 子彈打到玩家
       if (b.fromBoss && Math.hypot(b.x - player.x, b.y - player.y) < b.r + player.r) {
         if (!player.shield.active && player.inv <= 0) {
@@ -1252,6 +1330,17 @@
           e.x += apush; e.y += apush;
         }
       }
+      // 撞隊友 (新系統)
+      for (var tm = teammates.length - 1; tm >= 0; tm--) {
+        var tmC = teammates[tm];
+        var tdp = Math.hypot(tmC.x - e.x, tmC.y - e.y);
+        if (tdp < 14 + e.r) {
+          tmC.hp -= e.dmg;
+          tmC.hitFlash = 0.1;
+          var tpush = (tdp - (14 + e.r)) * -2;
+          e.x += tpush; e.y += tpush;
+        }
+      }
 
       // 被子彈打中
       for (var k = bullets.length - 1; k >= 0; k--) {
@@ -1261,7 +1350,10 @@
           e.hp -= dmg;
           e.hitFlash = 0.08;
           burst(bb.x, bb.y, "#ffd34d", 3);
-          bullets.splice(k, 1);
+          // 雷射/穿透子彈不消失
+          if (!bb.piercing && !bb.laser) {
+            bullets.splice(k, 1);
+          }
           // golden_launcher 命中觸發小型 AoE
           if (bb.goldType === "golden_launcher") {
             triggerExplosion(bb.x, bb.y, 50, dmg * 0.5);
@@ -1551,6 +1643,128 @@
               r: 4, life: 1.2, rot: 0, fromBoss: true
             });
             boss.fireCd = boss.fireRate;
+          }
+        }
+      }
+    }
+
+    // --- 隊友 (每 5 波召喚) ---
+    for (var ti2 = teammates.length - 1; ti2 >= 0; ti2--) {
+      var t = teammates[ti2];
+      // HP <= 0 → 死亡
+      if (t.hp <= 0) {
+        burst(t.x, t.y, t.def.labelColor, 16);
+        burst(t.x, t.y, "#888", 8);
+        teammates.splice(ti2, 1);
+        continue;
+      }
+      t.fireCd -= dt;
+      // 偵測最近敵人
+      var tn = null, tnD = t.viewRange;
+      for (var tk = 0; tk < enemies.length; tk++) {
+        if (enemies[tk].hp <= 0) continue;
+        var dd = Math.hypot(enemies[tk].x - t.x, enemies[tk].y - t.y);
+        if (dd < tnD) { tn = enemies[tk]; tnD = dd; }
+      }
+      // 也偵測 BOSS
+      for (var tb = 0; tb < bosses.length; tb++) {
+        if (bosses[tb].hp <= 0) continue;
+        var dd2 = Math.hypot(bosses[tb].x - t.x, bosses[tb].y - t.y);
+        if (dd2 < tnD) { tn = bosses[tb]; tnD = dd2; }
+      }
+      t.target = tn;
+      if (tn) {
+        t.facing = angleToFacing(Math.atan2(tn.y - t.y, tn.x - t.x));
+        if (t.fireCd <= 0) {
+          var ang = Math.atan2(tn.y - t.y, tn.x - t.x);
+          var wep = t.def.weapon;
+          if (wep === "mg") {
+            bullets.push({
+              x: t.x + Math.cos(ang) * 18, y: t.y + Math.sin(ang) * 18 - 8, z: 12,
+              vx: Math.cos(ang) * 640, vy: Math.sin(ang) * 640, vz: 0,
+              r: 4, life: 0.8, rot: 0, fromTeammate: true, dmg: t.def.dmg
+            });
+            for (var pf1 = 0; pf1 < 2; pf1++) {
+              particles.push({ x: t.x + Math.cos(ang) * 18, y: t.y + Math.sin(ang) * 18 - 8,
+                vx: Math.cos(ang + (Math.random() - 0.5)) * 100,
+                vy: Math.sin(ang + (Math.random() - 0.5)) * 100,
+                r: 1.5, life: 0.1, maxLife: 0.1, color: "#a4ff6b" });
+            }
+            playShoot();
+            t.fireCd = t.fireRate;
+          } else if (wep === "pistol") {
+            bullets.push({
+              x: t.x + Math.cos(ang) * 16, y: t.y + Math.sin(ang) * 16 - 8, z: 12,
+              vx: Math.cos(ang) * 720, vy: Math.sin(ang) * 720, vz: 0,
+              r: 3, life: 0.7, rot: 0, fromTeammate: true, dmg: t.def.dmg
+            });
+            playShoot();
+            t.fireCd = t.fireRate;
+          } else if (wep === "rocket") {
+            // 火箭: 高拋物線,落地爆炸
+            bullets.push({
+              x: t.x + Math.cos(ang) * 22, y: t.y + Math.sin(ang) * 22 - 10, z: 18,
+              vx: Math.cos(ang) * 320, vy: Math.sin(ang) * 320, vz: 380,
+              r: 7, life: 1.5, rot: 0, fromTeammate: true, dmg: t.def.dmg,
+              rocket: true, aoeRadius: t.def.aoeRadius
+            });
+            // 火箭尾焰
+            for (var pf2 = 0; pf2 < 4; pf2++) {
+              particles.push({ x: t.x, y: t.y,
+                vx: (Math.random() - 0.5) * 80, vy: (Math.random() - 0.5) * 80,
+                r: 2 + Math.random() * 2, life: 0.3, maxLife: 0.3, color: "#ff8030" });
+            }
+            t.fireCd = t.fireRate;
+          } else if (wep === "laser") {
+            // 雷射: 快速穿透
+            bullets.push({
+              x: t.x + Math.cos(ang) * 16, y: t.y + Math.sin(ang) * 16 - 6, z: 14,
+              vx: Math.cos(ang) * 880, vy: Math.sin(ang) * 880, vz: 0,
+              r: 5, life: 1.0, rot: 0, fromTeammate: true, dmg: t.def.dmg,
+              laser: true, piercing: true
+            });
+            // 雷射光暈
+            for (var pf3 = 0; pf3 < 3; pf3++) {
+              particles.push({ x: t.x + Math.cos(ang) * 16, y: t.y + Math.sin(ang) * 16 - 6,
+                vx: Math.cos(ang + (Math.random() - 0.5)) * 150,
+                vy: Math.sin(ang + (Math.random() - 0.5)) * 150,
+                r: 1.5, life: 0.15, maxLife: 0.15, color: "#8aafff" });
+            }
+            playShoot();
+            t.fireCd = t.fireRate;
+          } else if (wep === "katana") {
+            // 武士: 三連擊, 近戰範圍 50 px
+            var hitAny = false;
+            for (var tk2 = enemies.length - 1; tk2 >= 0; tk2--) {
+              var ee = enemies[tk2];
+              if (ee.hp <= 0) continue;
+              if (Math.hypot(ee.x - t.x, ee.y - t.y) < (t.def.range || 50)) {
+                ee.hp -= t.def.dmg;
+                ee.hitFlash = 0.1;
+                burst(ee.x, ee.y, "#ffffff", 4);
+                hitAny = true;
+                if (ee.hp <= 0) {
+                  score += ee.score;
+                  burst(ee.x, ee.y, ee.color, 12);
+                  enemies.splice(tk2, 1);
+                  updateHud();
+                }
+              }
+            }
+            // 武士刀視覺 (3 條斬擊弧)
+            if (hitAny) {
+              for (var pf4 = 0; pf4 < 6; pf4++) {
+                particles.push({
+                  x: t.x + Math.cos(ang) * 30,
+                  y: t.y + Math.sin(ang) * 30,
+                  vx: Math.cos(ang + (Math.random() - 0.5)) * 200,
+                  vy: Math.sin(ang + (Math.random() - 0.5)) * 200,
+                  r: 2, life: 0.2, maxLife: 0.2, color: "#ffffff"
+                });
+              }
+              playShoot();
+            }
+            t.fireCd = t.fireRate;
           }
         }
       }
@@ -2432,6 +2646,87 @@
     ctx.restore();
   }
 
+  // ===== 隊友玩家繪製 (站立人型, 5 種類型) =====
+  function drawTeammatePlayer(t) {
+    var pal = t.def.palette;
+    var ang = t.target ? Math.atan2(t.target.y - t.y, t.target.x - t.x) : 0;
+
+    ctx.save();
+    ctx.translate(t.x, t.y);
+
+    // 1) 陰影
+    ctx.save();
+    ctx.scale(1, ISO_Y_SCALE);
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 14, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 2) 全身站立人 (用 drawCharacter2_5D 但傳入對應 palette)
+    var palette = {
+      helmet: pal.helmet, helmetHL: pal.helmet, helmetRim: pal.helmet,
+      skin: pal.skin, skinShadow: pal.skin, skinHL: pal.skin,
+      vest: pal.vest, vestShadow: pal.vest, vestHighlight: pal.vest, vestZip: "#9aa888",
+      pants: pal.pants, pantsShadow: pal.pants, pantsHL: pal.pants,
+      boots: pal.boots, bootsHL: pal.boots,
+      gun: pal.gun, gunHighlight: "#888", gunShadow: "#0a0a0a", gunStock: pal.gun,
+      pack: pal.pack, packShadow: pal.pack,
+      arm: pal.arm, armShadow: pal.arm, armHL: pal.arm,
+      glove: "#0a0a08", gloveHL: "#2a2a28"
+    };
+    var weapon = t.def.weapon === "katana" ? "smg"
+               : t.def.weapon === "pistol" ? "pistol"
+               : t.def.weapon === "rocket" ? "shotgun"
+               : t.def.weapon === "laser" ? "rifle"
+               : "mg";
+    // 站立 (scale 1.0)
+    drawCharacter2_5D(0, 0, palette, {
+      facing: t.facing, scale: 0.95, isMoving: false, phase: 0,
+      weapon: weapon
+    });
+
+    // 3) 武器視覺 (依類型在頭頂加 icon)
+    ctx.fillStyle = t.def.labelColor;
+    ctx.font = "bold 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(t.def.label, 0, -42);
+    ctx.textAlign = "start";
+
+    // 4) 鎖定線 (若有目標)
+    if (t.target) {
+      ctx.strokeStyle = "rgba(255, 255, 100, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(t.target.x - t.x, t.target.y - t.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 5) HP 血條 (頭頂)
+    if (t.hp < t.maxHp) {
+      var bw = 32;
+      var by = -50;
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-bw / 2, by, bw, 4);
+      var hpRatio = t.hp / t.maxHp;
+      var hpGrad = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+      if (hpRatio > 0.5) {
+        hpGrad.addColorStop(0, "#4a9a5a");
+        hpGrad.addColorStop(1, "#aaffbf");
+      } else {
+        hpGrad.addColorStop(0, "#9a4a4a");
+        hpGrad.addColorStop(1, "#ffaa4a");
+      }
+      ctx.fillStyle = hpGrad;
+      ctx.fillRect(-bw / 2, by, bw * hpRatio, 4);
+    }
+
+    ctx.restore();
+  }
+
   // ===== 防護罩 (能量場) =====
   function drawShield() {
     if (!player.shield.active) return;
@@ -2640,6 +2935,9 @@
 
     // 機槍班 AI (臥姿 + 沙包)
     for (var ti = 0; ti < aiTeammates.length; ti++) drawTeammate(aiTeammates[ti]);
+
+    // 隊友 (5 種類型)
+    for (var tmi = 0; tmi < teammates.length; tmi++) drawTeammatePlayer(teammates[tmi]);
 
     // BOSS (大尺寸 3D 人物)
     for (var bi = 0; bi < bosses.length; bi++) drawBoss(bosses[bi]);
