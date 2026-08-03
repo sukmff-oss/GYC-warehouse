@@ -1173,23 +1173,55 @@
       d.targetEnemy = nearest;
       // 鎖定時顯示瞄準線
       if (nearest && d.fireCd <= 0) {
-        // 發射飛彈
         var ang = Math.atan2(nearest.y - d.y, nearest.x - d.x);
-        missiles.push({
-          x: d.x, y: d.y,
-          vx: Math.cos(ang) * 380,
-          vy: Math.sin(ang) * 380,
-          r: 4, life: 4, rot: ang,
-          target: nearest
-        });
-        // 發射火焰
-        for (var pf = 0; pf < 4; pf++) {
+        // 雙發模式: 兩個彈並列 (主軸 ±8 px 偏移)
+        // 如果玩家有 golden_launcher → 升級為雙飛彈 (追蹤彈)
+        var useMissile = goldWeapons === "golden_launcher";
+        var burstOffsets = [-8, 8];  // 並列偏移
+        for (var bi = 0; bi < 2; bi++) {
+          var perpX = -Math.sin(ang) * burstOffsets[bi];
+          var perpY = Math.cos(ang) * burstOffsets[bi];
+          if (useMissile) {
+            // 雙飛彈 (追蹤)
+            missiles.push({
+              x: d.x + perpX, y: d.y + perpY,
+              vx: Math.cos(ang) * 380,
+              vy: Math.sin(ang) * 380,
+              r: 4, life: 4, rot: ang,
+              target: nearest
+            });
+          } else {
+            // 雙發子彈 (直線)
+            bullets.push({
+              x: d.x + perpX,
+              y: d.y + perpY,
+              z: 12,
+              vx: Math.cos(ang) * 640,
+              vy: Math.sin(ang) * 640,
+              vz: 0,
+              r: 4, life: 1.0, rot: 0,
+              fromDrone: true,
+              dmg: 10
+            });
+          }
+          // 發射火焰 (兩個位置各 2 顆)
+          for (var pf = 0; pf < 2; pf++) {
+            particles.push({
+              x: d.x + perpX - Math.cos(ang) * 4,
+              y: d.y + perpY - Math.sin(ang) * 4,
+              vx: Math.cos(ang + (Math.random() - 0.5)) * 90,
+              vy: Math.sin(ang + (Math.random() - 0.5)) * 90,
+              r: 1.5 + Math.random() * 2, life: 0.18, maxLife: 0.18, color: "#a4ff6b"
+            });
+          }
+        }
+        // 額外 2 顆粒子 (中間爆炸)
+        for (var pc = 0; pc < 2; pc++) {
           particles.push({
-            x: d.x - Math.cos(ang) * 4,
-            y: d.y - Math.sin(ang) * 4,
-            vx: Math.cos(ang + (Math.random() - 0.5)) * 90,
-            vy: Math.sin(ang + (Math.random() - 0.5)) * 90,
-            r: 1.5 + Math.random() * 2, life: 0.18, maxLife: 0.18, color: "#a4ff6b"
+            x: d.x, y: d.y,
+            vx: (Math.random() - 0.5) * 60,
+            vy: (Math.random() - 0.5) * 60,
+            r: 1.5, life: 0.15, maxLife: 0.15, color: "#ffd34d"
           });
         }
         d.fireCd = d.fireRate;
