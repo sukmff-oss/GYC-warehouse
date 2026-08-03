@@ -611,33 +611,78 @@ table.compare tr:last-child td{border-bottom:none;}
         </script>
       </div>
 
-      <!-- 🎮 研發中心 - 叢林槍戰突圍 -->
-      <div class="card game-launcher" id="game-launcher" style="background:linear-gradient(135deg,rgba(34,80,40,.92),rgba(20,40,28,.95));border:1px solid rgba(120,255,140,.4);box-shadow:0 0 30px rgba(120,255,140,.15);">
-        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-          <div style="flex:0 0 auto;font-size:64px;line-height:1;">🎮</div>
-          <div style="flex:1;min-width:240px;">
-            <div style="font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:6px;font-weight:700;">🟢 國研AI研發中心 · R&amp;D CENTER</div>
-            <h2 style="font-size:28px;font-weight:900;margin:0 0 10px 0;background:linear-gradient(90deg,#a4ff6b,#6bd4ff,#ffd34d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">叢林槍戰突圍</h2>
-            <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-              2.5D Isometric 動作射擊 ・ Canvas 多部件 3D 模型 ・ 雙槍/防護罩/無人機/機槍班波次解鎖<br>
-              <span style="color:#a4ff6b;font-weight:700;">🎯 滑鼠瞄準射擊</span> ・
-              <span style="color:#6bd4ff;font-weight:700;">🛡 第 5 波解鎖防護罩</span> ・
-              <span style="color:#ffd34d;font-weight:700;">🪖 第 11 波召喚機槍班</span>
+      <!-- 🎮 遊戲中心 -->
+            <div class="card game-launcher" id="game-launcher" style="background:linear-gradient(135deg,rgba(34,80,40,.92),rgba(20,40,28,.95));border:1px solid rgba(120,255,140,.4);box-shadow:0 0 30px rgba(120,255,140,.15);">
+              <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:20px;">
+                <div style="flex:0 0 auto;font-size:56px;line-height:1;">🎮</div>
+                <div style="flex:1;min-width:240px;">
+                  <div style="font-size:13px;color:var(--accent);letter-spacing:2px;margin-bottom:6px;font-weight:700;">🟢 國研AI研發中心 · R&amp;D CENTER</div>
+                  <h2 style="font-size:30px;font-weight:900;margin:0 0 6px 0;background:linear-gradient(90deg,#a4ff6b,#6bd4ff,#ffd34d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;">遊戲中心</h2>
+                  <div style="font-size:12.5px;color:var(--muted);">Canvas / Three.js ・ 動作射擊 ・ 戰略 ・ 模擬 ・ 共 2 款</div>
+                </div>
+                <div style="flex:0 0 auto;font-family:'Courier New',monospace;font-size:11px;color:rgba(164,255,107,.6);text-align:right;line-height:1.4;">
+                  <div>v2026.08</div>
+                  <div>2 GAMES</div>
+                  <div>R&amp;D</div>
+                </div>
+              </div>
+
+              <!-- 遊戲卡片網格 -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+                <!-- 🎮 叢林槍戰突圍 -->
+                <div class="game-card" style="background:linear-gradient(135deg,rgba(20,30,18,.85),rgba(10,20,15,.92));border:1px solid rgba(120,255,140,.35);border-radius:10px;padding:18px;transition:transform .15s,box-shadow .15s;">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <div style="font-size:36px;line-height:1;">🌴</div>
+                    <div style="flex:1;">
+                      <div style="font-size:10px;color:#a4ff6b;letter-spacing:1.5px;font-weight:700;margin-bottom:2px;">2.5D · ACTION · SHOOTER</div>
+                      <h3 style="font-size:18px;font-weight:900;color:#e8ecf4;margin:0;letter-spacing:1px;">叢林槍戰突圍</h3>
+                    </div>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+                    Isometric 動作射擊 ・ Canvas 多部件 3D 模型<br>
+                    <span style="color:#a4ff6b;font-weight:700;">⚡ 雙槍</span> ・
+                    <span style="color:#6bd4ff;font-weight:700;">🛡 防護罩</span> ・
+                    <span style="color:#a4ff6b;font-weight:700;">🛸 無人機</span> ・
+                    <span style="color:#ffd34d;font-weight:700;">🪖 機槍班</span><br>
+                    波次解鎖系統 ・ 撐越久越強
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <a href="./shootergame.html" class="game-launch-btn" style="flex:1;min-width:120px;text-align:center;display:inline-block;padding:10px 18px;background:linear-gradient(135deg,#a4ff6b,#6bd4ff);color:#0b0e14;text-decoration:none;border-radius:6px;font-weight:900;font-size:13px;letter-spacing:1.5px;box-shadow:0 0 16px rgba(120,255,140,.35);">▶ 開始突圍</a>
+                    <a href="./shootergame.html" target="_blank" style="padding:10px 14px;color:var(--muted);font-size:11px;text-decoration:none;border:1px solid var(--border);border-radius:6px;">↗ 新分頁</a>
+                  </div>
+                </div>
+
+                <!-- 🎮 拯救台北 101 -->
+                <div class="game-card" style="background:linear-gradient(135deg,rgba(30,20,30,.85),rgba(20,10,25,.92));border:1px solid rgba(255,140,180,.35);border-radius:10px;padding:18px;transition:transform .15s,box-shadow .15s;">
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                    <div style="font-size:36px;line-height:1;">🏙️</div>
+                    <div style="flex:1;">
+                      <div style="font-size:10px;color:#ff8cb4;letter-spacing:1.5px;font-weight:700;margin-bottom:2px;">3D · TOWER DEFENSE</div>
+                      <h3 style="font-size:18px;font-weight:900;color:#e8ecf4;margin:0;letter-spacing:1px;">拯救台北 101</h3>
+                    </div>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+                    3D 塔防射擊 ・ Three.js 城市保衛戰<br>
+                    <span style="color:#ff8cb4;font-weight:700;">🏢 場景建模</span> ・
+                    <span style="color:#a4ff6b;font-weight:700;">🔫 多武器</span> ・
+                    <span style="color:#ffd34d;font-weight:700;">💥 爆炸特效</span><br>
+                    守護台灣地標
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <a href="./blockade-strike/index.html" class="game-launch-btn" style="flex:1;min-width:120px;text-align:center;display:inline-block;padding:10px 18px;background:linear-gradient(135deg,#ff8cb4,#ffd34d);color:#0b0e14;text-decoration:none;border-radius:6px;font-weight:900;font-size:13px;letter-spacing:1.5px;box-shadow:0 0 16px rgba(255,140,180,.35);">▶ 開始保衛</a>
+                    <a href="./blockade-strike/index.html" target="_blank" style="padding:10px 14px;color:var(--muted);font-size:11px;text-decoration:none;border:1px solid var(--border);border-radius:6px;">↗ 新分頁</a>
+                  </div>
+                </div>
+
+              </div>
+
+              <style>
+                .game-launch-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+                .game-launch-btn:active { transform: translateY(1px); }
+                .game-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(120,255,140,.2); }
+              </style>
             </div>
-            <a href="./shootergame.html" class="game-launch-btn" style="display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#a4ff6b,#6bd4ff);color:#0b0e14;text-decoration:none;border-radius:8px;font-weight:900;font-size:16px;letter-spacing:2px;box-shadow:0 0 20px rgba(120,255,140,.4);transition:transform .15s,box-shadow .15s;">▶ 立即開始突圍</a>
-            <a href="./shootergame.html" target="_blank" style="margin-left:10px;color:var(--muted);font-size:12px;text-decoration:none;padding:8px 14px;border:1px solid var(--border);border-radius:6px;">在新分頁開啟 ↗</a>
-          </div>
-          <div style="flex:0 0 auto;font-family:'Courier New',monospace;font-size:11px;color:rgba(164,255,107,.6);text-align:right;line-height:1.4;">
-            <div>v2.5D-OPT</div>
-            <div>Canvas</div>
-            <div>2026-08</div>
-          </div>
-        </div>
-        <style>
-          .game-launch-btn:hover { transform: translateY(-2px); box-shadow: 0 0 32px rgba(120,255,140,.7); }
-          .game-launch-btn:active { transform: translateY(1px); }
-        </style>
-      </div>
 
       <!-- 1. 金融行情 -->
   <div class="card" id="finance">
