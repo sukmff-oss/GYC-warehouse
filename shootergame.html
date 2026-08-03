@@ -101,6 +101,88 @@
     0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.3); }
     50% { box-shadow: 0 0 16px rgba(255, 170, 60, 0.7); }
   }
+  /* 角色面板 (左上) */
+  .char-panel {
+    position: fixed; top: 14px; left: 14px;
+    background: linear-gradient(180deg, rgba(40, 24, 24, 0.85), rgba(20, 12, 12, 0.92));
+    border: 1px solid rgba(180, 50, 50, 0.4);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    z-index: 6;
+    pointer-events: none;
+  }
+  #charAvatar {
+    background: linear-gradient(135deg, #3a2a2a, #1a0a0a);
+    border-radius: 6px;
+    border: 1px solid #5a3a3a;
+  }
+  .char-info { display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
+  .char-stats {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #e8ecf4; font-weight: 700;
+  }
+  .char-icon { font-size: 13px; }
+  .char-hp-text { color: #ff6b6b; min-width: 56px; }
+  .char-lv {
+    margin-left: auto;
+    color: #ffd34d;
+    background: rgba(255, 211, 77, 0.15);
+    border: 1px solid rgba(255, 211, 77, 0.5);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .hp-bar, .exp-bar {
+    width: 140px; height: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .hp-bar { height: 8px; }
+  #charHpBar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #ff3030, #ff8030, #ffd34d);
+    transition: width 0.2s ease;
+  }
+  #charExpBar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #8a4aff, #c080ff);
+    transition: width 0.3s ease;
+  }
+
+  /* 進化卡片 (右上) */
+  .evo-card {
+    position: fixed; top: 70px; right: 14px;
+    width: 200px;
+    background: linear-gradient(180deg, rgba(40, 30, 20, 0.92), rgba(20, 14, 8, 0.95));
+    border: 1px solid rgba(255, 200, 100, 0.5);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    z-index: 6;
+    pointer-events: none;
+  }
+  .evo-title {
+    font-size: 12px; font-weight: 700; color: #ffd34d;
+    letter-spacing: 1px; margin-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 200, 100, 0.3);
+    padding-bottom: 4px;
+  }
+  .evo-body { display: flex; gap: 8px; align-items: center; }
+  #evoAvatar {
+    background: linear-gradient(135deg, #3a2a1a, #1a0a08);
+    border-radius: 6px;
+    border: 1px solid #5a3a1a;
+    flex-shrink: 0;
+  }
+  .evo-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .evo-label { font-size: 10px; color: #e8c898; line-height: 1.3; }
+  .evo-progress { font-size: 10px; color: #9aa4b8; }
+  .evo-stars { font-size: 11px; color: #ffd34d; letter-spacing: 1px; }
+
   /* 音訊開關按鈕 */
   #audioBtn {
     position: fixed; top: 14px; left: 50%;
@@ -151,10 +233,35 @@
 <button id="audioBtn" title="音效開/關">🔊</button>
 
 <div id="hud" class="hidden">
-  <div>
-    <div id="hpWrap"><div id="hpBar"></div></div>
+  <div class="char-panel" id="charPanel">
+    <canvas id="charAvatar" width="56" height="56"></canvas>
+    <div class="char-info">
+      <div class="char-stats">
+        <span class="char-icon">❤️</span>
+        <span id="charHpText" class="char-hp-text">100/100</span>
+        <span class="char-lv">Lv.<span id="charLv">1</span></span>
+      </div>
+      <div class="hp-bar"><div id="charHpBar"></div></div>
+      <div class="exp-bar"><div id="charExpBar"></div></div>
+    </div>
   </div>
-  <div id="scoreBox">得分 <span id="score">0</span><div id="waveBox">第 1 波</div></div>
+
+  <div class="evo-card" id="evoCard">
+    <div class="evo-title">⚔️ 下次進化</div>
+    <div class="evo-body">
+      <canvas id="evoAvatar" width="48" height="48"></canvas>
+      <div class="evo-info">
+        <div class="evo-label" id="evoLabel">擊敗 5 隻灰暗屍靈</div>
+        <div class="evo-progress"><span id="evoNow">0</span>/<span id="evoMax">5</span></div>
+        <div class="evo-stars" id="evoStars">★★☆☆☆</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scoreBox" style="position:fixed;top:14px;right:18px;z-index:5;color:#e8ecf4;font-size:14px;font-weight:700;text-align:right;pointer-events:none;">
+    得分 <span id="score" style="color:#ffd34d;font-size:18px;">0</span>
+    <div id="waveBox" style="font-size:11px;color:#9aa4b8;margin-top:2px;">第 1 波</div>
+  </div>
 </div>
 
 <div id="dualTag" class="upgrade-tag">⚡ 雙槍模式</div>
@@ -224,7 +331,7 @@
   var STATE = { MENU: 0, PLAY: 1, OVER: 2 };
   var state = STATE.MENU;
 
-  var player, bullets, enemies, particles, pickups, drones, missiles, explosions, aiTeammates, scenery, bosses, goldWeapons, teammates;
+  var player, bullets, enemies, particles, pickups, drones, missiles, explosions, aiTeammates, scenery, bosses, goldWeapons, teammates, snowParticles;
   var score, wave, spawnTimer, waveTimer, shake, flash, aiSupportTimer;
   var lastTime = 0, gameTime = 0;
 
@@ -429,6 +536,7 @@
       r: 14,
       speed: 260,
       hp: 100, maxHp: 100,
+      exp: 0, level: 1, expToNext: 100,
       angle: 0,
       facing: 0,
       fireCd: 0, fireRate: 0.16,
@@ -452,6 +560,9 @@
     bosses = [];
     goldWeapons = null;
     teammates = [];
+    snowParticles = [];
+    killsThisWave = 0;
+    evoGoal = 5 + Math.floor(wave * 0.5);
     score = 0;
     wave = 1;
     spawnTimer = 0;
@@ -818,7 +929,133 @@
     hpBarEl.style.width = Math.max(0, player.hp / player.maxHp * 100) + "%";
     waveEl.textContent = "第 " + wave + " 波";
     if (droneCountEl) droneCountEl.textContent = drones.length;
+    // 角色面板 (左上)
+    var charHpText = document.getElementById("charHpText");
+    if (charHpText) charHpText.textContent = Math.max(0, Math.ceil(player.hp)) + "/" + player.maxHp;
+    var charHpBar = document.getElementById("charHpBar");
+    if (charHpBar) charHpBar.style.width = Math.max(0, player.hp / player.maxHp * 100) + "%";
+    var charExpBar = document.getElementById("charExpBar");
+    if (charExpBar) charExpBar.style.width = Math.max(0, player.exp / player.expToNext * 100) + "%";
+    var charLv = document.getElementById("charLv");
+    if (charLv) charLv.textContent = player.level;
+    // 進化卡片 (右上)
+    var evoNow = document.getElementById("evoNow");
+    var evoMax = document.getElementById("evoMax");
+    var evoStars = document.getElementById("evoStars");
+    if (evoNow) evoNow.textContent = killsThisWave;
+    if (evoMax) evoMax.textContent = evoGoal;
+    if (evoStars) evoStars.textContent = "★".repeat(Math.min(5, Math.floor(player.level / 2))) + "☆".repeat(5 - Math.min(5, Math.floor(player.level / 2)));
   }
+
+  // ===== 角色頭像 (骷髏) =====
+  function drawCharAvatar() {
+    var cv = document.getElementById("charAvatar");
+    if (!cv) return;
+    var c = cv.getContext("2d");
+    c.clearRect(0, 0, 56, 56);
+    // 背景
+    var bgGrad = c.createLinearGradient(0, 0, 0, 56);
+    bgGrad.addColorStop(0, "#3a2a2a");
+    bgGrad.addColorStop(1, "#1a0a0a");
+    c.fillStyle = bgGrad;
+    c.fillRect(0, 0, 56, 56);
+    // 骷髏 (圓頭 + 眼窩 + 嘴)
+    c.fillStyle = "#e8d8c0";
+    c.beginPath();
+    c.arc(28, 24, 16, 0, Math.PI * 2);
+    c.fill();
+    // 下顎
+    c.fillRect(20, 36, 16, 8);
+    // 牙齒
+    c.fillStyle = "#1a0a0a";
+    for (var t = 0; t < 4; t++) {
+      c.fillRect(22 + t * 3, 38, 1, 4);
+    }
+    // 眼窩 (大紅眼)
+    c.fillStyle = "#aa1010";
+    c.beginPath();
+    c.arc(23, 24, 4, 0, Math.PI * 2);
+    c.fill();
+    c.beginPath();
+    c.arc(33, 24, 4, 0, Math.PI * 2);
+    c.fill();
+    // 眼窩黑邊
+    c.fillStyle = "#000";
+    c.beginPath();
+    c.arc(23, 24, 2.5, 0, Math.PI * 2);
+    c.fill();
+    c.beginPath();
+    c.arc(33, 24, 2.5, 0, Math.PI * 2);
+    c.fill();
+    // 紅眼高光
+    c.fillStyle = "#ff5050";
+    c.beginPath();
+    c.arc(23, 24, 1, 0, Math.PI * 2);
+    c.fill();
+    c.beginPath();
+    c.arc(33, 24, 1, 0, Math.PI * 2);
+    c.fill();
+    // 鼻孔
+    c.fillStyle = "#1a0a0a";
+    c.beginPath();
+    c.moveTo(28, 30);
+    c.lineTo(26, 34);
+    c.lineTo(30, 34);
+    c.closePath();
+    c.fill();
+    // 紅頭巾 (頂部)
+    c.fillStyle = "#aa3030";
+    c.fillRect(14, 10, 28, 6);
+    c.fillRect(12, 14, 32, 4);
+  }
+
+  // ===== 進化頭像 (木乃伊/骷髏戰士) =====
+  function drawEvoAvatar() {
+    var cv = document.getElementById("evoAvatar");
+    if (!cv) return;
+    var c = cv.getContext("2d");
+    c.clearRect(0, 0, 48, 48);
+    // 背景
+    var bgGrad = c.createLinearGradient(0, 0, 0, 48);
+    bgGrad.addColorStop(0, "#3a2a1a");
+    bgGrad.addColorStop(1, "#1a0a08");
+    c.fillStyle = bgGrad;
+    c.fillRect(0, 0, 48, 48);
+    // 木乃伊纏繃帶
+    c.fillStyle = "#d4c4a8";
+    c.beginPath();
+    c.arc(24, 20, 13, 0, Math.PI * 2);
+    c.fill();
+    // 繃帶紋路
+    c.strokeStyle = "#9a8a6e";
+    c.lineWidth = 1;
+    for (var b = 0; b < 4; b++) {
+      c.beginPath();
+      c.moveTo(12, 14 + b * 5);
+      c.lineTo(36, 14 + b * 5);
+      c.stroke();
+    }
+    // 眼睛縫隙 (深紅光)
+    c.fillStyle = "#aa2020";
+    c.fillRect(19, 18, 4, 2);
+    c.fillRect(25, 18, 4, 2);
+    // 盾牌 (右下小圖示)
+    c.fillStyle = "#7a5a2a";
+    c.beginPath();
+    c.arc(34, 36, 4, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = "#ffd34d";
+    c.lineWidth = 1;
+    c.beginPath();
+    c.arc(34, 36, 4, 0, Math.PI * 2);
+    c.stroke();
+    c.fillStyle = "#ffd34d";
+    c.fillRect(33, 36, 2, 2);
+  }
+
+  // 升級計數 (擊殺累積)
+  var killsThisWave = 0;
+  var evoGoal = 5;
 
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 
@@ -932,30 +1169,35 @@
   // ===== 隊友系統 (每 5 波召喚) =====
   // 5 種類型: 機槍兵/火箭兵/武士/手槍兵/雷射兵
   var TEAMMATE_TYPES = {
-    machinegun: { name: "MG 兵", hp: 300, weapon: "mg", fireRate: 0.125, dmg: 3,
+    machinegun: { name: "MG 兵", hp: 9999, weapon: "mg", fireRate: 0.125, dmg: 3,
+                  followOffset: { x: -130, y: 80 },
                   palette: { vest: "#3a4030", helmet: "#3a4030", skin: "#c89878",
                              pants: "#1a2010", boots: "#0a0a08", gun: "#2a2a2a",
                              arm: "#3a4030", pack: "#2a3020" },
                   label: "🔫 MG", labelColor: "#a4ff6b" },
-    rocket: { name: "火箭兵", hp: 200, weapon: "rocket", fireRate: 1.5, dmg: 1000,
+    rocket: { name: "火箭兵", hp: 9999, weapon: "rocket", fireRate: 1.5, dmg: 1000,
               aoeRadius: 100, range: 280,
+              followOffset: { x: 0, y: -250 },
               palette: { vest: "#5a4a3a", helmet: "#5a4a3a", skin: "#c89878",
                          pants: "#3a2a1a", boots: "#0a0a08", gun: "#3a3a3a",
                          arm: "#5a4a3a", pack: "#3a2a1a" },
               label: "🚀 RKT", labelColor: "#ff8c5a" },
-    samurai: { name: "武士", hp: 250, weapon: "katana", fireRate: 0.33, dmg: 40,
+    samurai: { name: "武士", hp: 9999, weapon: "katana", fireRate: 0.33, dmg: 40,
                melee: true, range: 50, burst: 3,
+               followOffset: { x: 0, y: -80 },
                palette: { vest: "#8a1a1a", helmet: "#8a1a1a", skin: "#e8c098",
                           pants: "#3a1a1a", boots: "#0a0a08", gun: "#e8e8e8",
                           arm: "#8a1a1a", pack: "#5a1a1a" },
                label: "⚔️ SAMURAI", labelColor: "#ffaaaa" },
-    pistol: { name: "手槍兵", hp: 180, weapon: "pistol", fireRate: 0.2, dmg: 8,
+    pistol: { name: "手槍兵", hp: 9999, weapon: "pistol", fireRate: 0.2, dmg: 8,
+              followOffset: { x: 130, y: 80 },
               palette: { vest: "#2a4a5a", helmet: "#2a4a5a", skin: "#c89878",
                          pants: "#1a2a3a", boots: "#0a0a08", gun: "#2a2a2a",
                          arm: "#2a4a5a", pack: "#1a3040" },
               label: "🔫 PISTOL", labelColor: "#5ad4ff" },
-    laser: { name: "雷射兵", hp: 350, weapon: "laser", fireRate: 0.5, dmg: 20,
+    laser: { name: "雷射兵", hp: 9999, weapon: "laser", fireRate: 0.5, dmg: 20,
              piercing: true,
+             followOffset: { x: -150, y: -100 },
              palette: { vest: "#3a2a5a", helmet: "#3a2a5a", skin: "#b898d8",
                        pants: "#1a0a3a", boots: "#0a0a08", gun: "#6a8aff",
                        arm: "#3a2a5a", pack: "#2a1a4a" },
@@ -969,20 +1211,12 @@
     var typeKeys = Object.keys(TEAMMATE_TYPES);
     var typeName = typeKeys[Math.floor(Math.random() * typeKeys.length)];
     var def = TEAMMATE_TYPES[typeName];
-    // 生成位置: 前 2 位在玩家身邊 150-250 px,超過 2 位隨機散布
-    var cx, cy;
-    if (teammates.length < 2) {
-      var ang = Math.random() * Math.PI * 2;
-      var dist = 150 + Math.random() * 100;
-      cx = clamp(player.x + Math.cos(ang) * dist, 30, W - 30);
-      cy = clamp(player.y + Math.sin(ang) * dist, 30, H - 30);
-    } else {
-      cx = 60 + Math.random() * (W - 120);
-      cy = 60 + Math.random() * (H - 120);
-    }
+    // 生成位置: 初始位置在玩家站位 (後續每幀 lerp 到該站位)
+    var off = def.followOffset;
     teammates.push({
       type: typeName,
-      x: cx, y: cy,
+      x: clamp(player.x + off.x, 30, W - 30),
+      y: clamp(player.y + off.y, 30, H - 30),
       hp: def.hp, maxHp: def.hp,
       fireCd: Math.random() * 0.5,
       fireRate: def.fireRate,
@@ -992,7 +1226,7 @@
       bobPhase: Math.random() * Math.PI * 2,
       facing: 0
     });
-    burst(cx, cy, def.labelColor, 18);
+    burst(player.x + off.x, player.y + off.y, def.labelColor, 18);
     flash = 0.2;
   }
 
@@ -1007,51 +1241,65 @@
   function generateScenery() {
     scenery = [];
     _scnSeed = 12345; // 確保每次重玩都一致
-    // 樹 (碰撞體) — 8-12 棵, 尺寸 24-40 px
-    var treeCount = 8 + Math.floor(scnRand() * 5);
-    for (var i = 0; i < treeCount; i++) {
+    // 石碑 (碰撞體) — 6-10 個, 寬 18-28 高 26-36 px
+    var graveCount = 6 + Math.floor(scnRand() * 5);
+    for (var i = 0; i < graveCount; i++) {
       var x = 80 + scnRand() * (W - 160);
       var y = 80 + scnRand() * (H - 160);
-      var sz = 24 + scnRand() * 16;
+      var gw = 18 + scnRand() * 10;
+      var gh = 26 + scnRand() * 10;
       scenery.push({
-        type: "tree",
+        type: "gravestone",
         x: x, y: y,
-        size: sz,
-        radius: sz * 0.45,  // 碰撞半徑
+        w: gw, h: gh,
+        radius: Math.max(gw, gh) * 0.45,
         collide: true,
-        foliage: ["#2d5a1f", "#3a6a28", "#4a7a30"][Math.floor(scnRand() * 3)],
-        trunk: "#3a2818"
+        stoneColor: ["#5a5a5a", "#6a6a6a", "#707070"][Math.floor(scnRand() * 3)],
+        snowOnTop: scnRand() < 0.7,
+        rot: (scnRand() - 0.5) * 0.4  // 微傾斜
       });
     }
-    // 大石頭 (碰撞體) — 4-6 顆, 尺寸 16-28 px
-    var rockCount = 4 + Math.floor(scnRand() * 3);
-    for (var j = 0; j < rockCount; j++) {
-      var rx = 60 + scnRand() * (W - 120);
-      var ry = 60 + scnRand() * (H - 120);
-      var rsz = 16 + scnRand() * 12;
+    // 柵欄 (裝飾, 不碰撞) — 5-8 段, 80-120 px 長
+    var fenceCount = 5 + Math.floor(scnRand() * 4);
+    for (var f = 0; f < fenceCount; f++) {
+      var fx = 60 + scnRand() * (W - 120);
+      var fy = 60 + scnRand() * (H - 120);
+      var flen = 80 + scnRand() * 40;
+      var fang = scnRand() * Math.PI;
       scenery.push({
-        type: "rock",
-        x: rx, y: ry,
-        size: rsz,
-        radius: rsz * 0.5,
-        collide: true,
-        color: ["#6a6a6a", "#7a7a7a", "#888"][Math.floor(scnRand() * 3)],
-        rot: scnRand() * Math.PI
+        type: "fence",
+        x: fx, y: fy,
+        length: flen,
+        angle: fang,
+        radius: 0,
+        collide: false
       });
     }
-    // 小雜草 (裝飾, 不碰撞) — 20-30 株
-    var grassCount = 20 + Math.floor(scnRand() * 12);
-    for (var k = 0; k < grassCount; k++) {
-      var gx = 30 + scnRand() * (W - 60);
-      var gy = 30 + scnRand() * (H - 60);
+    // 拱門 (裝飾, 不碰撞) — 2-3 個
+    var archCount = 2 + Math.floor(scnRand() * 2);
+    for (var a = 0; a < archCount; a++) {
+      var ax = 100 + scnRand() * (W - 200);
+      var ay = 100 + scnRand() * (H - 200);
       scenery.push({
-        type: "grass",
-        x: gx, y: gy,
-        size: 4 + scnRand() * 4,
+        type: "arch",
+        x: ax, y: ay,
+        radius: 0,
+        collide: false
+      });
+    }
+    // 墓堆 (小裝飾, 不碰撞) — 8-12 堆
+    var moundCount = 8 + Math.floor(scnRand() * 5);
+    for (var m = 0; m < moundCount; m++) {
+      var mx = 40 + scnRand() * (W - 80);
+      var my = 40 + scnRand() * (H - 80);
+      var msz = 8 + scnRand() * 6;
+      scenery.push({
+        type: "mound",
+        x: mx, y: my,
+        size: msz,
         radius: 0,
         collide: false,
-        color: ["#3a5a28", "#4a6a30", "#5a7a40"][Math.floor(scnRand() * 3)],
-        sway: scnRand() * Math.PI * 2
+        dirtColor: ["#3a2818", "#4a3018", "#2a1a10"][Math.floor(scnRand() * 3)]
       });
     }
   }
@@ -1165,6 +1413,9 @@
       if (wave >= UNLOCK.BOSS_WAVE) {
         spawnBoss();
       }
+      // 每波重置擊殺計數 + 動態調整目標
+      killsThisWave = 0;
+      evoGoal = 5 + Math.floor(wave * 0.5);
       updateHud();
     }
 
@@ -1330,13 +1581,11 @@
           e.x += apush; e.y += apush;
         }
       }
-      // 撞隊友 (新系統)
+      // 撞隊友 (新系統, 無敵: 隊友不會扣血,只把敵人彈開)
       for (var tm = teammates.length - 1; tm >= 0; tm--) {
         var tmC = teammates[tm];
         var tdp = Math.hypot(tmC.x - e.x, tmC.y - e.y);
         if (tdp < 14 + e.r) {
-          tmC.hp -= e.dmg;
-          tmC.hitFlash = 0.1;
           var tpush = (tdp - (14 + e.r)) * -2;
           e.x += tpush; e.y += tpush;
         }
@@ -1372,11 +1621,23 @@
               pickups.push({ x: e.x, y: e.y, r: 9, life: 8, pulse: 0, type: "hp" });
             }
             enemies.splice(j, 1);
+            // 擊殺計數 + EXP
+            killsThisWave++;
+            player.exp += 5;
+            while (player.exp >= player.expToNext) {
+              player.exp -= player.expToNext;
+              player.level++;
+              player.maxHp += 20;
+              player.hp = player.maxHp;  // 升級補滿
+              player.expToNext = Math.floor(player.expToNext * 1.4);
+              burst(player.x, player.y, "#ffd34d", 24);
+              flash = 0.2;
+            }
             updateHud();
           }
-          break;
-        }
-      }
+                        break;
+                      }
+                    }
 
       // 被飛彈爆炸 AoE 波及
       for (var ex2 = 0; ex2 < explosions.length; ex2++) {
@@ -1648,17 +1909,18 @@
       }
     }
 
-    // --- 隊友 (每 5 波召喚) ---
-    for (var ti2 = teammates.length - 1; ti2 >= 0; ti2--) {
+    // --- 隊友 (每 5 波召喚, 無敵 + 跟隨玩家) ---
+    for (var ti2 = 0; ti2 < teammates.length; ti2++) {
       var t = teammates[ti2];
-      // HP <= 0 → 死亡
-      if (t.hp <= 0) {
-        burst(t.x, t.y, t.def.labelColor, 16);
-        burst(t.x, t.y, "#888", 8);
-        teammates.splice(ti2, 1);
-        continue;
-      }
       t.fireCd -= dt;
+
+      // 跟隨玩家: lerp 到站位 (世界座標偏移, 玩家移動時自動跟上)
+      var off = t.def.followOffset;
+      var targetX = clamp(player.x + off.x, 30, W - 30);
+      var targetY = clamp(player.y + off.y, 30, H - 30);
+      var followSp = 6;
+      t.x += (targetX - t.x) * Math.min(1, dt * followSp);
+      t.y += (targetY - t.y) * Math.min(1, dt * followSp);
       // 偵測最近敵人
       var tn = null, tnD = t.viewRange;
       for (var tk = 0; tk < enemies.length; tk++) {
@@ -1830,6 +2092,20 @@
 
     if (shake > 0) shake = Math.max(0, shake - 30 * dt);
     if (flash > 0) flash = Math.max(0, flash - dt);
+
+    // 雪花飄落 (世界座標, 不受場景碰撞影響)
+    for (var sf = 0; sf < snowParticles.length; sf++) {
+      var sp = snowParticles[sf];
+      sp.drift += dt;
+      sp.x += sp.vx * dt + Math.sin(sp.drift * 1.5) * 8 * dt;
+      sp.y += sp.vy * dt;
+      if (sp.y > H + 5) {
+        sp.y = -5;
+        sp.x = Math.random() * W;
+      }
+      if (sp.x < -10) sp.x = W + 10;
+      if (sp.x > W + 10) sp.x = -10;
+    }
   }
 
   function triggerExplosion(x, y, radius, damage) {
@@ -1861,81 +2137,133 @@
       if (!scenery) return;
       for (var i = 0; i < scenery.length; i++) {
         var s = scenery[i];
-        if (s.type === "tree") {
-          // 樹陰影
-          ctx.fillStyle = "rgba(0,0,0,0.3)";
-          ctx.beginPath();
-          ctx.ellipse(s.x, s.y + s.size * 0.4, s.size * 0.6, s.size * 0.18, 0, 0, Math.PI * 2);
-          ctx.fill();
-          // 樹幹
-          ctx.fillStyle = s.trunk;
-          ctx.fillRect(s.x - s.size * 0.08, s.y - s.size * 0.2, s.size * 0.16, s.size * 0.5);
-          // 樹冠 (3 層球)
-          var baseY = s.y - s.size * 0.2;
-          ctx.fillStyle = s.foliage;
-          ctx.beginPath();
-          ctx.arc(s.x, baseY, s.size * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(s.x - s.size * 0.3, baseY - s.size * 0.2, s.size * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(s.x + s.size * 0.3, baseY - s.size * 0.2, s.size * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-          // 樹冠高光
-          ctx.fillStyle = "rgba(255,255,255,0.18)";
-          ctx.beginPath();
-          ctx.arc(s.x - s.size * 0.15, baseY - s.size * 0.1, s.size * 0.2, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (s.type === "rock") {
-          // 石頭陰影
-          ctx.fillStyle = "rgba(0,0,0,0.3)";
-          ctx.beginPath();
-          ctx.ellipse(s.x, s.y + s.size * 0.5, s.size * 0.7, s.size * 0.2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          // 石頭主體 (多邊形)
+        if (s.type === "gravestone") {
           ctx.save();
           ctx.translate(s.x, s.y);
           ctx.rotate(s.rot);
-          ctx.fillStyle = s.color;
+          // 石碑陰影
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
           ctx.beginPath();
-          ctx.moveTo(-s.size * 0.7, s.size * 0.2);
-          ctx.lineTo(-s.size * 0.5, -s.size * 0.4);
-          ctx.lineTo(s.size * 0.1, -s.size * 0.5);
-          ctx.lineTo(s.size * 0.7, -s.size * 0.1);
-          ctx.lineTo(s.size * 0.5, s.size * 0.4);
-          ctx.closePath();
+          ctx.ellipse(0, s.h * 0.4, s.w * 0.7, s.w * 0.2, 0, 0, Math.PI * 2);
           ctx.fill();
-          // 石頭高光
-          ctx.fillStyle = "rgba(255,255,255,0.2)";
+          // 石碑主體 (矩形 + 圓頂)
+          ctx.fillStyle = s.stoneColor;
+          // 矩形底
+          ctx.fillRect(-s.w / 2, -s.h / 2, s.w, s.h);
+          // 圓頂
           ctx.beginPath();
-          ctx.moveTo(-s.size * 0.5, -s.size * 0.3);
-          ctx.lineTo(-s.size * 0.2, -s.size * 0.4);
-          ctx.lineTo(0, -s.size * 0.2);
-          ctx.lineTo(-s.size * 0.3, -s.size * 0.05);
-          ctx.closePath();
+          ctx.arc(0, -s.h / 2, s.w / 2, Math.PI, 0);
           ctx.fill();
+          // 雪花蓋頂 (75% 機率)
+          if (s.snowOnTop) {
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            ctx.beginPath();
+            ctx.arc(0, -s.h / 2, s.w / 2 * 0.8, Math.PI, 0);
+            ctx.fill();
+            // 矩形上也鋪雪
+            ctx.fillRect(-s.w / 2 * 0.85, -s.h / 2 + 1, s.w * 0.85, 3);
+          }
+          // 碑文裂痕 (深色線)
+          ctx.strokeStyle = "rgba(0,0,0,0.5)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(-2, -s.h / 4);
+          ctx.lineTo(1, 0);
+          ctx.lineTo(-1, s.h / 4);
+          ctx.stroke();
+          // 高光 (左側光源)
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.fillRect(-s.w / 2, -s.h / 2 + 2, s.w * 0.25, s.h - 4);
           ctx.restore();
-        } else if (s.type === "grass") {
-          // 雜草 (微搖擺)
-          var sway = Math.sin(gameTime * 1.5 + s.sway) * 0.15;
+        } else if (s.type === "fence") {
           ctx.save();
           ctx.translate(s.x, s.y);
-          ctx.rotate(sway);
-          ctx.strokeStyle = s.color;
-          ctx.lineWidth = 1.2;
+          ctx.rotate(s.angle);
+          // 黑色鐵柵欄 (細條 + 連桿)
+          ctx.fillStyle = "#0a0a0a";
+          // 上橫桿
+          ctx.fillRect(-s.length / 2, -16, s.length, 1.5);
+          // 下橫桿
+          ctx.fillRect(-s.length / 2, 12, s.length, 1.5);
+          // 直條 (每隔 8 px 一條)
+          var n = Math.floor(s.length / 8);
+          for (var k = 0; k < n; k++) {
+            var bx = -s.length / 2 + k * 8 + 4;
+            ctx.fillRect(bx, -18, 1, 36);
+            // 頂端尖刺
+            ctx.beginPath();
+            ctx.moveTo(bx - 0.5, -18);
+            ctx.lineTo(bx + 0.5, -18);
+            ctx.lineTo(bx, -22);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        } else if (s.type === "arch") {
+          ctx.save();
+          ctx.translate(s.x, s.y);
+          // 拱門底座
+          ctx.fillStyle = "#2a1a10";
+          ctx.fillRect(-30, 0, 60, 4);
+          // 左柱
+          ctx.fillRect(-28, -40, 6, 40);
+          // 右柱
+          ctx.fillRect(22, -40, 6, 40);
+          // 拱頂弧
           ctx.beginPath();
-          ctx.moveTo(-s.size * 0.3, s.size * 0.4);
-          ctx.lineTo(-s.size * 0.2, 0);
-          ctx.lineTo(-s.size * 0.3, -s.size * 0.4);
-          ctx.moveTo(0, s.size * 0.4);
-          ctx.lineTo(0, -s.size * 0.5);
-          ctx.moveTo(s.size * 0.3, s.size * 0.4);
-          ctx.lineTo(s.size * 0.2, 0);
-          ctx.lineTo(s.size * 0.3, -s.size * 0.4);
-          ctx.stroke();
+          ctx.moveTo(-30, -40);
+          ctx.lineTo(-28, -40);
+          ctx.arc(0, -50, 28, Math.PI, 0);
+          ctx.lineTo(28, -40);
+          ctx.lineTo(30, -40);
+          ctx.lineTo(30, -36);
+          ctx.arc(0, -46, 24, 0, Math.PI);
+          ctx.lineTo(-30, -36);
+          ctx.closePath();
+          ctx.fill();
+          // 雪花蓋頂
+          ctx.fillStyle = "rgba(255,255,255,0.85)";
+          ctx.fillRect(-30, -42, 60, 2);
+          ctx.beginPath();
+          ctx.arc(0, -50, 28, Math.PI, 0);
+          ctx.fill();
+          ctx.restore();
+        } else if (s.type === "mound") {
+          ctx.save();
+          ctx.translate(s.x, s.y);
+          // 墓堆陰影
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(0, 3, s.size * 1.2, s.size * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // 墓堆主體
+          ctx.fillStyle = s.dirtColor;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, s.size, s.size * 0.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // 高光
+          ctx.fillStyle = "rgba(255,255,255,0.18)";
+          ctx.beginPath();
+          ctx.ellipse(-s.size * 0.3, -s.size * 0.2, s.size * 0.4, s.size * 0.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // 雪花 (30% 機率)
+          if (scnRand() < 0.3) {
+            ctx.fillStyle = "rgba(255,255,255,0.8)";
+            ctx.fillRect(-s.size * 0.5, -s.size * 0.1, s.size, 1);
+          }
           ctx.restore();
         }
+      }
+    }
+
+    // ===== 雪花繪製 (覆蓋在所有場景物件之上) =====
+    if (snowParticles) {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      for (var sd = 0; sd < snowParticles.length; sd++) {
+        var sp2 = snowParticles[sd];
+        ctx.beginPath();
+        ctx.arc(sp2.x, sp2.y, sp2.r, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -2705,25 +3033,6 @@
       ctx.setLineDash([]);
     }
 
-    // 5) HP 血條 (頭頂)
-    if (t.hp < t.maxHp) {
-      var bw = 32;
-      var by = -50;
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(-bw / 2, by, bw, 4);
-      var hpRatio = t.hp / t.maxHp;
-      var hpGrad = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
-      if (hpRatio > 0.5) {
-        hpGrad.addColorStop(0, "#4a9a5a");
-        hpGrad.addColorStop(1, "#aaffbf");
-      } else {
-        hpGrad.addColorStop(0, "#9a4a4a");
-        hpGrad.addColorStop(1, "#ffaa4a");
-      }
-      ctx.fillStyle = hpGrad;
-      ctx.fillRect(-bw / 2, by, bw * hpRatio, 4);
-    }
-
     ctx.restore();
   }
 
@@ -2986,6 +3295,10 @@
     menuEl.classList.add("hidden");
     overEl.classList.add("hidden");
     hudEl.classList.remove("hidden");
+    // 繪製頭像
+    drawCharAvatar();
+    drawEvoAvatar();
+    updateHud();
   }
 
   function gameOver() {
@@ -3016,6 +3329,17 @@
 
   resetGame();
   generateScenery();
+  // 雪花初始填滿
+  for (var si = 0; si < 80; si++) {
+    snowParticles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: -10 + Math.random() * 20,
+      vy: 20 + Math.random() * 30,
+      r: 1 + Math.random() * 2,
+      drift: Math.random() * Math.PI * 2
+    });
+  }
   requestAnimationFrame(function (t) { lastTime = t; loop(t); });
 })();
 </script>
