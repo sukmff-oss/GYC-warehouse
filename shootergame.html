@@ -3340,6 +3340,19 @@
       drift: Math.random() * Math.PI * 2
     });
   }
+  // 錯誤捕獲: 任何 JS 錯誤顯示在畫面上, 方便調試
+  window.addEventListener("error", function (e) {
+    try {
+      var menu = document.getElementById("menu");
+      if (menu && !menu.classList.contains("hidden")) return; // 選單還在,正常
+      var body = document.body;
+      var err = document.createElement("div");
+      err.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(120,0,0,0.92);color:#fff;padding:24px;border-radius:12px;z-index:9999;max-width:80%;font-family:monospace;font-size:13px;line-height:1.5;";
+      err.innerHTML = "<b>⚠️ 遊戲載入失敗</b><br>" + (e.message || e.error || "未知錯誤").replace(/</g, "&lt;") + "<br><br><small>請按 Ctrl+Shift+R 強制重整瀏覽器</small>";
+      body.appendChild(err);
+    } catch (_) {}
+  });
+
   requestAnimationFrame(function (t) { lastTime = t; loop(t); });
 })();
 </script>
