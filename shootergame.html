@@ -1087,11 +1087,11 @@
       if (drones.length === 1) spawnDrone(1);
       if (droneCountEl) droneCountEl.textContent = drones.length;
     }
-    if (w >= UNLOCK.TEAMMATE_WAVE) {
+    if (w >= UNLOCK.TEAMMATE_WAVE && w === UNLOCK.TEAMMATE_WAVE) {
       spawnTeammates();
     }
-    // 每 5 波召喚隨機隊友 (5/10/15/20/...)
-    if (w >= 5 && w % 5 === 0) {
+    // 每 3 波召喚 1 名隨機隊友 (3/6/9/12/...)
+    if (w >= 3 && w % 3 === 0) {
       spawnTeammateRandom();
     }
   }
@@ -1167,7 +1167,7 @@
     bosses.push(boss);
   }
 
-  // ===== 隊友系統 (每 5 波召喚) =====
+  // ===== 隊友系統 (每 3 波召喚 1 名隨機隊友, 無上限) =====
   // 5 種類型: 機槍兵/火箭兵/武士/手槍兵/雷射兵
   var TEAMMATE_TYPES = {
     machinegun: { name: "MG 兵", hp: 9999, weapon: "mg", fireRate: 0.125, dmg: 3,
@@ -1206,8 +1206,6 @@
   };
 
   function spawnTeammateRandom() {
-    // 上限 4 位隊友
-    if (teammates.length >= 4) return;
     // 隨機選一種
     var typeKeys = Object.keys(TEAMMATE_TYPES);
     var typeName = typeKeys[Math.floor(Math.random() * typeKeys.length)];
