@@ -300,7 +300,8 @@
   var overEl = document.getElementById("gameover");
   var hudEl = document.getElementById("hud");
   var scoreEl = document.getElementById("score");
-  var hpBarEl = document.getElementById("hpBar");
+  // 舊版 HUD 使用 #hpBar；目前角色面板使用 #charHpBar，保留相容 fallback
+  var hpBarEl = document.getElementById("hpBar") || document.getElementById("charHpBar");
   var waveEl = document.getElementById("waveBox");
   var finalScoreEl = document.getElementById("finalScore");
   var dualTagEl = document.getElementById("dualTag");
