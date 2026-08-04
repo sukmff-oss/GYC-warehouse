@@ -79,9 +79,20 @@
   #scoreBox span { color: #ffd34d; font-size: 24px; }
   #waveBox { font-size: 13px; color: #9aa4b8; margin-top: 2px; }
 
+  /* 右上 HUD 容器 — flex 垂直堆疊,避免重疊 */
+  #rightHud {
+    position: fixed;
+    top: 14px; right: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    z-index: 5;
+    pointer-events: none;
+    max-width: 60vw;
+  }
   /* 升級標籤 (右上角堆疊) */
   .upgrade-tag {
-    position: fixed;
     font-size: 12px; font-weight: 700;
     color: #ffd34d;
     background: rgba(255, 170, 60, 0.18);
@@ -89,13 +100,30 @@
     padding: 4px 10px;
     border-radius: 6px;
     letter-spacing: 0.1em;
-    z-index: 5;
     pointer-events: none;
     display: none;
+    white-space: nowrap;
   }
   .upgrade-tag.show {
     display: block;
     animation: tagPulse 1.4s ease-in-out infinite;
+  }
+  #shieldTag.show { color: #6bd4ff; border-color: rgba(107, 212, 255, 0.5); background: rgba(107, 212, 255, 0.12); }
+  #droneTag.show  { color: #a4ff6b; border-color: rgba(164, 255, 107, 0.5); background: rgba(164, 255, 107, 0.12); }
+  #teammateTag.show { color: #a4ff6b; border-color: rgba(255, 200, 60, 0.5); background: rgba(255, 200, 60, 0.12); }
+  /* 機槍班裝備員 黃色 */
+  #goldWeaponTag {
+    font-size: 12px; font-weight: 700;
+    color: #ffd34d;
+    background: rgba(255, 220, 100, 0.15);
+    border: 1px solid rgba(255, 220, 100, 0.6);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    display: none;
+    white-space: nowrap;
+    animation: goldPulse 1.2s ease-in-out infinite;
   }
   @keyframes tagPulse {
     0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.3); }
@@ -155,14 +183,12 @@
 
   /* 進化卡片 (右上) */
   .evo-card {
-    position: fixed; top: 70px; right: 14px;
     width: 200px;
     background: linear-gradient(180deg, rgba(40, 30, 20, 0.92), rgba(20, 14, 8, 0.95));
     border: 1px solid rgba(255, 200, 100, 0.5);
     border-radius: 8px;
     padding: 8px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-    z-index: 6;
     pointer-events: none;
   }
   .evo-title {
@@ -201,25 +227,7 @@
   }
   #audioBtn:hover { background: rgba(255, 255, 255, 0.15); transform: translateX(-50%) scale(1.08); }
   #audioBtn:active { transform: translateX(-50%) scale(0.95); }
-  #dualTag { top: 50px; right: 18px; }
-  #shieldTag { top: 80px; right: 18px; color: #6bd4ff; border-color: rgba(107, 212, 255, 0.5); background: rgba(107, 212, 255, 0.12); }
-  #droneTag { top: 110px; right: 18px; color: #a4ff6b; border-color: rgba(164, 255, 107, 0.5); background: rgba(164, 255, 107, 0.12); }
-  #teammateTag { top: 140px; right: 18px; color: #a4ff6b; border-color: rgba(255, 200, 60, 0.5); background: rgba(255, 200, 60, 0.12); }
-  /* 機槍班裝備員 黃色 */
-  #goldWeaponTag {
-    position: fixed; top: 170px; right: 18px;
-    font-size: 12px; font-weight: 700;
-    color: #ffd34d;
-    background: rgba(255, 220, 100, 0.15);
-    border: 1px solid rgba(255, 220, 100, 0.6);
-    padding: 4px 10px;
-    border-radius: 6px;
-    letter-spacing: 0.1em;
-    z-index: 5;
-    pointer-events: none;
-    display: none;
-    animation: goldPulse 1.2s ease-in-out infinite;
-  }
+  #scoreBox { color: #e8ecf4; font-size: 14px; font-weight: 700; text-align: right; }
   #goldWeaponTag.show { display: block; }
   @keyframes goldPulse {
     0%, 100% { box-shadow: 0 0 8px rgba(255, 220, 100, 0.4); }
@@ -257,18 +265,18 @@
       </div>
     </div>
   </div>
-
-  <div id="scoreBox" style="position:fixed;top:14px;right:18px;z-index:5;color:#e8ecf4;font-size:14px;font-weight:700;text-align:right;pointer-events:none;">
-    得分 <span id="score" style="color:#ffd34d;font-size:18px;">0</span>
-    <div id="waveBox" style="font-size:11px;color:#9aa4b8;margin-top:2px;">第 1 波</div>
+  <div id="rightHud">
+    <div id="scoreBox">
+      得分 <span id="score" style="color:#ffd34d;font-size:18px;">0</span>
+      <div id="waveBox" style="font-size:11px;color:#9aa4b8;margin-top:2px;">第 1 波</div>
+    </div>
+    <div id="dualTag" class="upgrade-tag">⚡ 雙槍模式</div>
+    <div id="shieldTag" class="upgrade-tag">🛡 防護罩掉落</div>
+    <div id="droneTag" class="upgrade-tag">🛸 無人機×<span id="droneCount">0</span></div>
+    <div id="teammateTag" class="upgrade-tag">🪖 機槍班 (<span id="teammateCount">60</span>s)</div>
+    <div id="goldWeaponTag">✨ <span id="goldWeaponName">GOLDEN</span> 武器</div>
   </div>
 </div>
-
-<div id="dualTag" class="upgrade-tag">⚡ 雙槍模式</div>
-<div id="shieldTag" class="upgrade-tag">🛡 防護罩掉落</div>
-<div id="droneTag" class="upgrade-tag">🛸 無人機×<span id="droneCount">0</span></div>
-<div id="teammateTag" class="upgrade-tag">🪖 機槍班 (<span id="teammateCount">60</span>s)</div>
-<div id="goldWeaponTag">✨ <span id="goldWeaponName">GOLDEN</span> 武器</div>
 
 <div id="menu" class="overlay">
   <h1>叢林槍戰突圍</h1>
