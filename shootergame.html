@@ -1090,8 +1090,11 @@
     if (w >= UNLOCK.TEAMMATE_WAVE && w === UNLOCK.TEAMMATE_WAVE) {
       spawnTeammates();
     }
-    // 每 3 波召喚 1 名隨機隊友 (3/6/9/12/...)
-    if (w >= 3 && w % 3 === 0) {
+    // 7/9 波召喚 MG 隊員 (無敵)
+    if (w === 7 || w === 9) {
+      spawnMgTeammate();
+    } else if (w >= 3 && w % 3 === 0) {
+      // 其餘每 3 波召喚 1 名隨機隊友 (3/6/12/15/...)
       spawnTeammateRandom();
     }
   }
@@ -1209,8 +1212,16 @@
     // 隨機選一種
     var typeKeys = Object.keys(TEAMMATE_TYPES);
     var typeName = typeKeys[Math.floor(Math.random() * typeKeys.length)];
-    var def = TEAMMATE_TYPES[typeName];
-    // 生成位置: 初始位置在玩家站位 (後續每幀 lerp 到該站位)
+    spawnTeammateByType(typeName);
+  }
+
+  // 7/9 波召喚 MG 隊員 (無敵) — 強制 machinegun 類型
+  function spawnMgTeammate() {
+    spawnTeammateByType("machinegun");
+  }
+
+  function spawnTeammateByType(typeName) {
+    var def = TEAMMATE_TYPES[typeName] || TEAMMATE_TYPES.machinegun;
     var off = def.followOffset;
     teammates.push({
       type: typeName,
