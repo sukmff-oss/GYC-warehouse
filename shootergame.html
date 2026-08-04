@@ -129,16 +129,26 @@
     0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.3); }
     50% { box-shadow: 0 0 16px rgba(255, 170, 60, 0.7); }
   }
+  /* 左上 HUD 容器 — flex 垂直堆疊,避免重疊 */
+  #leftHud {
+    position: fixed;
+    top: 14px; left: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    z-index: 5;
+    pointer-events: none;
+    max-width: 60vw;
+  }
   /* 角色面板 (左上) */
   .char-panel {
-    position: fixed; top: 14px; left: 14px;
     background: linear-gradient(180deg, rgba(40, 24, 24, 0.85), rgba(20, 12, 12, 0.92));
     border: 1px solid rgba(180, 50, 50, 0.4);
     border-radius: 8px;
     padding: 8px 10px;
     display: flex; align-items: center; gap: 8px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-    z-index: 6;
     pointer-events: none;
   }
   #charAvatar {
@@ -241,27 +251,29 @@
 <button id="audioBtn" title="音效開/關">🔊</button>
 
 <div id="hud" class="hidden">
-  <div class="char-panel" id="charPanel">
-    <canvas id="charAvatar" width="56" height="56"></canvas>
-    <div class="char-info">
-      <div class="char-stats">
-        <span class="char-icon">❤️</span>
-        <span id="charHpText" class="char-hp-text">100/100</span>
-        <span class="char-lv">Lv.<span id="charLv">1</span></span>
+  <div id="leftHud">
+    <div class="char-panel" id="charPanel">
+      <canvas id="charAvatar" width="56" height="56"></canvas>
+      <div class="char-info">
+        <div class="char-stats">
+          <span class="char-icon">❤️</span>
+          <span id="charHpText" class="char-hp-text">100/100</span>
+          <span class="char-lv">Lv.<span id="charLv">1</span></span>
+        </div>
+        <div class="hp-bar"><div id="charHpBar"></div></div>
+        <div class="exp-bar"><div id="charExpBar"></div></div>
       </div>
-      <div class="hp-bar"><div id="charHpBar"></div></div>
-      <div class="exp-bar"><div id="charExpBar"></div></div>
     </div>
-  </div>
 
-  <div class="evo-card" id="evoCard">
-    <div class="evo-title">⚔️ 下次進化</div>
-    <div class="evo-body">
-      <canvas id="evoAvatar" width="48" height="48"></canvas>
-      <div class="evo-info">
-        <div class="evo-label" id="evoLabel">擊敗 5 隻灰暗屍靈</div>
-        <div class="evo-progress"><span id="evoNow">0</span>/<span id="evoMax">5</span></div>
-        <div class="evo-stars" id="evoStars">★★☆☆☆</div>
+    <div class="evo-card" id="evoCard">
+      <div class="evo-title">⚔️ 下次進化</div>
+      <div class="evo-body">
+        <canvas id="evoAvatar" width="48" height="48"></canvas>
+        <div class="evo-info">
+          <div class="evo-label" id="evoLabel">擊敗 5 隻灰暗屍靈</div>
+          <div class="evo-progress"><span id="evoNow">0</span>/<span id="evoMax">5</span></div>
+          <div class="evo-stars" id="evoStars">★★☆☆☆</div>
+        </div>
       </div>
     </div>
   </div>
