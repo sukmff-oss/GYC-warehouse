@@ -344,7 +344,7 @@
   var _prevPx = 0, _prevPy = 0;
 
   // ===== 升級里程碑 =====
-  var UNLOCK = { DUAL_WAVE: 3, SHIELD_WAVE: 5, DRONE1_WAVE: 7, DRONE2_WAVE: 9, TEAMMATE_WAVE: 11, BOSS_WAVE: 13 };
+  var UNLOCK = { DUAL_WAVE: 3, SHIELD_WAVE: 5, DRONE1_WAVE: 5, TEAMMATE_WAVE: 11, BOSS_WAVE: 13 };
 
   // ===== 音訊系統 (Web Audio API, 純程式生成) =====
   var audioCtx = null;
@@ -1080,11 +1080,11 @@
       if (shieldTagEl) shieldTagEl.classList.add("show");
     }
     if (w >= UNLOCK.DRONE1_WAVE) {
-      if (drones.length === 0) spawnDrone(0);
       if (droneTagEl) droneTagEl.classList.add("show");
     }
-    if (w >= UNLOCK.DRONE2_WAVE) {
-      if (drones.length === 1) spawnDrone(1);
+    // 每 5 波召喚 1 台無人機 (5/10/15/...) — 取消舊的 wave 7/9 固定 2 台上限
+    if (w >= 5 && w % 5 === 0) {
+      spawnDrone(drones.length);
       if (droneCountEl) droneCountEl.textContent = drones.length;
     }
     if (w >= UNLOCK.TEAMMATE_WAVE && w === UNLOCK.TEAMMATE_WAVE) {
