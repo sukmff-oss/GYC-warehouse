@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CYBER STOCK PICKS · 賽博卡片選股</title>
+<style>  :root {
+    --blue:#0071e3; --green:#34c759; --red:#ff3b30; --orange:#ff9500;
+    --bg:#f5f5f7; --panel:#ffffff; --text:#1d1d1f; --text2:#6e6e73; --muted:#86868b; --line:#e8e8ed;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
+                 "PingFang TC", "Microsoft JhengHei", sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 20px 20px 48px; }
+
+  h1 {
+    margin: 18px 0 6px;
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-shadow: none;
+  }
+  h1 small {
+    display: block; font-size: 13px; font-weight: 400;
+    letter-spacing: 0.06em; color: var(--text2); margin-top: 6px; text-shadow: none;
+  }
+
+  /* ============ Topbar ============ */
+  .topbar { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 18px; align-items: stretch; }
+  .badge {
+    background: var(--panel); border: none; border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    padding: 10px 16px; font-size: 12px; color: var(--text2); letter-spacing: 0.03em;
+  }
+  .badge strong { color: var(--text); font-size: 14px; font-weight: 600; margin-left: 6px; text-shadow: none; }
+
+  /* ============ Portfolio Cart ============ */
+  .cart {
+    position: sticky; top: 12px; z-index: 50;
+    background: rgba(255,255,255,.88);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: none; border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    padding: 16px 20px; margin-bottom: 16px; display: none;
+  }
+  .cart.open { display: block; }
+  .cart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cart-head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 0; text-shadow: none; }
+  .cart-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cart-tag {
+    background: #eef0f3; border: none; border-radius: 999px;
+    color: var(--text); padding: 6px 14px; font-size: 13px;
+    cursor: pointer; user-select: none; transition: background .15s ease;
+    box-shadow: none;
+  }
+  .cart-tag:hover { background: #e2e4e9; }
+  .cart-tag .x { margin-left: 6px; opacity: .4; }
+  .cart-stat { margin-top: 12px; display: flex; gap: 22px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; }
+  .cart-stat .item { font-size: 12px; color: var(--text2); }
+  .cart-stat .item strong { color: var(--text); font-size: 17px; font-weight: 600; margin-left: 4px; text-shadow: none; }
+  .cart-stat .item.agg strong { color: var(--blue); }
+
+  /* ============ Card Grid ============ */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--panel); border: none; border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    padding: 20px;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease;
+    position: relative;
+  }
+  .card::before, .card::after, .card > .bl, .card > .br { content: none !important; display: none !important; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+  .card.selected { box-shadow: 0 0 0 2.5px var(--green), 0 12px 32px rgba(52,199,89,.18) !important; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .card-head .code { font-size: 23px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; text-shadow: none; }
+  .card-head .name { font-size: 14px; color: var(--text2); font-weight: 500; }
+  .card-head .rank { font-size: 13px; font-weight: 600; color: var(--muted); text-shadow: none; }
+  .card-mid { display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px; }
+  .card-mid .price { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; text-shadow: none; }
+  .card-mid .price.up   { color: var(--green); }
+  .card-mid .price.down { color: var(--red); }
+  .card-mid .chg { font-size: 12px; color: var(--text2); opacity: 1; }
+  .card-bot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; gap: 10px; }
+  .hit-bar { flex: 1; background: #e8e8ed; border: none; height: 18px; border-radius: 9px; position: relative; overflow: hidden; }
+  .hit-bar-fill { height: 100%; background: linear-gradient(90deg,#0071e3,#34c759); border-radius: 9px; transition: width .4s ease; box-shadow: none; }
+  .hit-bar-fill.mid { background: linear-gradient(90deg,#0071e3,#ff9500); }
+  .hit-bar-fill.low { background: linear-gradient(90deg,#aeaeb2,#ff3b30); }
+  .hit-bar-text {
+    position: absolute; top: 0; right: 10px; line-height: 18px;
+    font-size: 11px; color: #fff; font-weight: 600;
+    font-family: inherit; text-shadow: 0 1px 2px rgba(0,0,0,.25);
+  }
+  .card-bot .select-btn {
+    background: #0071e3; color: #fff;
+    border: none; border-radius: 999px;
+    padding: 8px 16px;
+    font-family: inherit; font-size: 13px; font-weight: 500; letter-spacing: 0;
+    cursor: pointer; box-shadow: none;
+    transition: background .15s ease;
+  }
+  .card-bot .select-btn:hover { background: #0077ed; }
+  .card.selected .select-btn { background: #34c759; }
+  .expand-bar { margin-top: 12px; font-size: 12px; color: var(--muted); text-align: center; letter-spacing: 0; }
+
+  /* ============ Detail Modal ============ */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(29,29,31,.42);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1000; overflow-y: auto; padding: 24px;
+  }
+  .modal-bg.open { display: block; }
+  .modal {
+    max-width: 1100px; margin: 24px auto;
+    background: #ffffff; border: none; border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.25);
+    padding: 32px; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: 18px; right: 18px;
+    width: 32px; height: 32px;
+    background: rgba(0,0,0,.06); color: #6e6e73;
+    border: none; border-radius: 50%;
+    cursor: pointer; font-size: 14px; font-family: inherit;
+    transition: background .15s ease;
+  }
+  .modal-close:hover { background: rgba(0,0,0,.12); }
+
+  /* ============ Tracking Panel ============ */
+  .tracking-panel {
+    background: #ffffff; border: none; border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    padding: 20px 22px; margin-bottom: 16px; position: relative;
+  }
+  .tracking-panel::before, .tracking-panel::after,
+  .tracking-panel > .bl, .tracking-panel > .br { content: none !important; display: none !important; }
+  .tp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .tp-head h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 0; text-shadow: none; }
+  .tp-cumulative {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 14px; color: var(--text2);
+    padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 12px;
+  }
+  .tp-cumulative strong { font-family: inherit; font-size: 26px; font-weight: 700; color: #0071e3; text-shadow: none; }
+  .tp-macro { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .tp-macro-chip {
+    background: #eef0f3; border: none; border-radius: 999px;
+    padding: 5px 12px; font-size: 12px; color: #48484a; letter-spacing: 0;
+  }
+  .tp-macro-chip.up   { color: #248a3d; background: rgba(52,199,89,.14); }
+  .tp-macro-chip.down { color: #d70015; background: rgba(255,59,48,.10); }
+  .tp-latest { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .tp-stock { background: #f5f5f7; border: none; border-radius: 12px; padding: 10px 12px; font-size: 12px; position: relative; }
+  .tp-stock.up   { border-left: 3px solid #34c759; }
+  .tp-stock.down { border-left: 3px solid #ff3b30; }
+  .tp-stock.neutral { border-left: 3px solid #ff9500; }
+  .tp-stock .ticker { font-family: inherit; font-weight: 600; font-size: 14px; color: #1d1d1f; }
+  .tp-stock .chg { font-size: 12px; margin-left: 4px; color: #6e6e73; }
+  .tp-stock .comp { margin-top: 4px; font-size: 11px; color: #86868b; }
+  .tp-history-btn {
+    background: #0071e3; color: #fff;
+    border: none; border-radius: 999px;
+    padding: 9px 20px;
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    box-shadow: none; letter-spacing: 0;
+    transition: background .15s ease;
+  }
+  .tp-history-btn:hover { background: #0077ed; }
+
+  .modal h2 {
+    margin: 0 0 10px; font-family: inherit; font-size: 30px; font-weight: 700;
+    color: #1d1d1f; letter-spacing: -0.02em; text-shadow: none;
+  }
+  .modal .meta-line {
+    color: #6e6e73; font-size: 13px;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid #e8e8ed;
+  }
+  .modal .meta-line b { color: #1d1d1f; font-weight: 600; }
+  .modal .meta-line span { margin-right: 12px; }
+
+  .modal-chart-wrap { background: #f5f5f7; border: none; border-radius: 14px; height: 240px; margin-bottom: 20px; box-shadow: none; }
+  .modal-chart-wrap canvas { display: block; width: 100%; height: 100%; }
+
+  .modal .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .modal .col { background: #f5f5f7; border: none; border-radius: 14px; padding: 18px; box-shadow: none; }
+  .modal .col.bull { background: rgba(52,199,89,.08); box-shadow: none; }
+  .modal .col.bear { background: rgba(255,59,48,.07); box-shadow: none; }
+  .modal .col h3 { margin: 0 0 14px; font-family: inherit; font-size: 17px; font-weight: 600; letter-spacing: 0; }
+  .modal .col.bull h3 { color: #248a3d; text-shadow: none; }
+  .modal .col.bear h3 { color: #d70015; text-shadow: none; }
+  .modal .factor {
+    border-left: none; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+    background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .modal .col.bull .factor { border-left-color: transparent; }
+  .modal .col.bear .factor { border-left-color: transparent; }
+  .modal .factor .tag {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 3px 10px; margin-right: 6px; border-radius: 999px;
+    background: rgba(0,113,227,.09); border: none;
+    color: #0071e3; letter-spacing: 0;
+  }
+  .modal .factor .body { color: #3a3a3c; font-size: 13px; line-height: 1.65; margin-top: 6px; }
+  .modal .col.bull .factor .body strong { color: #248a3d; }
+  .modal .col.bear .factor .body strong { color: #d70015; }
+
+  .modal .news-block {
+    margin-bottom: 16px; padding: 16px 18px; border-radius: 14px;
+    border: none; background: #f5f5f7; box-shadow: none;
+  }
+  .modal .news-block h4 { margin: 0 0 10px; color: #1d1d1f; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+  .modal .news-block ul { padding-left: 18px; margin: 0; }
+  .modal .news-block li { color: #3a3a3c; margin: 5px 0; line-height: 1.65; font-size: 13px; }
+
+  .modal .summary-block {
+    padding: 16px 18px; border-radius: 14px;
+    border: none; background: rgba(0,113,227,.07);
+    font-size: 14px; line-height: 1.7; color: #1d1d1f;
+  }
+  .modal .summary-block::before { content: "\258C "; color: #0071e3; font-weight: bold; }
+
+  .footer { text-align: center; font-size: 12px; color: #86868b; margin-top: 28px; padding-bottom: 20px; line-height: 1.8; }
+  .footer .warn { color: #ff9500; margin-right: 6px; text-shadow: none; }
+
+  .helper-tip {
+    background: rgba(0,113,227,.06); border-left: none; border-radius: 12px;
+    padding: 12px 16px; font-size: 13px; color: #48484a;
+    margin-bottom: 16px; letter-spacing: 0;
+  }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 12px 12px 32px; }
+    h1 { font-size: 26px; }
+    .modal { padding: 20px; margin: 12px; }
+    .modal .compare { grid-template-columns: 1fr; }
+  }</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CYBER · STOCK PICKS<small>// 賽 博 卡 片 選 股 //</small></h1>
+
+  <div class="helper-tip">
+    ▣ 點任卡片 → 展開個股漲跌原因詳細分析 · 點卡片右下「+ 選股」可加入組合(右上 cart 會累計)
+  </div>
+
+  <div class="topbar">
+    <div class="badge">SCAN <strong id="scanDate">--</strong></div>
+    <div class="badge">UNIVERSE <strong>10</strong> STOCKS</div>
+    <div class="badge">FILTER <strong>30D &lt; +5%</strong></div>
+    <div class="badge">RANK BY <strong>HISTORICAL HIT RATE</strong></div>
+  </div>
+
+  <div class="cart" id="cart">
+      <div class="cart-head">
+        <h3>▣ 我的投資組合 · PORTFOLIO</h3>
+        <span style="font-size:11px;color:rgba(60,60,67,.55);">← 點下面卡片「+ 選股」加到這</span>
+      </div>
+      <div class="cart-tags" id="cartTags"></div>
+      <div class="cart-stat" id="cartStat"></div>
+    </div>
+
+    <div class="tracking-panel" id="trackingPanel" style="margin-bottom:14px;display:none;">
+      <div class="tp-head">
+        <h3>📊 每日命中追蹤 · DAILY TRACKING</h3>
+        <span style="font-size:11px;color:rgba(60,60,67,.55);">最後更新 <span id="trackUpdated">--</span></span>
+      </div>
+      <div class="tp-cumulative" id="trackCumulative">
+        累計命中率 —<strong>--%</strong> (過去 <span id="trackDays">0</span> 天,<span id="trackObs">0</span> 筆觀察)
+      </div>
+      <div class="tp-latest" id="trackLatest">今日尚無資料。</div>
+      <button class="tp-history-btn" onclick="window.open('cyber_history.html','_blank')">📜 查看歷史預測記錄</button>
+          </div>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+  <div class="modal-bg" id="modalBg">
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <div class="footer">
+    <div><span class="warn">⚠ DISCL</span>
+      「命中率」為<strong>歷史回測</strong>(30d 漲幅訊號 → 30 天後真漲百分比),非未來預測。
+      所有資料彙整自 TWSE、Yahoo Finance 公開報價與免費新聞,不構成投資建議。
+    </div>
+    <div>資料抓取日期 <span id="dataDate">--</span></div>
+  </div>
+</div>
+
+<script>
+let STOCKS = {};
+let sortedCodes = [];
+let selectedSet = new Set();
+let currentDetailCode = null;
+
+// boot
+window.__BOOT_DATA__ = {
+  "2886": {
+    "name": "兆豐金",
+    "last": 46.85,
+    "7d": -0.0106,
+    "30d": -0.0032,
+    "hit_rate": 0.953,
+    "score": 95,
+    "trend": "近一個月持平偏弱",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "除息行情",
+            "8/13 配發每股 1.6 元現金股利,股東人數 45.4 萬,投信連 17 買站穩多方,『填息行情』推升買氣。"
+          ],
+          [
+            "基本面 / 內部",
+            "2025 年獲利創史高,公股金控龍頭體質穩,現金股利有望優於 1.6 元(2025 法說會已暗示)。"
+          ],
+          [
+            "利率 / 內部",
+            "在升息週期尾段,公股行庫利差擴張,淨利收益看好延續。"
+          ],
+          [
+            "籌碼面 / 內部",
+            "投信、外資、法人同步偏多持股(連買 17 日),低 PE/PB 雙高現股價位於淨值附近,安全邊際相對高。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "全球金融風險 / 政治",
+            "美中/美俄地緣衝突若升級,金融股易遭非理性調節,歐洲央行循環接近末升段,後續降息循環對公股金控獲利有壓。"
+          ],
+          [
+            "配息後填息失敗 / 內部",
+            "除息後若台股大盤震盪,填息進度緩慢,大戶反手調節風險。"
+          ],
+          [
+            "高本益 vs 高息題材 / 內部",
+            "壽險與金控本益比相對高,當高股息 ETF(如 0056/00878) 搶眼,部分資金可能流向 ETF 而非個股。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "兆豐金、華南金 8/13 壓軸除息,投信連 17 買填息行情可期(豐雲學堂)",
+      "去年獲利創史高!擬配息逾 1.6 元,前 2 月賺近 70 億坐公股龍頭(Yahoo)"
+    ],
+    "summary": "短期由除息+投信買盤推升;長期受惠升息尾段利差擴張,基本面穩健。命中 95% 來自歷史回測,不代表未來會重演。",
+    "hist_closes": [
+      41.45000076293945,
+      41.70000076293945,
+      41.650001525878906,
+      42.099998474121094,
+      41.95000076293945,
+      41.20000076293945,
+      43.54999923706055,
+      43.400001525878906,
+      43.400001525878906,
+      43.400001525878906,
+      44.0,
+      44.5,
+      45.099998474121094,
+      45.5,
+      44.75,
+      45.20000076293945,
+      44.54999923706055,
+      46.650001525878906,
+      46.150001525878906,
+      46.20000076293945,
+      46.099998474121094,
+      46.150001525878906,
+      46.0,
+      45.5,
+      46.29999923706055,
+      46.79999923706055,
+      46.79999923706055,
+      46.70000076293945,
+      46.70000076293945,
+      47.0,
+      47.0,
+      46.0,
+      46.599998474121094,
+      47.599998474121094,
+      48.20000076293945,
+      48.599998474121094,
+      48.20000076293945,
+      48.150001525878906,
+      48.45000076293945,
+      49.400001525878906,
+      49.45000076293945,
+      49.900001525878906,
+      51.5,
+      53.099998474121094,
+      51.599998474121094,
+      50.70000076293945,
+      51.20000076293945,
+      50.29999923706055,
+      50.900001525878906,
+      51.0,
+      49.400001525878906,
+      48.70000076293945,
+      45.849998474121094,
+      47.349998474121094,
+      46.599998474121094,
+      46.900001525878906,
+      47.04999923706055,
+      46.400001525878906,
+      46.95000076293945,
+      46.849998474121094
+    ],
+    "best_n": 64,
+    "data_date": "2026-08-25"
+  },
+  "2330": {
+    "name": "台積電",
+    "last": 2350.0,
+    "7d": -0.0167,
+    "30d": -0.0269,
+    "hit_rate": 0.797,
+    "score": 80,
+    "trend": "中性偏弱",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "AI/HPC / 電子AI供需",
+            "2026 美元營收年增上修至 ~40%,資本支出 600-640 億美元,AI 訂單能見度強,高效運算占季度營收 55% 年增 48%。"
+          ],
+          [
+            "2 奈米量產 / 電子",
+            "N2 在新竹與高雄同步量產,蘋果 M、超微 MI 接棒,3 奈米出貨創新高。"
+          ],
+          [
+            "股東人數 / 內部",
+            "股東人數單週增近 3 萬創新高,在震盪期間呈防禦屬性,長線買盤進場。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "Q3 毛利率 / 內部",
+            "指引 65-67% 低於市場期待,2 奈米初期成本稀釋使 ADR 跌。"
+          ],
+          [
+            "海外擴廠資本支出 / 政治",
+            "美國廠加碼投資,資本支出壓力;地緣政治敏感。"
+          ],
+          [
+            "本益比 / 內部",
+            "P/E 23-25 倍偏高,任何財測利多鈍化都引發震盪。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "法說會來襲,台積電恐丟出『營收暴增 35% + 三年砸 2,000 億美元』",
+      "2Q26 達成率 101%,法說會五大變數才是行情主軸"
+    ],
+    "summary": "AI 訂單能見度強,短線因 Q3 毛利率指引略低 + 美國廠資本支出加重回檔。歷史回測 80% 是『過去訊號偏多』。",
+    "hist_closes": [
+      2350.0,
+      2360.0,
+      2410.0,
+      2385.0,
+      2350.0,
+      2230.0,
+      2295.0,
+      2255.0,
+      2210.0,
+      2290.0,
+      2345.0,
+      2350.0,
+      2350.0,
+      2385.0,
+      2455.0,
+      2490.0,
+      2390.0,
+      2390.0,
+      2325.0,
+      2330.0,
+      2410.0,
+      2475.0,
+      2445.0,
+      2415.0,
+      2455.0,
+      2440.0,
+      2420.0,
+      2415.0,
+      2440.0,
+      2390.0,
+      2415.0,
+      2420.0,
+      2290.0,
+      2300.0,
+      2345.0,
+      2385.0,
+      2370.0,
+      2345.0,
+      2330.0,
+      2270.0,
+      2180.0,
+      2190.0,
+      2345.0,
+      2365.0,
+      2310.0,
+      2370.0,
+      2360.0,
+      2355.0,
+      2380.0,
+      2375.0,
+      2390.0,
+      2425.0,
+      2395.0,
+      2390.0,
+      2375.0,
+      2335.0,
+      2350.0,
+      2365.0,
+      2375.0,
+      2350.0
+    ],
+    "best_n": 222,
+    "data_date": "2026-08-25"
+  },
+  "2303": {
+    "name": "聯電",
+    "last": 119.0,
+    "7d": -0.0206,
+    "30d": -0.2372,
+    "hit_rate": 0.759,
+    "score": 75,
+    "trend": "重大回檔(30日-23.7%)",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "基本面 / 內部",
+            "麥格理首評『優於大盤』目標價 258 元(上檔 8 成空間),FactSet 22 位分析師目標價中位調升 17.3%。"
+          ],
+          [
+            "產能利用率 / 需求",
+            "匯豐預期下半年產用率回升至 91%,2027 漲價趨勢看至年底。"
+          ],
+          [
+            "矽光子題材 / 電子AI",
+            "與新加坡 SILITH 合作的矽光子晶圓首批量產,2027 再推 12 吋自有平台。"
+          ],
+          [
+            "防禦屬性 / 內部",
+            "投信連 11 日加碼,大盤震盪時相對抗跌。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "台積電成熟製程不退場 / 內部",
+            "原本轉單利多變空,直接打入跌停。"
+          ],
+          [
+            "處置股出關賣壓 / 內部",
+            "7/20 跌停鎖死,處置出關後放量賣出 25-30 萬張。"
+          ],
+          [
+            "估值 / 內部",
+            "近期高點 176 跌至 119(-32%),屬擁擠交易典型大幅調節。"
+          ],
+          [
+            "地緣政治 / 戰爭原料",
+            "新加坡廠產能擴張若遇地緣緊張,可能影響毛利。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "聯電股價飆上 176 元後還有戲?法人曝最佳買點與進場時機",
+      "聯電跌停原因?逾 6 萬張搶賣,股價 144 元可以買?(今周刊)",
+      "聯電攜 SILITH 首批矽光子晶圓量產,2027 年再推 12 吋自有平台"
+    ],
+    "summary": "基本面 vs 技術面嚴重背離:麥格理目標價 258 vs 30 日 -23.7% 仍在調節賣壓。歷史 76% 是過去訊號,不代表會在此刻立刻翻多。",
+    "hist_closes": [
+      140.0,
+      133.5,
+      130.5,
+      122.5,
+      125.0,
+      119.0,
+      118.5,
+      117.5,
+      116.5,
+      132.5,
+      137.0,
+      138.5,
+      136.0,
+      138.5,
+      160.0,
+      167.5,
+      165.5,
+      173.0,
+      162.0,
+      160.0,
+      164.5,
+      166.5,
+      158.0,
+      158.5,
+      164.0,
+      152.0,
+      149.0,
+      154.0,
+      151.5,
+      140.0,
+      156.0,
+      159.0,
+      144.0,
+      130.0,
+      125.5,
+      137.5,
+      135.5,
+      128.0,
+      118.0,
+      113.5,
+      102.5,
+      105.0,
+      121.0,
+      116.0,
+      115.5,
+      121.5,
+      118.0,
+      114.0,
+      117.0,
+      120.0,
+      121.0,
+      123.0,
+      120.0,
+      121.5,
+      117.5,
+      113.5,
+      112.0,
+      114.0,
+      117.5,
+      119.0
+    ],
+    "best_n": 199,
+    "data_date": "2026-08-25"
+  },
+  "2882": {
+    "name": "國泰金",
+    "last": 98.9,
+    "7d": -0.0256,
+    "30d": 0.0291,
+    "hit_rate": 0.746,
+    "score": 74,
+    "trend": "近一個月持平偏強",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "息率題材 / 內部",
+            "法人預估若配 3.5 元現金,以 70.6 元計息率 4.96%,在升息尾段高息股受青睞。"
+          ],
+          [
+            "壽險獲利 / 內部",
+            "國壽為壽險業龍頭,升息循環下壽險投資收益提升、利差擴張。"
+          ],
+          [
+            "基本面 / 內部",
+            "金控股資質穩,金融海嘯以來多次系統性風險後皆回穩。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "全球金融風險 / 政治",
+            "地緣衝突若升級,金融股易首當其衝。"
+          ],
+          [
+            "配息後填息 / 內部",
+            "若除息後大盤回檔,填息可能延後,股價易震盪。"
+          ],
+          [
+            "壽險匯損 / 內部",
+            "新台幣若短線急升,壽險業海外投資匯兌可能影響獲利。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "國泰金法說 2:股利比照去年 3.5 元?配發量能沒有問題,股息殖利率 4.96%"
+    ],
+    "summary": "金控股資質穩,息率題材 + 升息循環利差擴張為主要利多。短期 30d 持平但 fill-in 配息題材明確。",
+    "hist_closes": [
+      88.19999694824219,
+      89.19999694824219,
+      91.80000305175781,
+      94.4000015258789,
+      100.0,
+      95.0,
+      104.0,
+      99.9000015258789,
+      100.5,
+      100.5,
+      104.0,
+      109.5,
+      113.5,
+      115.5,
+      113.0,
+      113.5,
+      110.0,
+      111.5,
+      106.0,
+      101.5,
+      98.30000305175781,
+      95.0,
+      93.5,
+      93.5999984741211,
+      93.4000015258789,
+      97.0,
+      98.0,
+      96.30000305175781,
+      96.30000305175781,
+      96.69999694824219,
+      96.0999984741211,
+      96.5999984741211,
+      97.30000305175781,
+      94.30000305175781,
+      94.0,
+      95.80000305175781,
+      96.80000305175781,
+      97.30000305175781,
+      97.0,
+      98.5,
+      95.4000015258789,
+      94.0999984741211,
+      95.19999694824219,
+      101.5,
+      100.5,
+      99.19999694824219,
+      100.5,
+      97.5,
+      99.4000015258789,
+      101.0,
+      99.5999984741211,
+      99.69999694824219,
+      99.5,
+      101.5,
+      98.0999984741211,
+      99.19999694824219,
+      98.30000305175781,
+      97.69999694824219,
+      100.5,
+      98.9000015258789
+    ],
+    "best_n": 63,
+    "data_date": "2026-08-25"
+  },
+  "2379": {
+    "name": "瑞昱",
+    "last": 716.0,
+    "7d": -0.0069,
+    "30d": -0.0504,
+    "hit_rate": 0.734,
+    "score": 73,
+    "trend": "近一個月下跌",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "WiFi 7 題材 / 電子AI",
+            "2026 年 WiFi 7 在 PC 滲透率預期 >30%(去年兩倍),高階商用機種採用最積極。"
+          ],
+          [
+            "車用乙太網路 / 電子",
+            "車用乙太網需求持續,IC 設計受惠。"
+          ],
+          [
+            "AI PC / 電子AI",
+            "Edge AI PC 滲透率上升,瑞昱為主要網通晶片商。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "記憶體/封測/晶圓代工成本 / 原料",
+            "記憶體、封測、晶圓代工成本上升,使毛利率承壓(2026 Q1 毛利率年減 1.9 個百分點)。"
+          ],
+          [
+            "下半年能見度 / 內部",
+            "法說會指出下半年能見度仍有限,存貨風險上升。"
+          ],
+          [
+            "PC 出貨 / 需求",
+            "全球 PC 出貨若低於預期,將直接影響瑞昱營收。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "瑞昱法說會:AI 網通成下半年主軸,WiFi 7、車用升級但毛利率承壓"
+    ],
+    "summary": "WiFi 7 + 車用題材明確,但短期毛利受成本壓力;下行有支撐、上行看 WiFi 7 滲透率。",
+    "hist_closes": [
+      609.0,
+      653.0,
+      646.0,
+      624.0,
+      643.0,
+      596.0,
+      651.0,
+      645.0,
+      655.0,
+      618.0,
+      634.0,
+      678.0,
+      745.0,
+      819.0,
+      900.0,
+      863.0,
+      803.0,
+      814.0,
+      740.0,
+      783.0,
+      806.0,
+      829.0,
+      811.0,
+      783.0,
+      769.0,
+      776.0,
+      817.0,
+      840.0,
+      840.0,
+      756.0,
+      754.0,
+      753.0,
+      712.0,
+      718.0,
+      709.0,
+      753.0,
+      743.0,
+      745.0,
+      744.0,
+      762.0,
+      731.0,
+      738.0,
+      697.0,
+      683.0,
+      704.0,
+      723.0,
+      751.0,
+      744.0,
+      750.0,
+      758.0,
+      772.0,
+      766.0,
+      758.0,
+      721.0,
+      717.0,
+      707.0,
+      738.0,
+      703.0,
+      714.0,
+      716.0
+    ],
+    "best_n": 64,
+    "data_date": "2026-08-25"
+  },
+  "2376": {
+    "name": "技嘉",
+    "last": 341.0,
+    "7d": -0.1421,
+    "30d": 0.021,
+    "hit_rate": 0.714,
+    "score": 71,
+    "trend": "近期急跌 7d-14%",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "AI 伺服器 / 電子AI供需",
+            "AI 訂單需求持續暢旺,1-2 月業績站穩 300 億大關,前兩月合併營收 660 億年增 52%。"
+          ],
+          [
+            "NVIDIA GB200/GB300 / 電子",
+            "出貨主力為 GB200/GB300 架構,新型號 Vera Rubin 8 月起開始出貨。"
+          ],
+          [
+            "海外產能 / 政治",
+            "美/馬來西亞/巴西/阿聯酋/印度多元產能,地緣風險分散。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "高 PE 估值 / 內部",
+            "AI 題材股近期回檔明顯,本益比偏高易震盪。"
+          ],
+          [
+            "客戶分散度 / 需求",
+            "出貨節奏受 NeoCloud 客戶拉貨強度影響,營收波動較大。"
+          ],
+          [
+            "記憶體/晶圓成本 / 原料",
+            "代工成本上升侵蝕毛利。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "技嘉 AI 伺服器接單旺,1、2 月站穩 300 億元,GB300 NV72 Q1 放量(工商時報 2026/3)",
+      "CoreWeave/Nebius 主要供應商,日本富岳超級電腦 B200 訂單出貨"
+    ],
+    "summary": "AI 伺服器題材明確,營收動能強;近期回檔主因高估值調節,基本面仍優。",
+    "hist_closes": [
+      387.0,
+      390.5,
+      399.0,
+      374.0,
+      369.0,
+      345.0,
+      359.0,
+      344.5,
+      340.0,
+      342.0,
+      349.5,
+      348.0,
+      347.5,
+      344.0,
+      339.5,
+      330.5,
+      339.0,
+      334.0,
+      319.5,
+      325.0,
+      344.0,
+      337.5,
+      338.5,
+      338.5,
+      336.5,
+      327.0,
+      335.0,
+      336.5,
+      336.5,
+      335.5,
+      334.0,
+      344.0,
+      337.0,
+      325.0,
+      331.0,
+      341.0,
+      348.0,
+      354.5,
+      354.5,
+      349.5,
+      327.0,
+      321.5,
+      318.5,
+      336.5,
+      324.5,
+      332.0,
+      342.0,
+      344.0,
+      344.0,
+      349.5,
+      350.5,
+      375.5,
+      393.5,
+      397.5,
+      358.0,
+      348.0,
+      348.5,
+      344.0,
+      339.5,
+      341.0
+    ],
+    "best_n": 63,
+    "data_date": "2026-08-25"
+  },
+  "2454": {
+    "name": "聯發科",
+    "last": 3655.0,
+    "7d": -0.0919,
+    "30d": -0.0027,
+    "hit_rate": 0.549,
+    "score": 55,
+    "trend": "近期急跌 7d-9%",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "Edge AI + AI ASIC / 電子AI",
+            "AI 代理手機、Edge AI SoC 滲透率上看 40%;Google AI ASIC 與 NVIDIA RTX Spark 合作。"
+          ],
+          [
+            "基本面 / 內部",
+            "2026.7 最新 EPS 預估上修至 123.71(2025.8 時為 76.82),P/E 30 倍中性。"
+          ],
+          [
+            "高階 SoC + WiFi 7 + 車用 / 電子",
+            "多條成長曲線交集。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "高價股波動 / 內部",
+            "單日振幅 6.7%,風險偏好降溫時易先被調節。"
+          ],
+          [
+            "中國手機 / 需求",
+            "終端需求對天璣均價、毛利有壓。"
+          ],
+          [
+            "產能/原料 / 內部",
+            "CoWoS、記憶體、面板驅動 IC 等供應若緊,影響出貨節奏。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "AI 代理手機全球問世,聯發科受惠關鍵差哪一步？",
+      "邊緣 AI 帶動 Q1 營收攀高峰,目標價上看 2,100 元",
+      "雲端 AI 晶片開始放量,手機低谷後迎接新成長"
+    ],
+    "summary": "長期多頭題材完整(Edge AI+AI ASIC+WiFi 7+車用);短期跟權值電子回檔 7d-9%。命中 55% 屬中性。",
+    "hist_closes": [
+      4440.0,
+      4380.0,
+      4420.0,
+      4430.0,
+      4130.0,
+      3935.0,
+      4130.0,
+      4120.0,
+      3880.0,
+      4165.0,
+      4350.0,
+      4415.0,
+      4380.0,
+      4375.0,
+      4380.0,
+      4515.0,
+      4225.0,
+      4215.0,
+      3880.0,
+      3825.0,
+      4060.0,
+      4225.0,
+      4150.0,
+      4120.0,
+      4110.0,
+      3955.0,
+      3955.0,
+      3925.0,
+      3825.0,
+      3515.0,
+      3665.0,
+      3620.0,
+      3370.0,
+      3240.0,
+      3410.0,
+      3830.0,
+      3850.0,
+      3750.0,
+      3525.0,
+      3315.0,
+      2990.0,
+      3060.0,
+      3555.0,
+      3780.0,
+      3800.0,
+      3980.0,
+      3905.0,
+      3825.0,
+      3915.0,
+      3810.0,
+      3950.0,
+      4115.0,
+      4205.0,
+      4025.0,
+      3885.0,
+      3750.0,
+      3675.0,
+      3695.0,
+      3745.0,
+      3655.0
+    ],
+    "best_n": 144,
+    "data_date": "2026-08-25"
+  },
+  "2891": {
+    "name": "中信金",
+    "last": 63.6,
+    "7d": -0.0334,
+    "30d": -0.0215,
+    "hit_rate": 0.547,
+    "score": 55,
+    "trend": "近一個月持平偏弱",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "息率題材 / 內部",
+            "2026 配發現金股利 2.5 元,以除息前 70.3 元計年化殖利率約 3.56%,8/7 發放。"
+          ],
+          [
+            "升息循環利差 / 內部",
+            "民營金控,利差擴張,壽險/銀行雙引擎。"
+          ],
+          [
+            "併購題材 / 內部",
+            "金融業持續整併,中信金可能再出手。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "全球金融風險 / 政治",
+            "地緣衝突若升級,金融股波動。"
+          ],
+          [
+            "壽險匯損 / 內部",
+            "新台幣匯率劇烈波動可能侵蝕獲利。"
+          ],
+          [
+            "高本益 vs ETF / 內部",
+            "資金流向高息 ETF。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "中信金 2026 每股配發現金股利 2.5 元,還原年化殖利率約 3.56%(最後買進日 7/9,除息 7/10)"
+    ],
+    "summary": "民營金控中配息穩定,殖利率約 3.5% 受定存戶青睞。短期回檔主因大盤波動。",
+    "hist_closes": [
+      62.099998474121094,
+      64.0999984741211,
+      70.5,
+      68.0,
+      66.5999984741211,
+      65.4000015258789,
+      69.19999694824219,
+      68.19999694824219,
+      67.5,
+      67.5999984741211,
+      70.0999984741211,
+      70.80000305175781,
+      71.0,
+      71.9000015258789,
+      70.5,
+      72.4000015258789,
+      69.9000015258789,
+      70.5999984741211,
+      70.30000305175781,
+      70.30000305175781,
+      71.0,
+      70.5999984741211,
+      69.9000015258789,
+      70.5999984741211,
+      71.4000015258789,
+      70.19999694824219,
+      71.30000305175781,
+      69.9000015258789,
+      69.9000015258789,
+      66.5,
+      65.0,
+      63.5,
+      63.0,
+      62.099998474121094,
+      61.5,
+      62.70000076293945,
+      64.0,
+      63.5,
+      63.599998474121094,
+      63.0,
+      62.400001525878906,
+      62.0,
+      63.099998474121094,
+      64.9000015258789,
+      64.80000305175781,
+      64.80000305175781,
+      66.0,
+      64.5999984741211,
+      65.5999984741211,
+      66.5,
+      66.80000305175781,
+      66.5999984741211,
+      66.5,
+      65.80000305175781,
+      65.5999984741211,
+      66.5,
+      64.9000015258789,
+      63.400001525878906,
+      65.0,
+      63.599998474121094
+    ],
+    "best_n": 64,
+    "data_date": "2026-08-25"
+  },
+  "2317": {
+    "name": "鴻海",
+    "last": 243.5,
+    "7d": -0.0617,
+    "30d": 0.034,
+    "hit_rate": 0.537,
+    "score": 54,
+    "trend": "近一個月持平偏強",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "AI 伺服器 / 電子AI",
+            "Q1 法說聚焦 AI 伺服器;鴻海為 GB200/GB300 重要代工夥伴。"
+          ],
+          [
+            "蘋果 iPhone / 需求",
+            "蘋果新手機 9 月拉貨啟動,消費性電子傳統旺季。"
+          ],
+          [
+            "全球製造多元佈局 / 政治",
+            "全球多元基地,地緣風險分散。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "美中貿易摩擦 / 政治",
+            "鴻海部分產能在中國,若關稅升級,毛利受影響。"
+          ],
+          [
+            "毛利率 / 內部",
+            "毛利較電子代工純薄,題材熱度降溫時易震盪。"
+          ],
+          [
+            "匯率 / 內部",
+            "新台幣升值壓力可能影響轉單價格。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "鴻海 2026 Q1 法說會,聚焦 AI 伺服器發展(YouTube 5/14)",
+      "Q1 法說會聚焦 AI 伺服器、蘋果手機、消費性電子"
+    ],
+    "summary": "AI+蘋果雙引擎,動能可期;短期受美中緊張及代工毛利率壓力。",
+    "hist_closes": [
+      293.5,
+      301.5,
+      309.0,
+      293.0,
+      284.5,
+      269.5,
+      277.5,
+      263.0,
+      258.5,
+      260.5,
+      267.5,
+      269.0,
+      272.0,
+      268.5,
+      268.5,
+      259.5,
+      256.0,
+      257.5,
+      248.5,
+      246.5,
+      251.0,
+      248.0,
+      239.0,
+      240.5,
+      242.0,
+      237.0,
+      237.5,
+      237.5,
+      237.5,
+      236.5,
+      235.5,
+      239.0,
+      242.5,
+      234.0,
+      234.5,
+      246.0,
+      251.5,
+      257.5,
+      252.5,
+      253.0,
+      238.0,
+      237.0,
+      229.5,
+      250.5,
+      253.0,
+      250.0,
+      258.5,
+      264.5,
+      260.0,
+      264.5,
+      263.0,
+      270.0,
+      262.0,
+      259.5,
+      255.0,
+      249.0,
+      245.0,
+      246.5,
+      245.5,
+      243.5
+    ],
+    "best_n": 54,
+    "data_date": "2026-08-25"
+  },
+  "2382": {
+    "name": "廣達",
+    "last": 325.0,
+    "7d": -0.0076,
+    "30d": -0.1447,
+    "hit_rate": 0.5,
+    "score": 50,
+    "trend": "近一個月大幅回檔 -14.5%",
+    "scenarios": [
+      {
+        "tag": "漲",
+        "color": "#34c759",
+        "factors": [
+          [
+            "AI 伺服器出貨放量 / 電子AI",
+            "2025 合併營收 2.1 兆年增 50.5%,稅後淨利 749.88 億年增 25.6% 創歷史新高,擬配息 15.6 元/股。"
+          ],
+          [
+            "新一代 Vera Rubin / 電子",
+            "8 月開始出貨,雖初期貢獻有限但量產連續性加分。"
+          ],
+          [
+            "GB200/GB300 機櫃 / 電子AI",
+            "集中 L11 機櫃級別訂單並延伸至 L12 規格。"
+          ]
+        ]
+      },
+      {
+        "tag": "跌",
+        "color": "#ff3b30",
+        "factors": [
+          [
+            "Vera Rubin 量產初期成本 / 內部",
+            "新平台初期成本較高,壓抑毛利。"
+          ],
+          [
+            "大盤 AI 股回檔 / 內部",
+            "近期 AI 題材股集體回檔,廣達 30 日已 -14%。"
+          ],
+          [
+            "集中出貨節奏 / 需求",
+            "若客戶單一集中,營收波動風險。"
+          ]
+        ]
+      }
+    ],
+    "news": [
+      "廣達 AI 伺服器出貨放量,提高資本支出續擴產(2026/3 Moneydj)",
+      "2025 全年合併營收 2.1 兆,淨利 749.88 億年增 25.6%,現金股利 15.6 元"
+    ],
+    "summary": "2025 創新高但近期 AI 股回檔影響短線;Vera Rubin 8 月開出貨,長期題材仍在。",
+    "hist_closes": [
+      372.5,
+      400.5,
+      417.0,
+      404.0,
+      390.5,
+      376.5,
+      375.0,
+      380.5,
+      370.0,
+      372.0,
+      370.0,
+      362.5,
+      374.0,
+      376.0,
+      380.0,
+      372.5,
+      372.0,
+      366.5,
+      362.0,
+      367.0,
+      368.0,
+      372.0,
+      369.0,
+      377.0,
+      378.0,
+      373.0,
+      377.0,
+      373.5,
+      373.5,
+      378.0,
+      380.0,
+      381.0,
+      352.0,
+      325.5,
+      316.0,
+      324.0,
+      329.0,
+      336.0,
+      328.0,
+      322.0,
+      313.5,
+      309.5,
+      279.0,
+      291.5,
+      296.5,
+      300.5,
+      304.0,
+      302.0,
+      298.0,
+      313.5,
+      315.5,
+      325.5,
+      325.0,
+      327.5,
+      333.5,
+      327.0,
+      331.0,
+      327.0,
+      321.5,
+      325.0
+    ],
+    "best_n": 64,
+    "data_date": "2026-08-25"
+  }
+};
+
+document.getElementById('scanDate').textContent = new Date().toISOString().slice(0, 10);
+
+function init(data) {
+  STOCKS = data;
+  sortedCodes = Object.keys(data).sort((a, b) => STOCKS[b].hit_rate - STOCKS[a].hit_rate);
+  renderGrid();
+  // cart init
+  document.getElementById('cartTags').innerHTML = '<span style="opacity:.5;font-size:11px;">尚未選股</span>';
+  // tracking init
+  if (window.__TRACKING__) renderTracking(window.__TRACKING__);
+}
+
+let trackingState = null;
+function renderTracking(t) {
+  if (!t) return;
+  trackingState = t;
+  const panel = document.getElementById('trackingPanel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  const cum = t.cumulative || {days:0, total_up:0, total_obs:0, hit_rate:0};
+  document.getElementById('trackDays').textContent = cum.days;
+  document.getElementById('trackObs').textContent  = cum.total_obs;
+  document.getElementById('trackCumulative').innerHTML =
+    `累計命中率 <strong>${(cum.hit_rate*100).toFixed(1)}%</strong> (過去 <span id="trackDays">${cum.days}</span> 天, <span id="trackObs">${cum.total_obs}</span> 筆觀察)`;
+  document.getElementById('trackUpdated').textContent = t.updated || '--';
+  // latest day
+  if (t.latest && t.latest.macro && t.latest.results) {
+    const m = t.latest.macro;
+    const cum3 = (m.macro_3d_pct || 0);
+    const cum5 = (m.macro_5d_pct || 0);
+    const macroHtml = `
+      <div class="tp-head">
+        <h3>📊 ${t.latest.date_iso || ''} 實戰記錄 · ${t.latest.actual_hit_count || 0}/${t.latest.total||0} 漲 (${(t.latest.actual_hit_rate*100||0).toFixed(1)}%)</h3>
+        <span style="font-size:11px;color:rgba(60,60,67,.55);">最後更新 ${t.updated || '--'}</span>
+      </div>
+      <div class="tp-cumulative">
+        累計命中率 <strong>${(cum.hit_rate*100).toFixed(1)}%</strong>
+        · ${cum.total_up}/${cum.total_obs} 漲
+        · ${cum.days} 天
+      </div>
+      <div class="tp-macro">
+        <span class="tp-macro-chip">美股 5d ${(cum5>=0?'+':'')}${cum5.toFixed(2)}%</span>
+        <span class="tp-macro-chip">美股 3d ${(cum3>=0?'+':'')}${cum3.toFixed(2)}%</span>
+        ${(m.symbols||{})['^SOX']  ? `<span class="tp-macro-chip ${m.symbols['^SOX'].change_pct >= 0 ? 'up':'down'}">SOX ${m.symbols['^SOX'].change_pct >= 0 ? '+' : ''}${m.symbols['^SOX'].change_pct.toFixed(2)}%</span>` : ''}
+        ${(m.symbols||{})['^GSPC'] ? `<span class="tp-macro-chip ${m.symbols['^GSPC'].change_pct >= 0 ? 'up':'down'}">SPX ${m.symbols['^GSPC'].change_pct >= 0 ? '+' : ''}${m.symbols['^GSPC'].change_pct.toFixed(2)}%</span>` : ''}
+        ${(m.symbols||{})['NVDA']  ? `<span class="tp-macro-chip ${m.symbols['NVDA'].change_pct >= 0 ? 'up':'down'}">NVDA ${m.symbols['NVDA'].change_pct >= 0 ? '+' : ''}${m.symbols['NVDA'].change_pct.toFixed(2)}%</span>` : ''}
+        ${(m.symbols||{})['TSM']   ? `<span class="tp-macro-chip ${m.symbols['TSM'].change_pct >= 0 ? 'up':'down'}">TSM ADR ${m.symbols['TSM'].change_pct >= 0 ? '+' : ''}${m.symbols['TSM'].change_pct.toFixed(2)}%</span>` : ''}
+      </div>
+      <div class="tp-latest">
+        ${t.latest.results.map(r => {
+          const cls = r.up === null ? 'neutral' : (r.up ? 'up' : 'down');
+          const sym = r.up === null ? '—' : (r.up ? '▲' : '▼');
+          const chg = r.change_pct != null ? `${r.up ? '+' : ''}${r.change_pct.toFixed(2)}%` : '?';
+          const comp = r.composite || {};
+          const compScore = comp.score != null ? `comp ${comp.score.toFixed(0)} · ${comp.label || ''}` : '';
+          return `<div class="tp-stock ${cls}">
+            <span class="ticker">${sym} ${r.code}</span> <span class="name">${r.name}</span>
+            <div class="chg">${chg} · 預 ${r.hit_rate ? (r.hit_rate*100).toFixed(0)+'%' : '--'}</div>
+            <div class="comp">${compScore}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="tp-history-btn" onclick="window.open('cyber_history.html','_blank')">📜 查看歷史預測記錄</button>
+    `;
+    panel.innerHTML = macroHtml;
+  }
+}
+
+function renderGrid() {
+  const host = document.getElementById('grid');
+  host.innerHTML = '';
+  sortedCodes.forEach((code, i) => {
+    const s = STOCKS[code];
+    const trend = s['7d'] >= 0 ? 'up' : 'down';
+    const trendSym = s['7d'] >= 0 ? '▲' : '▼';
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.code = code;
+    const hr = s['hit_rate'];
+    const fillCls = hr > 0.7 ? '' : (hr > 0.55 ? 'mid' : 'low');
+    card.innerHTML = `
+      <span class="bl"></span><span class="br"></span>
+      <div class="card-head">
+        <div><span class="code">${code}</span> <span class="name">${s.name}</span></div>
+        <div class="rank">#${i+1}</div>
+      </div>
+      <div class="card-mid">
+        <span class="price ${trend}">${s.last.toFixed(2)}</span>
+        <span class="chg">${trendSym} ${(Math.abs(s['7d'])*100).toFixed(2)}% / 7d</span>
+        <span class="chg" style="margin-left:auto;color:#86868b">${s['30d']>=0?'+':''}${(s['30d']*100).toFixed(2)}% / 30d</span>
+      </div>
+      <div class="card-bot">
+        <div class="hit-bar">
+          <div class="hit-bar-fill ${fillCls}" style="width:${hr*100}%"></div>
+          <div class="hit-bar-text">HIT ${(hr*100).toFixed(0)}%</div>
+        </div>
+        <button class="select-btn" data-act="select">+ 選股</button>
+      </div>
+      <div class="expand-bar">▸ 點擊展開分析</div>
+    `;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('button[data-act="select"]')) return;
+      openDetail(code);
+    });
+    card.querySelector('button[data-act="select"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSelect(code);
+    });
+    host.appendChild(card);
+  });
+}
+
+function toggleSelect(code) {
+  const card = document.querySelector(`.card[data-code="${code}"]`);
+  if (selectedSet.has(code)) {
+    selectedSet.delete(code);
+    card.classList.remove('selected');
+  } else {
+    selectedSet.add(code);
+    card.classList.add('selected');
+  }
+  refreshCart();
+}
+
+function refreshCart() {
+  const cart = document.getElementById('cart');
+  const tagsHost = document.getElementById('cartTags');
+  const statHost = document.getElementById('cartStat');
+  if (selectedSet.size === 0) {
+    cart.classList.remove('open');
+    return;
+  }
+  cart.classList.add('open');
+
+  // tags
+  tagsHost.innerHTML = '';
+  selectedSet.forEach(code => {
+    const s = STOCKS[code];
+    const tag = document.createElement('div');
+    tag.className = 'cart-tag';
+    tag.innerHTML = `${code} ${s.name} (${(s.hit_rate*100).toFixed(0)}%) <span class="x">✕</span>`;
+    tag.addEventListener('click', () => toggleSelect(code));
+    tagsHost.appendChild(tag);
+  });
+
+  // statistics
+  const arr = Array.from(selectedSet).map(c => STOCKS[c]);
+  const sumLast = arr.reduce((a, s) => a + s['last'], 0);
+  const avg7d = arr.reduce((a, s) => a + s['7d'], 0) / arr.length;
+  const avg30d = arr.reduce((a, s) => a + s['30d'], 0) / arr.length;
+  const avgHit = arr.reduce((a, s) => a + s['hit_rate'], 0) / arr.length;
+  statHost.innerHTML = `
+    <div class="item"># 持股 <strong>${arr.length}</strong></div>
+    <div class="item">平均收盤加總 <strong>${sumLast.toFixed(1)}</strong></div>
+    <div class="item">組合 7d <strong style="color:${avg7d>=0?'#34c759':'#ff3b30'}">${(avg7d*100).toFixed(2)}%</strong></div>
+    <div class="item">組合 30d <strong style="color:${avg30d>=0?'#34c759':'#ff3b30'}">${(avg30d*100).toFixed(2)}%</strong></div>
+    <div class="item agg">組合歷史命中率 <strong>${(avgHit*100).toFixed(1)}%</strong></div>
+  `;
+}
+
+// ============= MODAL DETAIL =============
+function openDetail(code) {
+  currentDetailCode = code;
+  const s = STOCKS[code];
+  const modal = document.getElementById('modal');
+  const bg = document.getElementById('modalBg');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeDetail()">✕</button>
+    <h2>${code} · ${s.name}</h2>
+    <div class="meta-line">
+      <span>收盤 <b style="font-size:18px;color:#1d1d1f">${s.last.toFixed(2)}</b></span>
+      <span>7d <b style="color:${s['7d']>=0?'#34c759':'#ff3b30'}">${(s['7d']*100).toFixed(2)}%</b></span>
+      <span>30d <b style="color:${s['30d']>=0?'#34c759':'#ff3b30'}">${(s['30d']*100).toFixed(2)}%</b></span>
+      <span>歷史命中率 <b style="color:#ff9500">${(s.hit_rate*100).toFixed(1)}%</b> (n=${s['best_n']||'?'})</span>
+      <span>trend <b>${s.trend}</b></span>
+    </div>
+    <div class="modal-chart-wrap"><canvas id="dchart"></canvas></div>
+    <div class="compare">
+      <div class="col bull">
+        <h3>▲ 上漲原因</h3>
+        ${(s.scenarios.find(x => x.tag==='漲') || {factors: []}).factors.map(f => `
+          <div class="factor"><span class="tag">${f[0]}</span><div class="body">${f[1]}</div></div>
+        `).join('')}
+      </div>
+      <div class="col bear">
+        <h3>▼ 跌幅原因</h3>
+        ${(s.scenarios.find(x => x.tag==='跌') || {factors: []}).factors.map(f => `
+          <div class="factor"><span class="tag">${f[0]}</span><div class="body">${f[1]}</div></div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="news-block">
+      <h4>▣ 2026-08 公開新聞</h4>
+      <ul>${(s.news || []).map(n => `<li>${n}</li>`).join('')}</ul>
+    </div>
+    <div class="summary-block">${s.summary}</div>
+  `;
+  bg.classList.add('open');
+  // render chart after DOM ready
+  requestAnimationFrame(() => drawDetailChart(code, s.hist_closes));
+}
+function closeDetail() {
+  document.getElementById('modalBg').classList.remove('open');
+  currentDetailCode = null;
+}
+document.getElementById('modalBg').addEventListener('click', (e) => {
+  if (e.target.id === 'modalBg') closeDetail();
+});
+
+function drawDetailChart(code, closes) {
+  const canvas = document.getElementById('dchart');
+  if (!canvas || !closes || !closes.length) return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+  const padL = 50, padR = 10, padT = 14, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const mn = Math.min(...closes), mx = Math.max(...closes);
+  const padding = (mx - mn) * 0.08;
+  const rangeMin = mn - padding, rangeMax = mx + padding;
+  const xAt = i => padL + (i / (closes.length - 1)) * plotW;
+  const yAt = v => padT + (1 - (v - rangeMin) / (rangeMax - rangeMin)) * plotH;
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+  ctx.setLineDash([2, 4]); ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = padT + (plotH / 5) * i;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    const v = rangeMax - (rangeMax - rangeMin) * (i / 5);
+    ctx.fillStyle = 'rgba(60,60,67,0.55)';
+    ctx.font = "11px -apple-system,'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(v.toFixed(1), padL - 4, y);
+  }
+  ctx.setLineDash([]);
+  const startColor = closes[0] <= closes[closes.length-1] ? '#34c759' : '#ff3b30';
+  ctx.strokeStyle = startColor;
+  ctx.lineWidth = 2;
+  ctx.shadowColor = startColor; ctx.shadowBlur = 0;
+  ctx.beginPath();
+  closes.forEach((c, i) => i === 0 ? ctx.moveTo(xAt(i), yAt(c)) : ctx.lineTo(xAt(i), yAt(c)));
+  ctx.stroke(); ctx.shadowBlur = 0;
+  ctx.fillStyle = startColor + '20';
+  ctx.beginPath();
+  ctx.moveTo(xAt(0), H - padB);
+  closes.forEach((c, i) => ctx.lineTo(xAt(i), yAt(c)));
+  ctx.lineTo(xAt(closes.length-1), H - padB);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = startColor;
+  ctx.shadowColor = startColor; ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.arc(xAt(closes.length-1), yAt(closes[closes.length-1]), 4, 0, Math.PI*2);
+  ctx.fill(); ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(60,60,67,0.55)';
+  ctx.font = "11px -apple-system,'PingFang TC','Microsoft JhengHei',sans-serif";
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText('60 日真實收盤', W/2, H - padB + 4);
+}
+
+// init
+
+
+
+
+
+
+window.__TRACKING__ = {"cumulative": {"days": 2, "total_obs": 20, "total_up": 11, "hit_rate": 0.55}, "latest": {"date": "20260827", "date_iso": "2026-08-27", "macro": {"date": "20260827", "symbols": {"^SOX": {"name": "費半指數", "close": 11611.24, "prev": 11588.04, "change_pct": 0.2, "d3_pct": -1.1, "d5_pct": -1.08}, "^GSPC": {"name": "S&P 500", "close": 7675.7, "prev": 7677.28, "change_pct": -0.02, "d3_pct": 0.02, "d5_pct": -0.42}, "^IXIC": {"name": "Nasdaq", "close": 26130.2, "prev": 26151.3, "change_pct": -0.08, "d3_pct": -0.19, "d5_pct": -0.76}, "NVDA": {"name": "NVIDIA", "close": 209.66, "prev": 213.05, "change_pct": -1.59, "d3_pct": -2.36, "d5_pct": -3.63}, "AAPL": {"name": "Apple", "close": 313.45, "prev": 309.9, "change_pct": 1.15, "d3_pct": 1.33, "d5_pct": -1.07}, "MSFT": {"name": "Microsoft", "close": 496.37, "prev": 491.71, "change_pct": 0.95, "d3_pct": 2.72, "d5_pct": 2.49}, "TSM": {"name": "TSMC ADR", "close": 417.69, "prev": 417.41, "change_pct": 0.07, "d3_pct": -0.3, "d5_pct": 1.36}, "AVGO": {"name": "Broadcom", "close": 355.59, "prev": 356.74, "change_pct": -0.32, "d3_pct": -3.49, "d5_pct": -1.9}}, "macro_3d_pct": -0.42, "macro_5d_pct": -0.75}, "results": [{"code": "2886", "name": "兆豐金", "close": 46.45000076293945, "prev": 46.599998474121094, "change_pct": -0.32, "up": false, "hit_rate": 0.953, "score": 95, "composite": {"score": 85.0, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2330", "name": "台積電", "close": 2425.0, "prev": 2415.0, "change_pct": 0.41, "up": true, "hit_rate": 0.797, "score": 80, "composite": {"score": 72.8, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2303", "name": "聯電", "close": 118.0, "prev": 123.5, "change_pct": -4.45, "up": false, "hit_rate": 0.759, "score": 75, "composite": {"score": 69.3, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2882", "name": "國泰金", "close": 103.5, "prev": 102.5, "change_pct": 0.98, "up": true, "hit_rate": 0.746, "score": 74, "composite": {"score": 68.3, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2379", "name": "瑞昱", "close": 731.0, "prev": 734.0, "change_pct": -0.41, "up": false, "hit_rate": 0.734, "score": 73, "composite": {"score": 67.5, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2376", "name": "技嘉", "close": 348.5, "prev": 351.5, "change_pct": -0.85, "up": false, "hit_rate": 0.714, "score": 71, "composite": {"score": 65.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2454", "name": "聯發科", "close": 3930.0, "prev": 3945.0, "change_pct": -0.38, "up": false, "hit_rate": 0.549, "score": 55, "composite": {"score": 52.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2891", "name": "中信金", "close": 64.4000015258789, "prev": 64.5999984741211, "change_pct": -0.31, "up": false, "hit_rate": 0.547, "score": 55, "composite": {"score": 52.8, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2317", "name": "鴻海", "close": 253.0, "prev": 246.5, "change_pct": 2.64, "up": true, "hit_rate": 0.537, "score": 54, "composite": {"score": 52.0, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2382", "name": "廣達", "close": 335.5, "prev": 332.5, "change_pct": 0.9, "up": true, "hit_rate": 0.5, "score": 50, "composite": {"score": 48.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}], "actual_hit_count": 4, "total": 10, "actual_hit_rate": 0.4}, "days": [{"date": "20260826", "date_iso": "2026-08-26", "macro": {"date": "20260826", "symbols": {"^SOX": {"name": "費半指數", "close": 11588.04, "prev": 11423.17, "change_pct": 1.44, "d3_pct": -1.8, "d5_pct": -3.37}, "^GSPC": {"name": "S&P 500", "close": 7677.28, "prev": 7652.86, "change_pct": 0.32, "d3_pct": 0.47, "d5_pct": -0.19}, "^IXIC": {"name": "Nasdaq", "close": 26151.3, "prev": 25980.19, "change_pct": 0.66, "d3_pct": 0.32, "d5_pct": -0.53}, "NVDA": {"name": "NVIDIA", "close": 213.05, "prev": 208.48, "change_pct": 2.19, "d3_pct": -1.75, "d5_pct": -3.04}, "AAPL": {"name": "Apple", "close": 309.9, "prev": 310.34, "change_pct": -0.14, "d3_pct": -0.45, "d5_pct": -0.04}, "MSFT": {"name": "Microsoft", "close": 491.71, "prev": 487.31, "change_pct": 0.9, "d3_pct": 2.19, "d5_pct": 2.09}, "TSM": {"name": "TSMC ADR", "close": 417.41, "prev": 410.12, "change_pct": 1.78, "d3_pct": 0.34, "d5_pct": 0.97}, "AVGO": {"name": "Broadcom", "close": 356.74, "prev": 358.76, "change_pct": -0.56, "d3_pct": -2.0, "d5_pct": -6.12}}, "macro_3d_pct": -0.33, "macro_5d_pct": -1.36}, "results": [{"code": "2886", "name": "兆豐金", "close": 46.599998474121094, "prev": 47.0, "change_pct": -0.85, "up": false, "hit_rate": 0.953, "score": 95, "composite": {"score": 84.6, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2330", "name": "台積電", "close": 2415.0, "prev": 2400.0, "change_pct": 0.62, "up": true, "hit_rate": 0.797, "score": 80, "composite": {"score": 72.4, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2303", "name": "聯電", "close": 123.5, "prev": 125.0, "change_pct": -1.2, "up": false, "hit_rate": 0.759, "score": 75, "composite": {"score": 68.9, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2882", "name": "國泰金", "close": 102.5, "prev": 103.0, "change_pct": -0.49, "up": false, "hit_rate": 0.746, "score": 74, "composite": {"score": 68.0, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2379", "name": "瑞昱", "close": 734.0, "prev": 730.0, "change_pct": 0.55, "up": true, "hit_rate": 0.734, "score": 73, "composite": {"score": 67.1, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2376", "name": "技嘉", "close": 351.5, "prev": 347.5, "change_pct": 1.15, "up": true, "hit_rate": 0.714, "score": 71, "composite": {"score": 65.5, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2454", "name": "聯發科", "close": 3945.0, "prev": 3735.0, "change_pct": 5.62, "up": true, "hit_rate": 0.549, "score": 55, "composite": {"score": 52.5, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2891", "name": "中信金", "close": 64.5999984741211, "prev": 64.5, "change_pct": 0.16, "up": true, "hit_rate": 0.547, "score": 55, "composite": {"score": 52.4, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2317", "name": "鴻海", "close": 246.5, "prev": 243.0, "change_pct": 1.44, "up": true, "hit_rate": 0.537, "score": 54, "composite": {"score": 51.6, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}, {"code": "2382", "name": "廣達", "close": 332.5, "prev": 328.5, "change_pct": 1.22, "up": true, "hit_rate": 0.5, "score": 50, "composite": {"score": 48.5, "macro_5d": -1.36, "macro_3d": -0.33, "label": "美股中性 —"}}], "actual_hit_count": 7, "total": 10, "actual_hit_rate": 0.7}, {"date": "20260827", "date_iso": "2026-08-27", "macro": {"date": "20260827", "symbols": {"^SOX": {"name": "費半指數", "close": 11611.24, "prev": 11588.04, "change_pct": 0.2, "d3_pct": -1.1, "d5_pct": -1.08}, "^GSPC": {"name": "S&P 500", "close": 7675.7, "prev": 7677.28, "change_pct": -0.02, "d3_pct": 0.02, "d5_pct": -0.42}, "^IXIC": {"name": "Nasdaq", "close": 26130.2, "prev": 26151.3, "change_pct": -0.08, "d3_pct": -0.19, "d5_pct": -0.76}, "NVDA": {"name": "NVIDIA", "close": 209.66, "prev": 213.05, "change_pct": -1.59, "d3_pct": -2.36, "d5_pct": -3.63}, "AAPL": {"name": "Apple", "close": 313.45, "prev": 309.9, "change_pct": 1.15, "d3_pct": 1.33, "d5_pct": -1.07}, "MSFT": {"name": "Microsoft", "close": 496.37, "prev": 491.71, "change_pct": 0.95, "d3_pct": 2.72, "d5_pct": 2.49}, "TSM": {"name": "TSMC ADR", "close": 417.69, "prev": 417.41, "change_pct": 0.07, "d3_pct": -0.3, "d5_pct": 1.36}, "AVGO": {"name": "Broadcom", "close": 355.59, "prev": 356.74, "change_pct": -0.32, "d3_pct": -3.49, "d5_pct": -1.9}}, "macro_3d_pct": -0.42, "macro_5d_pct": -0.75}, "results": [{"code": "2886", "name": "兆豐金", "close": 46.45000076293945, "prev": 46.599998474121094, "change_pct": -0.32, "up": false, "hit_rate": 0.953, "score": 95, "composite": {"score": 85.0, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2330", "name": "台積電", "close": 2425.0, "prev": 2415.0, "change_pct": 0.41, "up": true, "hit_rate": 0.797, "score": 80, "composite": {"score": 72.8, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2303", "name": "聯電", "close": 118.0, "prev": 123.5, "change_pct": -4.45, "up": false, "hit_rate": 0.759, "score": 75, "composite": {"score": 69.3, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2882", "name": "國泰金", "close": 103.5, "prev": 102.5, "change_pct": 0.98, "up": true, "hit_rate": 0.746, "score": 74, "composite": {"score": 68.3, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2379", "name": "瑞昱", "close": 731.0, "prev": 734.0, "change_pct": -0.41, "up": false, "hit_rate": 0.734, "score": 73, "composite": {"score": 67.5, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2376", "name": "技嘉", "close": 348.5, "prev": 351.5, "change_pct": -0.85, "up": false, "hit_rate": 0.714, "score": 71, "composite": {"score": 65.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2454", "name": "聯發科", "close": 3930.0, "prev": 3945.0, "change_pct": -0.38, "up": false, "hit_rate": 0.549, "score": 55, "composite": {"score": 52.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2891", "name": "中信金", "close": 64.4000015258789, "prev": 64.5999984741211, "change_pct": -0.31, "up": false, "hit_rate": 0.547, "score": 55, "composite": {"score": 52.8, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2317", "name": "鴻海", "close": 253.0, "prev": 246.5, "change_pct": 2.64, "up": true, "hit_rate": 0.537, "score": 54, "composite": {"score": 52.0, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}, {"code": "2382", "name": "廣達", "close": 335.5, "prev": 332.5, "change_pct": 0.9, "up": true, "hit_rate": 0.5, "score": 50, "composite": {"score": 48.9, "macro_5d": -0.75, "macro_3d": -0.42, "label": "美股中性 —"}}], "actual_hit_count": 4, "total": 10, "actual_hit_rate": 0.4}], "updated": "2026-08-27T11:09:52.073646"};
+init(window.__BOOT_DATA__);
+document.getElementById('dataDate').textContent =
+  (STOCKS[Object.keys(STOCKS)[0]].data_date || 'N/A');
+if (window.__TRACKING__) renderTracking(window.__TRACKING__);
+</script>
+</body>
+</html>
