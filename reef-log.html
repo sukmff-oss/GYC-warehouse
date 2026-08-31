@@ -264,6 +264,7 @@ table.log-table td.actions{text-align:right;white-space:nowrap;}
       <div class="form-field" style="grid-column:1/-1;flex-direction:row;gap:10px;">
         <button type="submit" class="btn btn-primary">💾 儲存紀錄</button>
         <button type="button" class="btn btn-secondary" onclick="triggerFileImport()">📤 匯入(補資料)</button>
+        <button type="button" class="btn btn-secondary" onclick="loadSeed()">🌱 載入初始 3 筆(2026-08-31)</button>
         <button type="button" class="btn btn-secondary" onclick="triggerFileExport()">📥 匯出 JSON</button>
         <button type="button" class="btn btn-danger" onclick="confirmClear()">🗑️ 清除全部</button>
         <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleImport(event)">
@@ -778,6 +779,69 @@ function init(){
     const entries = loadLog();
     if(entries.length>=2) drawTrend(entries.slice(-30));
   });
+}
+
+
+/* ========== Seed 初始資料(2026-08-31 三次測試) ========== */
+const SEED_DATA = [
+  {
+    "id": "seed-20260831-01",
+    "date": "2026-08-31",
+    "time": "10:00",
+    "ph": "8.04",
+    "temp": "25.8",
+    "ec": "53200",
+    "tds": "26600",
+    "salinity": "32.8",
+    "sg": "1.022",
+    "orp": "295",
+    "cl": "0.1",
+    "notes": "第一次測試,海水缸建置初期 baseline",
+    "ts": 1693443600000
+  },
+  {
+    "id": "seed-20260831-02",
+    "date": "2026-08-31",
+    "time": "14:30",
+    "ph": "8.10",
+    "temp": "25.9",
+    "ec": "53500",
+    "tds": "26800",
+    "salinity": "33.0",
+    "sg": "1.023",
+    "orp": "296",
+    "cl": "0.1",
+    "notes": "補水/換水後,SG 緩升中,probe 數據開始一致",
+    "ts": 1693458600000
+  },
+  {
+    "id": "seed-20260831-03",
+    "date": "2026-08-31",
+    "time": "22:00",
+    "ph": "8.11",
+    "temp": "25.5",
+    "ec": "54200",
+    "tds": "27100",
+    "salinity": "33.5",
+    "sg": "1.023",
+    "orp": "297",
+    "cl": "0.1",
+    "notes": "夜間測量,溫度略降,四探頭數據完全一致,系統趨於穩定",
+    "ts": 1693485600000
+  }
+];
+
+function loadSeed(){
+  if(!confirm('將載入 2026-08-31 的 3 筆初始測試資料(若已有紀錄會自動去重),確定?')) return;
+  const existing = loadLog();
+  const merged = existing.concat(SEED_DATA).reduce((acc,curr)=>{
+    const key = curr.date+'-'+curr.time;
+    if(!acc.seen.has(key)){ acc.seen.add(key); acc.result.push(curr); }
+    return acc;
+  },{seen:new Set(),result:[]}).result;
+  saveLog(merged);
+  render();
+  alert('✓ 已載入 3 筆初始資料,總計 '+merged.length+' 筆');
 }
 
 init();
