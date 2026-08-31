@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海水缸日誌 | 國研AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+:root{
+  --bg:#060912;
+  --bg2:#0a1020;
+  --card:#0c1528;
+  --card2:#0f1d35;
+  --border:#1a2740;
+  --border2:#243354;
+  --text:#EDF2FA;
+  --muted:#5A7090;
+  --accent:#FF6535;
+  --accent2:#FF8C5A;
+  --up:#EF4444;
+  --down:#10B981;
+  --blue:#4F8EF7;
+  --gold:#F5C518;
+  --ok:#10B981;
+  --warn:#F59E0B;
+  --bad:#EF4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+
+/* nav (與 daily-report.html 一致) */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,9,18,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:0 20px;}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:3px;height:56px;overflow-x:auto;scrollbar-width:none;}
+.nav-inner::-webkit-scrollbar{display:none;}
+.nav-inner a{font-size:12.5px;font-weight:500;padding:5px 13px;border-radius:999px;white-space:nowrap;transition:.2s;color:var(--muted);letter-spacing:.3px;}
+.nav-inner a:hover,.nav-inner a.active{background:rgba(255,101,53,0.14);color:var(--accent);}
+.nav-logo{font-weight:900;font-size:17px;color:var(--text)!important;letter-spacing:1px;margin-right:10px;}
+.nav-logo span{color:var(--accent);}
+.live-dot{width:7px;height:7px;background:var(--down);border-radius:50%;animation:livepulse 2s infinite;margin-left:6px;}
+@keyframes livepulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+.nav-clock{font-size:12px;color:var(--muted);padding:4px 12px;background:rgba(255,255,255,0.04);border-radius:999px;margin-left:auto;font-variant-numeric:tabular-nums;letter-spacing:.5px;}
+
+.container{max-width:1200px;margin:0 auto;padding:28px 20px;display:flex;flex-direction:column;gap:18px;}
+
+/* hero */
+.hero{background:linear-gradient(135deg,#0a1628 0%,#060d20 40%,#0a1e3a 100%);border:1px solid var(--border);border-radius:22px;padding:32px 36px;position:relative;overflow:hidden;}
+.hero-eyebrow{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.hero h1{font-size:32px;font-weight:900;letter-spacing:3px;margin-bottom:14px;}
+.hero h1 span{color:var(--accent);}
+.hero-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:border-color .3s;}
+.card:hover{border-color:var(--border2);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+.section-header h2{font-size:17px;font-weight:700;letter-spacing:.3px;}
+.badge{font-size:10.5px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,0.05);color:var(--muted);letter-spacing:.5px;}
+
+/* metric grid */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.metric-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;transition:border-color .25s;}
+.metric-card:hover{border-color:rgba(255,101,53,0.28);}
+.metric-card h3{font-size:10.5px;color:var(--muted);font-weight:500;margin-bottom:8px;letter-spacing:.6px;text-transform:uppercase;}
+.metric-card .val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.metric-card .sub{font-size:11px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;}
+.metric-card.status-ok{border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.06);}
+.metric-card.status-warn{border-color:rgba(245,158,11,0.35);background:rgba(245,158,11,0.06);}
+.metric-card.status-bad{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.06);}
+
+/* form */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-field label{font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;}
+.form-field input,.form-field textarea,.form-field select{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13.5px;transition:border-color .2s;}
+.form-field input:focus,.form-field textarea:focus,.form-field select:focus{outline:none;border-color:var(--accent);}
+.form-field textarea{resize:vertical;min-height:60px;}
+
+/* buttons */
+.btn{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .2s;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-secondary{background:rgba(255,255,255,0.05);color:var(--text);border-color:var(--border);}
+.btn-secondary:hover{background:rgba(255,255,255,0.09);border-color:var(--border2);}
+.btn-danger{background:rgba(239,68,68,0.12);color:var(--bad);border-color:rgba(239,68,68,0.3);}
+.btn-danger:hover{background:rgba(239,68,68,0.2);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+/* table */
+.log-table-wrap{overflow-x:auto;border-radius:10px;}
+table.log-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.log-table th{padding:10px 12px;text-align:left;font-size:10.5px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);letter-spacing:.7px;text-transform:uppercase;white-space:nowrap;}
+table.log-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.035);font-variant-numeric:tabular-nums;}
+table.log-table tr:hover td{background:rgba(255,255,255,0.02);}
+table.log-table td.actions{text-align:right;white-space:nowrap;}
+
+/* AI analysis block */
+.ai-block{background:linear-gradient(135deg,rgba(79,142,247,0.08) 0%,rgba(255,101,53,0.06) 100%);border:1px solid rgba(79,142,247,0.25);border-radius:14px;padding:22px;}
+.ai-block h3{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--blue);display:flex;align-items:center;gap:8px;}
+.ai-section{margin-bottom:14px;}
+.ai-section:last-child{margin-bottom:0;}
+.ai-section-title{font-size:12px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;font-weight:600;}
+.ai-section ul{list-style:none;padding:0;}
+.ai-section li{padding:5px 0 5px 20px;position:relative;font-size:13.5px;}
+.ai-section li::before{content:'•';position:absolute;left:6px;color:var(--accent);font-weight:700;}
+.ai-section li.pro::before{content:'✓';color:var(--ok);}
+.ai-section li.con::before{content:'✗';color:var(--bad);}
+.ai-section li.warn::before{content:'!';color:var(--warn);}
+
+/* status pills */
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.3px;}
+.pill-ok{background:rgba(16,185,129,0.15);color:var(--ok);}
+.pill-warn{background:rgba(245,158,11,0.15);color:var(--warn);}
+.pill-bad{background:rgba(239,68,68,0.15);color:var(--bad);}
+
+/* chart canvas */
+.chart-wrap{position:relative;height:260px;margin-top:8px;}
+
+/* stats strip */
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+.stat-item{text-align:center;padding:10px;background:rgba(255,255,255,0.02);border-radius:10px;}
+.stat-item .stat-val{font-size:20px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+.stat-item .stat-lbl{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:16px;}
+.modal .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+
+/* empty state */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state .ico{font-size:48px;margin-bottom:12px;opacity:.5;}
+.empty-state .msg{font-size:14px;margin-bottom:16px;}
+
+@media(max-width:640px){
+  .container{padding:18px 14px;}
+  .hero{padding:22px 22px;}
+  .hero h1{font-size:24px;}
+  .card{padding:18px;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/daily-report.html" class="nav-logo">國研<span>AI</span></a>
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/daily-report.html">🌅 早報</a>
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/twse-archive.html">📈 台股</a>
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/cyber_picks.html">🎯 AI選股</a>
+    <a href="reef-log.html" class="active">🐠 海水缸</a>
+    <a href="https://sukmff-oss.github.io/GYC-warehouse/GYC-warehouse-admin.html" target="_blank">📦 倉儲</a>
+    <div class="live-dot"></div>
+    <span class="nav-clock" id="nav-clock">載入中…</span>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">REEF LOG · SEAWATER TANK · SINCE 2026</div>
+    <h1>🐠 海水缸 <span>日誌 & 分析</span></h1>
+    <div class="hero-meta">
+      <span>📍 海葵 + 小丑魚 海水缸</span>
+      <span>💾 LocalStorage 本機儲存</span>
+      <span id="lastUpdate">最後更新:—</span>
+    </div>
+  </div>
+
+  <!-- 最新一次數據儀表板 -->
+  <div class="card">
+    <div class="section-header">
+      <h2>📊 最新水質快照</h2>
+      <span class="badge" id="entryCount">0 筆紀錄</span>
+    </div>
+    <div class="metrics-grid" id="latestMetrics">
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="ico">📭</div>
+        <div class="msg">還沒有任何紀錄,從下方表單新增第一筆資料</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 分析 -->
+  <div class="ai-block" id="aiBlock" style="display:none;">
+    <h3>🤖 AI 分析 · 優缺點 & 改進建議</h3>
+    <div class="stats-strip" id="aiStats"></div>
+    <div class="ai-section">
+      <div class="ai-section-title">✅ 優點</div>
+      <ul id="aiPros"></ul>
+    </div>
+    <div class="ai-section">
+      <div class="ai-section-title">⚠️ 待改進</div>
+      <ul id="aiCons"></ul>
+    </div>
+    <div class="ai-section">
+      <div class="ai-section-title">🛠️ 建議處置</div>
+      <ul id="aiActions"></ul>
+    </div>
+  </div>
+
+  <!-- 趨勢圖 -->
+  <div class="card" id="trendCard" style="display:none;">
+    <div class="section-header">
+      <h2>📈 水質趨勢圖</h2>
+      <span class="badge">最近 30 筆</span>
+    </div>
+    <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <!-- 新增表單 -->
+  <div class="card">
+    <div class="section-header">
+      <h2>➕ 新增水質紀錄</h2>
+      <span class="badge" id="formDate">今天</span>
+    </div>
+    <form id="logForm" class="form-grid">
+      <div class="form-field">
+        <label>📅 日期</label>
+        <input type="date" id="date" required>
+      </div>
+      <div class="form-field">
+        <label>🕐 時間</label>
+        <input type="time" id="time" required>
+      </div>
+      <div class="form-field">
+        <label>pH</label>
+        <input type="number" step="0.01" id="ph" placeholder="8.10" required>
+      </div>
+      <div class="form-field">
+        <label>🌡️ 溫度 °C</label>
+        <input type="number" step="0.1" id="temp" placeholder="25.8" required>
+      </div>
+      <div class="form-field">
+        <label>⚡ EC µS/cm</label>
+        <input type="number" step="100" id="ec" placeholder="54200">
+      </div>
+      <div class="form-field">
+        <label>💧 TDS ppm</label>
+        <input type="number" step="100" id="tds" placeholder="27100">
+      </div>
+      <div class="form-field">
+        <label>🧂 鹽度 ppt</label>
+        <input type="number" step="0.1" id="salinity" placeholder="33.5">
+      </div>
+      <div class="form-field">
+        <label>⚖️ 比重 SG</label>
+        <input type="number" step="0.001" id="sg" placeholder="1.023">
+      </div>
+      <div class="form-field">
+        <label>⚗️ ORP mV</label>
+        <input type="number" step="1" id="orp" placeholder="297">
+      </div>
+      <div class="form-field">
+        <label>🚿 餘氯 mg/L</label>
+        <input type="number" step="0.1" id="cl" placeholder="0.1">
+      </div>
+      <div class="form-field" style="grid-column:1/-1;">
+        <label>📝 備註(選填)</label>
+        <textarea id="notes" placeholder="海葵狀態、小丑魚行為、換水紀錄…"></textarea>
+      </div>
+      <div class="form-field" style="grid-column:1/-1;flex-direction:row;gap:10px;">
+        <button type="submit" class="btn btn-primary">💾 儲存紀錄</button>
+        <button type="button" class="btn btn-secondary" onclick="triggerFileImport()">📤 匯入(補資料)</button>
+        <button type="button" class="btn btn-secondary" onclick="triggerFileExport()">📥 匯出 JSON</button>
+        <button type="button" class="btn btn-danger" onclick="confirmClear()">🗑️ 清除全部</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleImport(event)">
+      </div>
+    </form>
+  </div>
+
+  <!-- 紀錄表 -->
+  <div class="card">
+    <div class="section-header">
+      <h2>📋 歷史紀錄</h2>
+      <span class="badge">最新在上</span>
+    </div>
+    <div class="log-table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>日期時間</th>
+            <th>pH</th>
+            <th>°C</th>
+            <th>EC</th>
+            <th>TDS</th>
+            <th>ppt</th>
+            <th>SG</th>
+            <th>ORP</th>
+            <th>備註</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="logTbody">
+          <tr><td colspan="10" class="empty-state">
+            <div class="ico">🌊</div>
+            <div class="msg">新增第一筆資料開始紀錄吧</div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 教學說明 -->
+  <div class="card">
+    <div class="section-header">
+      <h2>📖 海葵+小丑魚 水質政策</h2>
+      <span class="badge">AI 自動分析規則</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;font-size:13px;">
+      <div style="padding:12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:6px;color:var(--ok);">✅ 理想區</div>
+        <div>pH 8.1–8.4 · 溫度 25–27°C<br>SG 1.024–1.025 · ppt 34–35<br>ORP 250–350 · KH 8–10</div>
+      </div>
+      <div style="padding:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:6px;color:var(--warn);">⚠️ 注意</div>
+        <div>pH 7.9–8.1 · SG 1.020–1.024<br>ppt 30–34 · ORP 200–250<br>溫差 > 1°C/日</div>
+      </div>
+      <div style="padding:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;">
+        <div style="font-weight:700;margin-bottom:6px;color:var(--bad);">❌ 警戒</div>
+        <div>pH &lt; 7.9 或 > 8.5<br>SG &lt; 1.018 或 > 1.028<br>餘氯 > 0.05 · 溫度 > 29°C</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.03);border-radius:10px;font-size:13px;color:var(--muted);">
+      💡 <strong style="color:var(--text);">使用流程:</strong>
+      拍照水質儀螢幕 → Telegram 傳給 AI → AI 自動解析數字 → 點下方「📤 匯入」或手動填表 → AI 立即產生優缺點分析
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ========== Data layer (LocalStorage) ========== */
+const STORAGE_KEY = 'reef_log_v1';
+
+function loadLog(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr)?arr:[];
+  }catch(e){
+    console.error('loadLog err:',e);
+    return [];
+  }
+}
+function saveLog(arr){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    return true;
+  }catch(e){
+    alert('儲存失敗:' + e.message);
+    return false;
+  }
+}
+function uid(){return Date.now().toString(36) + Math.random().toString(36).slice(2,7);}
+
+/* ========== Status rules (海葵+小丑魚) ========== */
+const RULES = {
+  ph:   { ok:[8.1,8.4], warn:[7.9,8.5], label:'pH', unit:'', decimals:2 },
+  temp: { ok:[25,27],   warn:[23,29],   label:'溫度', unit:'°C', decimals:1 },
+  ec:   { ok:[48000,55000], warn:[40000,60000], label:'EC', unit:'µS/cm', decimals:0 },
+  tds:  { ok:[32000,36000], warn:[25000,40000], label:'TDS', unit:'ppm', decimals:0 },
+  salinity: { ok:[34,35.5], warn:[30,37], label:'鹽度', unit:'ppt', decimals:1 },
+  sg:   { ok:[1.024,1.026], warn:[1.020,1.028], label:'SG', unit:'', decimals:3 },
+  orp:  { ok:[250,350], warn:[200,400], label:'ORP', unit:'mV', decimals:0 },
+  cl:   { ok:[0,0.05], warn:[0.05,0.1], label:'餘氯', unit:'mg/L', decimals:2 }
+};
+
+function statusOf(field, val){
+  if(val===null||val===undefined||val===''||isNaN(val)) return 'unknown';
+  const r = RULES[field];
+  if(!r) return 'unknown';
+  if(val>=r.ok[0] && val<=r.ok[1]) return 'ok';
+  if(val>=r.warn[0] && val<=r.warn[1]) return 'warn';
+  return 'bad';
+}
+
+function pill(s){
+  return s==='ok' ? '<span class="pill pill-ok">✓ 正常</span>'
+       : s==='warn' ? '<span class="pill pill-warn">⚠ 注意</span>'
+       : s==='bad' ? '<span class="pill pill-bad">✗ 警戒</span>'
+       : '<span class="pill">—</span>';
+}
+
+/* ========== Render metrics card ========== */
+function renderMetrics(entry){
+  const fields = [
+    ['ph','pH','📊'],
+    ['temp','溫度','🌡️'],
+    ['orp','ORP','⚗️'],
+    ['ec','EC','⚡'],
+    ['tds','TDS','💧'],
+    ['salinity','鹽度','🧂'],
+    ['sg','比重','⚖️'],
+    ['cl','餘氯','🚿']
+  ];
+  return fields.map(([k,lbl,icon])=>{
+    const r = RULES[k];
+    const v = entry[k];
+    if(v===undefined||v===null||v===''){
+      return `<div class="metric-card"><h3>${icon} ${lbl}</h3><div class="val" style="color:var(--muted)">—</div><div class="sub">${r.unit||''}</div></div>`;
+    }
+    const st = statusOf(k, Number(v));
+    return `<div class="metric-card status-${st}">
+      <h3>${icon} ${lbl}</h3>
+      <div class="val">${Number(v).toFixed(r.decimals)}</div>
+      <div class="sub">${r.unit||''} ${pill(st)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ========== AI Analysis (純前端規則引擎) ========== */
+function aiAnalyze(entries){
+  if(!entries.length) return null;
+  const latest = entries[entries.length-1];
+  const prev = entries.length>=2 ? entries[entries.length-2] : null;
+
+  const pros = [], cons = [], actions = [];
+
+  // pH
+  const phSt = statusOf('ph', Number(latest.ph));
+  if(phSt==='ok') pros.push('pH '+latest.ph+' 落在 8.1–8.4 理想區,系統緩衝穩定');
+  else if(phSt==='warn') { cons.push('pH '+latest.ph+' 略偏離理想區(< 8.1 或 > 8.4)'); actions.push('檢測 KH 鹼度(目標 8–10 dKH),若不足用蘇打水或 Balling 法補充'); }
+  else { cons.push('pH '+latest.ph+' 進入警戒區'); actions.push('立即檢測 KH 鹼度 + 換水 10%,避免珊瑚/海葵黏膜受損'); }
+
+  // temp
+  const tSt = statusOf('temp', Number(latest.temp));
+  if(tSt==='ok') pros.push('溫度 '+latest.temp+'°C 完美落在 25–27°C 海葵+小丑魚舒適區');
+  else if(tSt==='warn') actions.push('檢查加熱棒/冷卻風扇,溫差應 < 1°C/日');
+  else actions.push('溫度異常!確認加熱/散熱系統,海葵對溫差極敏感');
+
+  // SG
+  const sgSt = statusOf('sg', Number(latest.sg));
+  if(sgSt==='ok') pros.push('比重 '+latest.sg+' 達標,海葵滲透壓調節無壓力');
+  else if(sgSt==='warn') { cons.push('比重 '+latest.sg+' 未達 1.024 理想值'); actions.push('每天以 0.0005 SG 速度緩慢調升,避免滲透壓震盪'); }
+  else { cons.push('比重 '+latest.sg+' 嚴重偏低或偏高'); actions.push('立即調整:低於 1.020 加海水、高於 1.028 加純水'); }
+
+  // ORP
+  const oSt = statusOf('orp', Number(latest.orp));
+  if(oSt==='ok') pros.push('ORP '+latest.orp+' mV 適合海葵缸,有機廢物控制良好');
+  else if(oSt==='warn') actions.push('檢查蛋白分離器與換水頻率,目標維持 250–350');
+  else actions.push('ORP 異常,加強換水與蛋白分離器效率');
+
+  // 鹽度
+  const sSt = statusOf('salinity', Number(latest.salinity));
+  if(sSt==='ok') pros.push('鹽度 '+latest.salinity+' ppt 達標,探頭間數據一致性良好');
+  else if(sSt==='warn') { cons.push('鹽度 '+latest.salinity+' ppt 略低於 34'); actions.push('持續蒸發-補水循環,讓 ppt 自然回升至 34–35'); }
+
+  // 餘氯
+  const cSt = statusOf('cl', Number(latest.cl));
+  if(cSt==='bad') { cons.push('餘氯 '+latest.cl+' mg/L 過高'); actions.push('立即換水!海葵/小丑魚對氯極敏感,改用 RO/DI 純水'); }
+  else if(cSt==='warn') actions.push('餘氯接近偵測下限,確認使用 RO/DI 純水 + 合格海鹽');
+
+  // 趨勢比較(若有前一筆)
+  if(prev){
+    const dPh = Number(latest.ph) - Number(prev.ph);
+    if(Math.abs(dPh) > 0.15){
+      cons.push('pH 24h 變動 '+dPh.toFixed(2)+' 過大(> 0.15)');
+      actions.push('檢測 KH 緩衝與 CO₂ 排除,避免夜間 pH 崩跌');
+    }
+    const dSg = Number(latest.sg) - Number(prev.sg);
+    if(Math.abs(dSg) > 0.002){
+      cons.push('SG 24h 變動 '+dSg.toFixed(3)+' 過大(> 0.002)');
+      actions.push('調整 ATO 補水頻率或加鹽節奏');
+    }
+  }
+
+  // 統計
+  const total = entries.length;
+  const avgPh = entries.reduce((s,e)=>s+Number(e.ph||0),0)/total;
+  const avgTemp = entries.reduce((s,e)=>s+Number(e.temp||0),0)/total;
+
+  return { latest, prev, pros, cons, actions, total, avgPh, avgTemp };
+}
+
+/* ========== Render ========== */
+function render(){
+  const entries = loadLog().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const tbody = document.getElementById('logTbody');
+  const metricBox = document.getElementById('latestMetrics');
+  const aiBlock = document.getElementById('aiBlock');
+  const trendCard = document.getElementById('trendCard');
+  const countBadge = document.getElementById('entryCount');
+  const lastUpd = document.getElementById('lastUpdate');
+
+  countBadge.textContent = entries.length + ' 筆紀錄';
+
+  if(!entries.length){
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state">
+      <div class="ico">🌊</div><div class="msg">新增第一筆資料開始紀錄吧</div></td></tr>`;
+    metricBox.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="ico">📭</div><div class="msg">還沒有任何紀錄</div></div>`;
+    aiBlock.style.display = 'none';
+    trendCard.style.display = 'none';
+    lastUpd.textContent = '最後更新:—';
+    return;
+  }
+
+  // 倒序排列(最新在上)
+  const reversed = entries.slice().reverse();
+  tbody.innerHTML = reversed.map(e=>{
+    return `<tr>
+      <td>${e.date} ${e.time}</td>
+      <td>${e.ph||'—'} ${pill(statusOf('ph',Number(e.ph)))}</td>
+      <td>${e.temp||'—'} ${pill(statusOf('temp',Number(e.temp)))}</td>
+      <td>${e.ec||'—'}</td>
+      <td>${e.tds||'—'}</td>
+      <td>${e.salinity||'—'}</td>
+      <td>${e.sg||'—'}</td>
+      <td>${e.orp||'—'}</td>
+      <td style="max-width:200px;font-size:12px;color:var(--muted);">${e.notes||''}</td>
+      <td class="actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('${e.id}')">刪</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // 最新一筆儀表板
+  const latest = entries[entries.length-1];
+  metricBox.innerHTML = renderMetrics(latest);
+  lastUpd.textContent = '最後更新:' + latest.date + ' ' + latest.time;
+
+  // AI 分析
+  const ai = aiAnalyze(entries);
+  if(ai){
+    aiBlock.style.display = 'block';
+    document.getElementById('aiStats').innerHTML = `
+      <div class="stat-item"><div class="stat-val">${ai.total}</div><div class="stat-lbl">總紀錄數</div></div>
+      <div class="stat-item"><div class="stat-val">${ai.avgPh.toFixed(2)}</div><div class="stat-lbl">pH 平均</div></div>
+      <div class="stat-item"><div class="stat-val">${ai.avgTemp.toFixed(1)}°</div><div class="stat-lbl">溫度平均</div></div>
+      <div class="stat-item"><div class="stat-val">${ai.pros.length}</div><div class="stat-lbl">達標項目</div></div>
+      <div class="stat-item"><div class="stat-val">${ai.cons.length}</div><div class="stat-lbl">待改進</div></div>
+    `;
+    document.getElementById('aiPros').innerHTML = ai.pros.length
+      ? ai.pros.map(t=>`<li class="pro">${t}</li>`).join('')
+      : '<li style="color:var(--muted);padding-left:20px;">目前無特別突出的優點</li>';
+    document.getElementById('aiCons').innerHTML = ai.cons.length
+      ? ai.cons.map(t=>`<li class="con">${t}</li>`).join('')
+      : '<li class="pro">所有指標均在理想區 🎉</li>';
+    document.getElementById('aiActions').innerHTML = ai.actions.length
+      ? ai.actions.map(t=>`<li class="warn">${t}</li>`).join('')
+      : '<li class="pro">目前無需調整,持續觀察即可</li>';
+  }
+
+  // 趨勢圖
+  if(entries.length>=2){
+    trendCard.style.display='block';
+    drawTrend(entries.slice(-30));
+  } else {
+    trendCard.style.display='none';
+  }
+}
+
+/* ========== Form ========== */
+document.getElementById('logForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const entry = {
+    id: uid(),
+    date: document.getElementById('date').value,
+    time: document.getElementById('time').value,
+    ph: document.getElementById('ph').value,
+    temp: document.getElementById('temp').value,
+    ec: document.getElementById('ec').value,
+    tds: document.getElementById('tds').value,
+    salinity: document.getElementById('salinity').value,
+    sg: document.getElementById('sg').value,
+    orp: document.getElementById('orp').value,
+    cl: document.getElementById('cl').value,
+    notes: document.getElementById('notes').value,
+    ts: Date.now()
+  };
+  if(!entry.date || !entry.time){ alert('請填日期與時間'); return; }
+  const arr = loadLog();
+  arr.push(entry);
+  if(!saveLog(arr)) return;
+  // 清空(保留日期時間方便連續輸入)
+  document.getElementById('ph').value='';
+  document.getElementById('orp').value='';
+  document.getElementById('ec').value='';
+  document.getElementById('tds').value='';
+  document.getElementById('notes').value='';
+  render();
+  // 滾動到最新儀表板
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+function deleteEntry(id){
+  if(!confirm('確定刪除此筆紀錄?')) return;
+  const arr = loadLog().filter(e=>e.id!==id);
+  saveLog(arr);
+  render();
+}
+
+function confirmClear(){
+  if(!confirm('⚠️ 將清除所有海水缸紀錄,無法復原,確定嗎?')) return;
+  if(!confirm('再次確認:真的要全部清空嗎?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+/* ========== Export / Import ========== */
+function triggerFileExport(){
+  const arr = loadLog();
+  if(!arr.length){ alert('目前沒有資料可匯出'); return; }
+  const blob = new Blob([JSON.stringify(arr,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'reef-log-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function triggerFileImport(){
+  document.getElementById('fileInput').click();
+}
+function handleImport(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('格式不正確');
+      const existing = loadLog();
+      const merged = existing.concat(data).reduce((acc,curr)=>{
+        const key = curr.date+'-'+curr.time;
+        if(!acc.seen.has(key)){ acc.seen.add(key); acc.result.push(curr); }
+        return acc;
+      },{seen:new Set(),result:[]}).result;
+      saveLog(merged);
+      alert(`匯入成功!新增 ${merged.length - existing.length} 筆,總計 ${merged.length} 筆`);
+      render();
+    }catch(err){
+      alert('匯入失敗:' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+/* ========== Chart ========== */
+function drawTrend(data){
+  const canvas = document.getElementById('trendChart');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth;
+  const H = 260;
+  canvas.style.width = W+'px';
+  canvas.style.height = H+'px';
+  canvas.width = W*dpr;
+  canvas.height = H*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const pad = {l:50,r:20,t:20,b:30};
+  const chartW = W - pad.l - pad.r;
+  const chartH = H - pad.t - pad.b;
+
+  // 系列
+  const series = [
+    { key:'ph', color:'#FF6535', label:'pH', scale:1, offset:0 },
+    { key:'temp', color:'#4F8EF7', label:'°C', scale:1, offset:0 }
+  ];
+  const sgSeries = { key:'sg', color:'#10B981', label:'SG×1000', scale:1000, offset:0 };
+
+  // 範圍
+  const phRange = [7.8, 8.6];
+  const tRange = [22, 30];
+  const sgRange = [1.018*1000, 1.028*1000];
+
+  // 背景格線
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for(let i=0;i<=4;i++){
+    const y = pad.t + chartH * i/4;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(W-pad.r, y);
+    ctx.stroke();
+  }
+
+  function plotSeries(s, range){
+    const pts = data.map(d=>Number(d[s.key])).filter(v=>!isNaN(v));
+    if(!pts.length) return;
+    const xStep = chartW / Math.max(1, data.length-1);
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    data.forEach((d,i)=>{
+      const v = Number(d[s.key]);
+      if(isNaN(v)) return;
+      const x = pad.l + xStep * i;
+      const y = pad.t + chartH - ((v*s.scale - range[0])/(range[1]-range[0])) * chartH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // 點
+    ctx.fillStyle = s.color;
+    data.forEach((d,i)=>{
+      const v = Number(d[s.key]);
+      if(isNaN(v)) return;
+      const x = pad.l + xStep * i;
+      const y = pad.t + chartH - ((v*s.scale - range[0])/(range[1]-range[0])) * chartH;
+      ctx.beginPath();
+      ctx.arc(x,y,3,0,Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  plotSeries(series[0], phRange);
+  plotSeries(series[1], tRange);
+  plotSeries(sgSeries, sgRange);
+
+  // Y 軸標籤
+  ctx.fillStyle = '#5A7090';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  for(let i=0;i<=4;i++){
+    const y = pad.t + chartH - chartH*i/4;
+    const phVal = (phRange[0] + (phRange[1]-phRange[0])*i/4).toFixed(1);
+    ctx.fillText(phVal, pad.l-6, y+4);
+  }
+
+  // X 軸日期(首末)
+  ctx.textAlign = 'center';
+  if(data.length){
+    ctx.fillText(data[0].date, pad.l, H-8);
+    if(data.length>1) ctx.fillText(data[data.length-1].date, W-pad.r, H-8);
+  }
+
+  // 圖例
+  ctx.textAlign = 'left';
+  ctx.font = '11px sans-serif';
+  const legend = [
+    {c:'#FF6535', t:'pH (左軸 7.8–8.6)'},
+    {c:'#4F8EF7', t:'°C (左軸 22–30)'},
+    {c:'#10B981', t:'SG×1000 (左軸 1018–1028)'}
+  ];
+  let lx = pad.l;
+  legend.forEach(l=>{
+    ctx.fillStyle = l.c;
+    ctx.fillRect(lx, 4, 10, 10);
+    ctx.fillStyle = '#EDF2FA';
+    ctx.fillText(l.t, lx+14, 13);
+    lx += ctx.measureText(l.t).width + 30;
+  });
+}
+
+/* ========== Init ========== */
+function init(){
+  // 預設日期時間
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mi = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('date').value = yyyy+'-'+mm+'-'+dd;
+  document.getElementById('time').value = hh+':'+mi;
+  document.getElementById('formDate').textContent = yyyy+'/'+mm+'/'+dd;
+
+  // nav clock
+  function tick(){
+    const d = new Date();
+    const s = d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')
+      +' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    document.getElementById('nav-clock').textContent = s + ' 更新';
+  }
+  tick();
+  setInterval(tick, 60000);
+
+  render();
+  window.addEventListener('resize', ()=>{
+    const entries = loadLog();
+    if(entries.length>=2) drawTrend(entries.slice(-30));
+  });
+}
+
+init();
+</script>
+</body>
+</html>
